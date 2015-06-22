@@ -1,91 +1,220 @@
 Kinto python client
 ###################
 
-Python library to interact with a `Kinto <https://kinto.readthedocs.org>`_
-HTTP server.
+Kinto is a service allowing you to store and synchronize arbitrary data,
+attached to an user account. It's primary interface is HTTP.
+
+`kinto-client` is a python library which aims to ease the interaction with
+kinto for clients. `A project with related goals is
+also available for JavaScript <https://github.com/mozilla-services/cliquetis>`_.
+
+.. warning::
+
+    Everything described here is still pure fiction and no implementation
+    of this is ready to be used yet.
+
 
 Usage
 =====
 
-.. warning::
-    The approach this library takes is different from the one took in the
+.. note::
+
+    The approach this library takes is different from the one described in the
     `Cliquetis <https://github.com/mozilla-services/cliquetis>`_ javascript
     client: Operations are always performed directly on the server, and no
     synchronisation features are implemented yet.
 
-- Every operation is done remotely; No synchronisation operation is supported;
-- 
+- The first version of this API doesn't cache any access nor provide any
+  refresh mechanism. If you want to be sure you have the last data available,
+  issue another call.
 
-To create a bucket and a collection (needed to use them later):
+Here are is an overview of what the API looks like:
 
 .. code-block:: python
 
-    import kintoclient import Bucket
+    from kintoclient import Bucket
 
-    # First, create a bucket.
-    bucket = Bucket(name='payments', server_url='http://localhost:8888/v1',
-                    auth=credentials, create=True)
+    bucket = Bucket('personal', server_url='http://localhost:8888/v1',
+                    auth=('alexis', 'p4ssw0rd'))
+    todo = bucket.get_collection('todo', create=True)
 
-    # In case it already exists, you can just retrieve it.
-    bucket = Bucket(name='payments', server_url='http://localhost:8888/v1',
-                    auth=credential)
+    records = collection.get_records()
+    for i, record in enumerate(records):
+        record.data.title = 'Todo #%d' %i
 
-    # Handling collections
-    collection = payments.create_collection(name='receipts')
-    collection = payments.get_collection(name='receipts')
-    collection.destroy() # Deletes the collection.
-    bucket.delete_collection(name='receipts')
+    todo.save_records(records)
 
-    # Handling records
-    record = collection.create_record(data={})
+
+Handling buckets
+================
+
+All operations are rooted in a bucket. It makes little sense for
+one application to handle multiple buckets at once.
+
+The passed `auth` parameter is a `requests <docs.python-requests.org>`_
+authentication policy, allowing you to authenticate with whatever means
+fits you.
+
+By default, Kinto supports Firefox Accounts and Basic authentication policies.
+
+.. code-block:: python
+
+    bucket = Bucket('payments', server_url='http://localhost:8888/v1',
+                    auth=credentials)
+
+    # Passing `create=True` to the bucket will make an HTTP request to
+    # create it.
+    bucket = Bucket('payments', server_url='http://localhost:8888/v1',
+                    auth=credential, create=True)
+
+
+Collections
+===========
+
+A collection is where records are stored.
+
+.. code-block:: python
+
+    # Once the bucket handy, use it to handle collections or groups.
+    collection = bucket.create_collection('receipts')
+
+    # Or get an existing one.
+    collection = bucket.get_collection('receipts')
+
+    # To delete an existing collection.
+    bucket.delete_collection('receipts')
+
+
+Records
+=======
+
+Records can be retrieved from and saved to buckets.
+
+.. code-block:: python
+
+    # Create an empty record
+    record = collection.create_record()
+
+    # You can also pass a python dictionary to represent the record
+    record = collection.create_record(dict(id='XXX', status='done',
+                                           title='Todo #1'))
+
+    # Get all records
     record = collection.get_all_records()
-    record = collection.get_record()
-    collection.save_record(record)  # Issues a PUT or PATCH
-    collection.delete_record(record)
+    record = collection.get_record(id='89881454-e4e9-4ef0-99a9-404d95900352')
+    collection.save_record(record)
+    collection.save_records([record1, record2])
+    collection.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352')
     collection.delete_records([record1, record2])
 
-    # Permissions on records
-    # Makes the record avail. to everyone.
-    record = collection.create_record(data={}, public=True)
+
+Handling conflicts
+------------------
+
+XXX
+
+Permissions
+===========
+
+ By default, the authenticated user will get read and write access to the
+ manipulated objects. It is possible to change this behavior by passing a dict
+ to the `permissions` parameter.
+
+ .. code-block:: python
+
     record = collection.create_record(
-      data={},
-      permissions={'read': ['group:groupid']})
-    collection.update_record_permissions(id=1234, read=['basicauth_kumar', ])
+        data={},
+        permissions={'read': ['group:groupid']})
 
-    record.update_record_permissions(read=['basicauth_kumar', ])
-    record.permissions.read += 'group:friends'
-    record.permissions.write = ['group:friends', 'basicauth_kumar']
+.. note::
 
-    # Handling groups
-    collection.create_group(name='moderators', ['list', 'of', 'users'])
-    collection.add_to_group(name='moderators', ['foo', 'bar'])
-    collection.remove_from_group(name='moderators', ['foo'])
-    collection.delete_group(name='moderators')
-    collection.clear_group(name='moderators')  # Removes all members of a group.
+    Every creation or modification operation on a distant object can be given
+    a `permissions` parameter.
 
-    # create_group can also handles its permissions
-    collection.create_group(name='moderators', ['list', 'of', 'users'],
-        permissions={
-          'write': ['list', 'of', 'principals'],
-        })
+The `Bucket`, `Collection`, `Group` and `Record` class have a special
+`permissions` object that can be mutated in order to update the permissions
+model attached to the object.
 
-    # Permissions on buckets
-    bucket.permissions.record_create = ['list', 'of', 'principals']
-    bucket.permissions.group_create = ['list', 'of', 'principals']
-    bucket.permissions.group_write = []
-    bucket.permissions.group_read = []
-    bucket.permissions.record_write = []
-    bucket.permissions.record_read = []
+.. code-block:: python
 
-    # Should we repeat "bucket" here?
-    # Should it be record_create or record_creators ?
-    bucket.update_permissions(record_create=['list',])
+    bucket = Bucket('personal', auth=('alexis', 'p4ssw0rd'))
+
+    # XXX We need to find a way to get other's names from kinto, this isn't
+    # realistic.
+    friends = ['natim', 'niko', 'mat', 'tarek']
+    bucket.permissions.write += friends
+    bucket.permissions.create_collection += friends
+
+    # You *need* to call save in order to have these changes reflected in the
+    # remote.
+    bucket.permissions.save()
+
+Groups
+======
+
+Giving specific permissions to specific users can be handy sometimes, but
+quickly becomes a pain to maintain if many permissions needs to be given to
+different set of people.
+
+In order to handle this better, Kinto has a concept of groups. Groups represent
+a set of individuals, described by a name. Individuals can then be added and
+removed from the group, and permissions can be given to the group rather than
+the individuals.
+
+.. note::
+
+    Groups are attached to a bucket (and not to a collection). As such they
+    can be shared accross different collections of the same bucket.
+
+Groups can be manipulated like python sets.
+
+.. code-block:: python
+
+    group = bucket.create_group('moderators', ['list', 'of', 'users'])
+    group.add('niko')
+    group.remove('remy')
+    group.clear()  # Remove everyone in the group (except yourself)
+    group.save() # XXX Add an option to remove current user from the group?
+
+
+Sending requests in batch
+=========================
+
+Sometimes, it is useful to issue multiple operations in batch, to avoid
+sending many requests to the same server. This is an especially useful thing
+when operations have been done offline and the server needs a refresh.
+
+Batch operations can be done using a python context manager (the `with`
+statement).
+
+.. code-block:: python
+
+    with kintoclient.batch() as session:
+        todo = session.get_collection('todo', bucket='personal')
+        # Pile up your operations here.
+        todo.save_records(records)
+
+    # When the context manager exits, operations are performed.
+
+Sessions
+========
+
+Under the hood, a `Session` class is instanciated when you first create a
+bucket. It is possible to pass the session to the constructor of the `Bucket`.
+
+.. code-block:: python
+
+    from kintoclient import BatchSession, Bucket
+    session = BatchSession()
+
+    my_bucket = Bucket('personal', session=session)
+    session.commit()
 
 
 Installation
 ============
 
-To install the kinto client, it's simple, just use pip!::
+To install the kinto client, use pip::
 
   $ pip install kintoclient
 

@@ -65,7 +65,7 @@ By default, Kinto supports Firefox Accounts and Basic authentication policies.
     # Passing `create=True` to the bucket will make an HTTP request to
     # create it.
     bucket = Bucket('payments', server_url='http://localhost:8888/v1',
-                    auth=credential, create=True)
+                    auth=credentials, create=True)
 
 
 Collections

@@ -34,9 +34,9 @@ Here are is an overview of what the API looks like:
 
     from kintoclient import Bucket
 
-    bucket = Bucket('personal', server_url='http://localhost:8888/v1',
+    bucket = Bucket('default', server_url='http://localhost:8888/v1',
                     auth=('alexis', 'p4ssw0rd'))
-    todo = bucket.get_collection('todo', create=True)
+    todo = bucket.get_collection('todo')
 
     records = collection.get_records()
     for i, record in enumerate(records):
@@ -58,6 +58,8 @@ fits you.
 By default, Kinto supports Firefox Accounts and Basic authentication policies.
 
 .. code-block:: python
+
+    credentials = ('alexis', 'p4ssw0rd')
 
     bucket = Bucket('payments', server_url='http://localhost:8888/v1',
                     auth=credentials)
@@ -108,11 +110,6 @@ Records can be retrieved from and saved to buckets.
     collection.delete_records([record1, record2])
 
 
-Handling conflicts
-------------------
-
-XXX
-
 Permissions
 ===========
 
@@ -137,7 +134,7 @@ model attached to the object.
 
 .. code-block:: python
 
-    bucket = Bucket('personal', auth=('alexis', 'p4ssw0rd'))
+    bucket = Bucket('default', auth=('alexis', 'p4ssw0rd'))
 
     # XXX We need to find a way to get other's names from kinto, this isn't
     # realistic.
@@ -148,6 +145,9 @@ model attached to the object.
     # You *need* to call save in order to have these changes reflected in the
     # remote.
     bucket.permissions.save()
+
+    # or if you want to save the whole bucket:
+    bucket.save()
 
 Groups
 ======
@@ -173,31 +173,19 @@ Groups can be manipulated like python sets.
     group = bucket.create_group('moderators', ['list', 'of', 'users'])
     group.add('niko')
     group.remove('remy')
-    group.clear()  # Remove everyone in the group (except yourself)
-    group.save() # XXX Add an option to remove current user from the group?
+    group.clear()  # Remove everyone in the group
+    group.save()
 
 
 Sending requests in batch
 =========================
 
 Sometimes, it is useful to issue multiple operations in batch, to avoid
-sending many requests to the same server. This is an especially useful thing
-when operations have been done offline and the server needs a refresh.
+sending many requests to the same server. This is especially useful
+when operations have been done offline and need to be sync with the server.
 
 Batch operations can be done using a python context manager (the `with`
 statement).
-
-.. code-block:: python
-
-    with kintoclient.batch() as session:
-        todo = session.get_collection('todo', bucket='personal')
-        # Pile up your operations here.
-        todo.save_records(records)
-
-    # When the context manager exits, operations are performed.
-
-Sessions
-========
 
 Under the hood, a `Session` class is instanciated when you first create a
 bucket. It is possible to pass the session to the constructor of the `Bucket`.

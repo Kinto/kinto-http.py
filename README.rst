@@ -38,7 +38,7 @@ Here are is an overview of what the API looks like:
                     auth=('alexis', 'p4ssw0rd'))
     todo = bucket.get_collection('todo')
 
-    records = collection.get_records()
+    records = todo.get_records()
     for i, record in enumerate(records):
         record.data.title = 'Todo #%d' %i
 
@@ -166,7 +166,7 @@ the individuals.
     Groups are attached to a bucket (and not to a collection). As such they
     can be shared accross different collections of the same bucket.
 
-Groups can be manipulated like python sets.
+Groups can be manipulated like python lists.
 
 .. code-block:: python
 

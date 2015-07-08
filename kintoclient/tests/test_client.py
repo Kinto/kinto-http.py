@@ -48,10 +48,28 @@ class BucketTest(TestCase):
     def test_put_is_issued_on_creation(self):
         pass
 
+    def test_creation_errors_are_raised(self):
+        pass
+
     def test_get_is_issued_on_retrieval(self):
         pass
 
+    def test_collection_is_not_created_for_personal_bucket(self):
+        pass
+
     def test_permissions_are_created(self):
+        pass
+
+    def test_groups_can_be_created_from_buckets(self):
+        pass
+
+    def test_collections_can_be_created(self):
+        pass
+
+    def test_collections_can_be_deleted(self):
+        pass
+
+    def test_collections_can_be_retrieved(self):
         pass
 
 
@@ -106,19 +124,15 @@ class SessionTest(TestCase):
 
 class PermissionsTests(TestCase):
 
-    def setUp(self):
-        self.session = mock.MagicMock()
-
     def test_should_throw_on_invalid_container(self):
-        self.assertRaises(AttributeError, Permissions,
-                          self.session, 'unknown_container')
+        self.assertRaises(AttributeError, Permissions, 'unknown_container')
 
     def test_should_not_throw_on_valid_container(self):
         # Should not raise.
-        Permissions(self.session, 'bucket')
+        Permissions('bucket')
 
     def test_permissions_default_to_empty_dict(self):
-        permissions = Permissions(self.session, 'bucket')
+        permissions = Permissions('bucket')
         self.assertEquals(permissions.group_create, set())
         self.assertEquals(permissions.collection_create, set())
         self.assertEquals(permissions.write, set())
@@ -126,7 +140,6 @@ class PermissionsTests(TestCase):
 
     def test_permissions_can_be_passed_as_arguments(self):
         permissions = Permissions(
-            session=self.session,
             container='bucket',
             permissions={
                 'group:create': ['alexis', 'natim'],
@@ -142,7 +155,6 @@ class PermissionsTests(TestCase):
 
     def test_can_be_manipulated_as_sets(self):
         Permissions(
-            session=self.session,
             container='bucket',
             permissions={
                 'group:create': ['alexis', 'natim'],
@@ -156,8 +168,93 @@ class PermissionsTests(TestCase):
         permissions = {
             'group:create': ['alexis', 'natim'],
         }
-        Permissions(
-            session=self.session,
-            container='bucket',
-            permissions=permissions).save()
+        session = mock.MagicMock()
+        Permissions(container='bucket', permissions=permissions).save(session)
         # XXX find a way to inspect the content of the request / session.
+
+
+class GroupTest(TestCase):
+
+    def test_group_can_be_saved(self):
+        pass
+
+    def test_group_issues_a_get_on_retrieval(self):
+        pass
+
+    def test_groups_can_be_manipulated_as_lists(self):
+        pass
+
+    def test_groups_can_be_cleared(self):
+        pass
+
+
+class CollectionTest(TestCase):
+
+    def test_collection_can_be_instanciated(self):
+        pass
+
+    def test_collection_can_create_records(self):
+        pass
+
+    def test_collection_creation_throws_on_error(self):
+        pass
+
+    def test_collection_deletion_throws_on_error(self):
+        pass
+
+    def test_collection_retrieval_throws_on_error(self):
+        pass
+
+    def test_collection_retrival_issues_an_http_get(self):
+        pass
+
+    def test_collection_creation_issues_an_http_put(self):
+        pass
+
+    def test_collection_deletion_issues_an_http_delete(self):
+        pass
+
+    def test_null_record_can_be_created(self):
+        pass
+
+    def test_minimal_record_ca_be_created(self):
+        pass
+
+    def test_permissions_can_be_attached_to_collections(self):
+        pass
+
+    def test_collection_can_retrieve_all_records(self):
+        pass
+
+    def test_collection_can_retrive_a_specific_record(self):
+        pass
+
+    def test_collection_can_save_a_record(self):
+        pass
+
+    def test_collection_can_save_a_list_of_records(self):
+        pass
+
+    def test_collection_can_delete_a_record(self):
+        pass
+
+    def test_collection_can_delete_a_list_of_records(self):
+        pass
+
+
+class RecordTest(TestCase):
+
+    def test_records_handles_permissions(self):
+        pass
+
+    def test_records_save_call_parent_collection_save(self):
+        pass
+
+    def test_records_save_calls_permissions_save(self):
+        pass
+
+    def test_records_fields_can_be_accessed_as_properties(self):
+        pass
+
+    def test_permissions_are_attached_on_save(self):
+        pass

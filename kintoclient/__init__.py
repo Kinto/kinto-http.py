@@ -54,6 +54,7 @@ class Session(object):
             kwargs.setdefault('payload', json.dumps(data))
             # XXX Change the Content-Type to JSON.
         resp = requests.request(method, actual_url, **kwargs)
+        resp.raise_for_status()
         return resp.json(), resp.headers
 
 
@@ -108,7 +109,7 @@ class Bucket(object):
         self.session = create_session(server_url, auth, session)
         self.name = name
 
-        method = 'put' if create else 'get'
+        method = 'put' if create and name != 'default' else 'get'
         self.uri = '/buckets/%s' % self.name
         info, _ = self.session.request(method, self.uri)
 
@@ -118,10 +119,16 @@ class Bucket(object):
             permissions=info.get('permissions'))
 
     def _get_collection_uri(self, collection_id):
-        return '%s/collection/%s' % (self.uri, collection_id)
+        return '%s/collections/%s' % (self.uri, collection_id)
 
     def get_collection(self, name):
         return Collection(name, bucket=self, session=self.session)
+
+    def list_collections(self):
+        uri = "%s/%s" % (self.uri, 'collections')
+        resp, _ = self.session.request('get', uri)
+
+        return [collection['id'] for collection in resp['data']]
 
     def create_collection(self, name, permissions=None):
         return Collection(name, bucket=self, session=self.session,
@@ -129,7 +136,7 @@ class Bucket(object):
 
     def delete_collection(self, name):
         uri = self._get_collection_uri(name)
-        self.session.request(uri)
+        self.session.request('delete', uri)
 
     def create_group(self, name, members):
         pass

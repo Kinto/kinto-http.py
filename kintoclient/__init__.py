@@ -15,6 +15,29 @@ CONTAINER_PERMISSIONS = {
 }
 
 
+def create_session(server_url=None, auth=None, session=None):
+    """Returns a session from the passed arguments.
+
+    :param server_url:
+        The URL of the server to use.
+    :param auth:
+        A requests authentication policy object.
+    :param session:
+        An optional session object to use, rather than creating a new one.
+    """
+    if session is not None and (
+            server_url is not None or auth is not None):
+        msg = ("You cannot specify session and server_url or auth. "
+               "Chose either session or auth + server_url.")
+        raise AttributeError(msg)
+    if session is None and server_url is None and auth is None:
+        msg = ("You need to either set session or auth + server_url")
+        raise AttributeError(msg)
+    if session is None:
+        session = Session(server_url=server_url, auth=auth)
+    return session
+
+
 class Session(object):
     """Handles all the interactions with the network.
     """
@@ -32,29 +55,6 @@ class Session(object):
             # XXX Change the Content-Type to JSON.
         resp = requests.request(method, actual_url, **kwargs)
         return resp.json(), resp.headers
-
-    @staticmethod
-    def create(klass, server_url=None, auth=None, session=None):
-        """Returns a session from the passed arguments.
-
-        :param server_url:
-            The URL of the server to use.
-        :param auth:
-            A requests authentication policy object.
-        :param session:
-            An optional session object to use, rather than creating a new one.
-        """
-        if session is not None and (
-                server_url is not None or auth is not None):
-            msg = ("You cannot specify session and server_url or auth. "
-                   "Chose either session or auth + server_url.")
-            raise AttributeError(msg)
-        if session is None and server_url is None and auth is None:
-            msg = ("You need to either set session or auth + server_url")
-            raise AttributeError(msg)
-        if session is None:
-            session = Session(server_url=server_url, auth=auth)
-        return session
 
 
 class Permissions(object):
@@ -105,7 +105,7 @@ class Bucket(object):
         :param create:
             Defines if the bucket should be created. (default to False)
         """
-        self.session = Session.create(server_url, auth, session)
+        self.session = create_session(server_url, auth, session)
         self.name = name
 
         method = 'put' if create else 'get'
@@ -114,9 +114,8 @@ class Bucket(object):
 
         self.data = info['data']
         self.permissions = Permissions(
-            session=session,
             container='bucket',
-            permissions=info['permissions'])
+            permissions=info.get('permissions'))
 
     def _get_collection_uri(self, collection_id):
         return '%s/collection/%s' % (self.uri, collection_id)
@@ -163,7 +162,7 @@ class Collection(object):
         :param create:
             Defines if the collection should be created. (default to False)
         """
-        self.session = Session.create(server_url, auth, session)
+        self.session = create_session(server_url, auth, session)
         if isinstance(bucket, six.string_types):
             bucket = Bucket(bucket, session=session)
         self.bucket = bucket

@@ -2,7 +2,9 @@ from unittest2 import TestCase
 import json
 import mock
 
-from kintoclient import Bucket, Session, Permissions, DEFAULT_SERVER_URL
+from kintoclient import (
+    Bucket, Session, Permissions, DEFAULT_SERVER_URL, create_session
+)
 
 
 # XXX Put this function in tests/support.py
@@ -19,31 +21,6 @@ class BucketTest(TestCase):
     def setUp(self):
         self.session = mock.MagicMock()
         mock_response(self.session)
-
-    def test_initialization_fails_if_session_and_server_url(self):
-        self.assertRaises(
-            AttributeError, Bucket,
-            'test', session='test', server_url='http://example.org')
-        self.assertRaises(
-            AttributeError, Bucket,
-            'test', session='test', auth=('alexis', 'p4ssw0rd'))
-
-    def test_initialization_fails_on_missing_args(self):
-        self.assertRaises(AttributeError, Bucket, 'test')
-
-    @mock.patch('kintoclient.Session')
-    def test_creates_a_session_if_needed(self, session_mock):
-        # Mock the session response.
-        mock_response(session_mock())
-        Bucket('test', server_url=mock.sentinel.server_url,
-               auth=mock.sentinel.auth)
-        session_mock.assert_called_with(
-            server_url=mock.sentinel.server_url,
-            auth=mock.sentinel.auth)
-
-    def test_use_given_session_if_provided(self):
-        bucket = Bucket('test', session=self.session)
-        self.assertEquals(bucket.session, self.session)
 
     def test_put_is_issued_on_creation(self):
         pass
@@ -120,6 +97,30 @@ class SessionTest(TestCase):
 
     def test_passed_data_changes_the_request_content_type(self):
         pass
+
+    def test_creation_fails_if_session_and_server_url(self):
+        self.assertRaises(
+            AttributeError, create_session,
+            session='test', server_url='http://example.org')
+        self.assertRaises(
+            AttributeError, create_session,
+            'test', session='test', auth=('alexis', 'p4ssw0rd'))
+
+    def test_initialization_fails_on_missing_args(self):
+        self.assertRaises(AttributeError, create_session)
+
+    @mock.patch('kintoclient.Session')
+    def test_creates_a_session_if_needed(self, session_mock):
+        # Mock the session response.
+        create_session(server_url=mock.sentinel.server_url,
+                       auth=mock.sentinel.auth)
+        session_mock.assert_called_with(
+            server_url=mock.sentinel.server_url,
+            auth=mock.sentinel.auth)
+
+    def test_use_given_session_if_provided(self):
+        session = create_session(session=mock.sentinel.session)
+        self.assertEquals(session, mock.sentinel.session)
 
 
 class PermissionsTests(TestCase):

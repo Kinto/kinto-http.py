@@ -8,12 +8,16 @@ from kintoclient import (
 
 
 # XXX Put this function in tests/support.py
-def mock_response(session, data=None, permissions=None, headers=None):
+def mock_response(session, data=None, permissions=None, headers=None,
+                  error=False):
     data = data or {}
     permissions = permissions or {}
     headers = headers or {}
     info = {'data': data, 'permissions': permissions}
-    session.request.return_value = (info, headers)
+    if error:
+        session.request.side_effect = ValueError
+    else:
+        session.request.return_value = (info, headers)
 
 
 class BucketTest(TestCase):
@@ -23,31 +27,47 @@ class BucketTest(TestCase):
         mock_response(self.session)
 
     def test_put_is_issued_on_creation(self):
-        pass
-
-    def test_creation_errors_are_raised(self):
-        pass
+        Bucket('testbucket', session=self.session, create=True)
+        self.session.request.assert_called_with('put', '/buckets/testbucket')
 
     def test_get_is_issued_on_retrieval(self):
-        pass
+        Bucket('testbucket', session=self.session)
+        self.session.request.assert_called_with('get', '/buckets/testbucket')
 
     def test_collection_is_not_created_for_personal_bucket(self):
-        pass
+        Bucket('default', session=self.session, create=True)
+        self.session.request.assert_called_with('get', '/buckets/default')
 
-    def test_permissions_are_created(self):
-        pass
+    def test_permissions_are_retrieved(self):
+        mock_response(self.session, permissions={'read': ['phrawzty', ]})
+        bucket = Bucket('testbucket', session=self.session)
+        self.assertIn('phrawzty', bucket.permissions.read)
 
     def test_groups_can_be_created_from_buckets(self):
         pass
 
-    def test_collections_can_be_created(self):
-        pass
+    @mock.patch('kintoclient.Collection')
+    def test_collections_can_be_created_from_buckets(self, collection_mock):
+        bucket = Bucket('testbucket', session=self.session)
+        bucket.create_collection('mycollection')
+        collection_mock.assert_called_with(
+            'mycollection',
+            bucket=bucket,
+            create=True,
+            permissions=None,
+            session=self.session)
 
-    def test_collections_can_be_deleted(self):
-        pass
+    def test_collections_can_be_deleted_from_buckets(self):
+        bucket = Bucket('testbucket', session=self.session)
+        bucket.delete_collection('testcollection')
+        uri = '/buckets/testbucket/collections/testcollection'
+        self.session.request.assert_called_with('delete', uri)
 
-    def test_collections_can_be_retrieved(self):
-        pass
+    def test_collections_can_be_retrieved_from_buckets(self):
+        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}])
+        bucket = Bucket('testbucket', session=self.session)
+        collections = bucket.list_collections()
+        self.assertEquals(collections, ['foo', 'bar'])
 
 
 class SessionTest(TestCase):
@@ -190,6 +210,9 @@ class GroupTest(TestCase):
 
 
 class CollectionTest(TestCase):
+
+    def setUp(self):
+        pass
 
     def test_collection_can_be_instanciated(self):
         pass

@@ -3,7 +3,7 @@ import json
 import mock
 
 from kintoclient import (
-    Bucket, Session, Permissions, Collection,
+    Bucket, Session, Permissions, Collection, Record,
     DEFAULT_SERVER_URL, create_session
 )
 
@@ -122,9 +122,6 @@ class SessionTest(TestCase):
             'get', 'https://example.org/test',
             payload=json.dumps({'foo': 'bar'}))
 
-    def test_passed_data_changes_the_request_content_type(self):
-        pass
-
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(
             AttributeError, create_session,
@@ -192,13 +189,19 @@ class PermissionsTests(TestCase):
             })
         # XXX work with sets.
 
-    def test_save_issues_a_put(self):
+    def test_serialization(self):
         permissions = {
             'group:create': ['alexis', 'natim'],
         }
         session = mock.MagicMock()
-        Permissions(container='bucket', permissions=permissions).save(session)
-        # XXX find a way to inspect the content of the request / session.
+        perm = Permissions(container='bucket', permissions=permissions)
+        serialized = perm.serialize()
+        self.assertDictEqual(serialized, {
+            'collection:create': set([]),
+            'group:create': {'alexis', 'natim'},
+            'read': set([]),
+            'write': set([]),
+        })
 
 
 class GroupTest(TestCase):
@@ -328,18 +331,26 @@ class CollectionTest(TestCase):
 
 
 class RecordTest(TestCase):
+    def setUp(self):
+        self.collection = mock.MagicMock()
 
-    def test_records_handles_permissions(self):
-        pass
+    def test_record_id_is_created_if_not_given(self):
+        record = Record({'foo': 'bar'}, collection=self.collection)
+        self.assertIsNotNone(record.id)
+
+    def test_generated_record_id_is_an_uuid(self):
+        record = Record({'foo': 'bar'}, collection=self.collection)
+
+        uuid_regexp = r'[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12}'
+        self.assertRegexpMatches(record.id, uuid_regexp)
+
+    @mock.patch('kintoclient.Permissions')
+    def test_records_handles_permissions(self, permissions_mock):
+        record = Record({'foo': 'bar'}, collection=self.collection,
+                        permissions=mock.sentinel.permissions)
+        permissions_mock.assert_called_with('record', mock.sentinel.permissions)
 
     def test_records_save_call_parent_collection_save(self):
-        pass
-
-    def test_records_save_calls_permissions_save(self):
-        pass
-
-    def test_records_fields_can_be_accessed_as_properties(self):
-        pass
-
-    def test_permissions_are_attached_on_save(self):
-        pass
+        record = Record({'foo': 'bar'}, collection=self.collection)
+        record.save()
+        self.collection.save_record.assert_called_with(record)

@@ -20,6 +20,12 @@ def mock_response(session, data=None, permissions=None, headers=None,
     else:
         session.request.return_value = (info, headers)
 
+def get_record(id=None, data=None, permissions=None):
+    record = mock.MagicMock()
+    record.id = id or '1234'
+    record.data = data or {'foo': 'bar'}
+    record.permissions = permissions or {'read': ['Niko', 'Mat']}
+    return record
 
 class BucketTest(TestCase):
 
@@ -271,20 +277,54 @@ class CollectionTest(TestCase):
         record_mock.assert_any_call({'id': 'foo'}, collection=collection)
         record_mock.assert_any_call({'id': 'bar'}, collection=collection)
 
-    def test_collection_can_retrieve_a_specific_record(self):
-        pass
+    @mock.patch('kintoclient.Record')
+    def test_collection_can_retrieve_a_specific_record(self, record_mock):
+        data = {'id': '1234', 'foo': 'bar'}
+        permissions = {'read': ['Natim', 'Mat']}
+        mock_response(self.session, data=data, permissions=permissions)
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        collection.get_record('1234')
+        uri = '/buckets/mybucket/collections/mycollection/records/1234'
+        self.session.request.assert_called_with('get', uri)
+        record_mock.assert_called_with(data, collection=collection,
+                                       permissions=permissions)
 
     def test_collection_can_save_a_record(self):
-        pass
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        record = get_record()
+        collection.save_record(record)
+        uri = '/buckets/mybucket/collections/mycollection/records/1234'
+        self.session.request.assert_called_with('put', uri, data=record.data,
+                                                permissions=record.permissions)
 
     def test_collection_can_save_a_list_of_records(self):
-        pass
+        records = [get_record(id=i) for i in range(1, 10)]
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        collection.save_records(records)
+        uri = '/buckets/mybucket/collections/mycollection/records/9'
+        self.session.request.assert_any_call(
+            'put', uri, data=records[0].data,
+            permissions=records[0].permissions)
+        self.assertEquals(self.session.request.call_count, 10)
 
     def test_collection_can_delete_a_record(self):
-        pass
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        collection.delete_record(id=1234)
+        uri = '/buckets/mybucket/collections/mycollection/records/1234'
+        self.session.request.assert_called_with('delete', uri)
 
     def test_collection_can_delete_a_list_of_records(self):
-        pass
+        records = [get_record(id=i) for i in range(1, 10)]
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        collection.delete_records(records)
+        uri = '/buckets/mybucket/collections/mycollection/records/9'
+        self.session.request.assert_any_call('delete', uri)
+        self.assertEquals(self.session.request.call_count, 10)
 
 
 class RecordTest(TestCase):

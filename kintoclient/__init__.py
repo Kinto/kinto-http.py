@@ -205,12 +205,14 @@ class Collection(object):
                       permissions=resp['permissions'])
 
     def save_record(self, record):
+        # XXX Rename in update_record and do a PATCH ?
         if record.id is None:
             record.id = str(uuid.uuid4())
-        self.session.request('put', self._get_record_uri(record.id))
+        self.session.request('put', self._get_record_uri(record.id),
+                             data=record.data, permissions=record.permissions)
 
     def save_records(self, records):
-        # XXX enhance this with a batch request.
+        # XXX Enhance this with a batch request.
         for record in records:
             self.save_record(record)
 
@@ -225,11 +227,12 @@ class Collection(object):
         resp, _ = self.session.request('delete', record_uri)
 
     def delete_records(self, records):
-        # XXX TODO
+        # XXX Enhance this with a batch request.
         # with self.session.batch() as batch:
         #     for record in records:
         #         batch.request('delete', self._get_record_uri(record.id))
-        pass
+        for record in records:
+            self.delete_record(record.id)
 
 
 class Record(object):

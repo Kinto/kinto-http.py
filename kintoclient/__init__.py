@@ -76,14 +76,13 @@ class Permissions(object):
             attr = permission_type.replace(':', '_')
             setattr(self, attr, set(permissions.get(permission_type, set())))
 
-    def save(self, session):
+    def serialize(self):
+        """Serialize the permissions to be sent to the server"""
         to_save = {}
         for permission_type in CONTAINER_PERMISSIONS[self.container]:
             attr = permission_type.replace(':', '_')
             to_save[permission_type] = getattr(self, attr)
-
-        session.request('put', '/%s/permissions' % self.container,
-                        data=to_save)
+        return to_save
 
 
 class Bucket(object):

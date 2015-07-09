@@ -3,7 +3,8 @@ import json
 import mock
 
 from kintoclient import (
-    Bucket, Session, Permissions, DEFAULT_SERVER_URL, create_session
+    Bucket, Session, Permissions, Collection,
+    DEFAULT_SERVER_URL, create_session
 )
 
 
@@ -212,45 +213,65 @@ class GroupTest(TestCase):
 class CollectionTest(TestCase):
 
     def setUp(self):
-        pass
+        self.session = mock.MagicMock()
+        mock_response(self.session)
+        self.bucket = mock.MagicMock()
+        self.bucket.uri = '/buckets/mybucket'
 
     def test_collection_can_be_instanciated(self):
-        pass
+        Collection('mycollection', bucket=self.bucket, session=self.session)
 
-    def test_collection_can_create_records(self):
-        pass
-
-    def test_collection_creation_throws_on_error(self):
-        pass
-
-    def test_collection_deletion_throws_on_error(self):
-        pass
-
-    def test_collection_retrieval_throws_on_error(self):
-        pass
-
-    def test_collection_retrival_issues_an_http_get(self):
-        pass
+    def test_collection_retrieval_issues_an_http_get(self):
+        Collection('mycollection', bucket=self.bucket, session=self.session)
+        uri = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with('get', uri)
 
     def test_collection_creation_issues_an_http_put(self):
-        pass
+        Collection('mycollection', bucket=self.bucket, session=self.session,
+                   permissions=mock.sentinel.permissions, create=True)
+        uri = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with(
+            'put', uri, permissions=mock.sentinel.permissions)
 
-    def test_collection_deletion_issues_an_http_delete(self):
-        pass
+    @mock.patch('kintoclient.Bucket')
+    def test_bucket_can_be_passed_as_a_string(self, bucket_mock):
+        Collection('mycollection', bucket='default', session=self.session)
+        bucket_mock.assert_called_with('default', session=self.session)
 
-    def test_null_record_can_be_created(self):
-        pass
+    @mock.patch('kintoclient.Record')
+    def test_collection_can_create_records(self, record_mock):
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        collection.create_record(
+            {'foo': 'bar'},
+            permissions=mock.sentinel.permissions)
+        record_mock.assert_called_with(
+            {'foo': 'bar'},
+            permissions=mock.sentinel.permissions,
+            collection=collection)
 
-    def test_minimal_record_ca_be_created(self):
-        pass
+    @mock.patch('kintoclient.Record')
+    def test_create_record_can_save(self, record_mock):
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        collection.save_record = mock.MagicMock()
+        record = collection.create_record(
+            {'foo': 'bar'},
+            permissions=mock.sentinel.permissions,
+            save=True)
+        collection.save_record.assert_called_with(record)
 
-    def test_permissions_can_be_attached_to_collections(self):
-        pass
+    @mock.patch('kintoclient.Record')
+    def test_collection_can_retrieve_all_records(self, record_mock):
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}])
+        records = collection.get_records()
+        self.assertEquals(len(records), 2)
+        record_mock.assert_any_call({'id': 'foo'}, collection=collection)
+        record_mock.assert_any_call({'id': 'bar'}, collection=collection)
 
-    def test_collection_can_retrieve_all_records(self):
-        pass
-
-    def test_collection_can_retrive_a_specific_record(self):
+    def test_collection_can_retrieve_a_specific_record(self):
         pass
 
     def test_collection_can_save_a_record(self):

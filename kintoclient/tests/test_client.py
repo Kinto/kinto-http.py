@@ -120,7 +120,18 @@ class SessionTest(TestCase):
                         data={'foo': 'bar'})
         requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            payload=json.dumps({'foo': 'bar'}))
+            payload=json.dumps({'data': {'foo': 'bar'}}))
+
+    @mock.patch('kintoclient.requests')
+    def test_passed_permissions_is_added_in_the_payload(self, requests_mock):
+        session = Session('https://example.org')
+        permissions = mock.MagicMock()
+        permissions.serialize.return_value = {'foo': 'bar'}
+        session.request('get', 'https://example.org/test',
+                        permissions=permissions)
+        requests_mock.request.assert_called_with(
+            'get', 'https://example.org/test',
+            payload=json.dumps({'permissions': {'foo': 'bar'}}))
 
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(

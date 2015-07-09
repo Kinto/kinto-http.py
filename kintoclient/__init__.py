@@ -45,14 +45,19 @@ class Session(object):
         self.server_url = server_url
         self.auth = auth
 
-    def request(self, method, url, data=None, **kwargs):
+    def request(self, method, url, data=None, permissions=None, **kwargs):
         actual_url = urlparse.urljoin(self.server_url, url)
         if self.auth is not None:
             kwargs.setdefault('auth', self.auth)
 
+        payload = {}
         if data is not None:
-            kwargs.setdefault('payload', json.dumps(data))
+            payload['data'] = data
+        if permissions is not None:
+            payload['permissions'] = permissions.serialize()
+        if payload:
             # XXX Change the Content-Type to JSON.
+            kwargs.setdefault('payload', json.dumps(payload))
         resp = requests.request(method, actual_url, **kwargs)
         resp.raise_for_status()
         return resp.json(), resp.headers

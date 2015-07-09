@@ -9,9 +9,9 @@ DEFAULT_SERVER_URL = 'https://kinto.dev.mozaws.net/v1'
 # XXX rename to 'objects'?
 CONTAINER_PERMISSIONS = {
     'bucket': ['group:create', 'collection:create', 'write', 'read'],
-    'groups': ['write', 'read'],
-    'collections': ['write', 'read', 'record:create'],
-    'records': ['read', 'write']
+    'group': ['write', 'read'],
+    'collection': ['write', 'read', 'record:create'],
+    'record': ['read', 'write']
 }
 
 
@@ -176,6 +176,15 @@ class Collection(object):
         self.name = name
         self.uri = "%s/collections/%s" % (self.bucket.uri, self.name)
 
+        method = 'put' if create and self.bucket.name != 'default' else 'get'
+        request_kwargs = {}
+        if method == 'put' and permissions is not None:
+            request_kwargs['permissions'] = permissions
+
+        info, _ = self.session.request(method, self.uri, **request_kwargs)
+        self.data = info['data']
+        self.permissions = Permissions('collection', info['permissions'])
+
     def _get_record_uri(self, record_id):
         return '%s/records/%s' % (self.uri, record_id)
 
@@ -209,6 +218,7 @@ class Collection(object):
         record = Record(data, permissions=permissions, collection=self)
         if save is True:
             self.save_record(record)
+        return record
 
     def delete_record(self, id):
         record_uri = self._get_record_uri(id)

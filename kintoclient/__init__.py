@@ -7,13 +7,14 @@ import uuid
 DEFAULT_SERVER_URL = 'https://kinto.dev.mozaws.net/v1'
 
 # XXX rename to 'objects'?
-CONTAINER_PERMISSIONS = {
+OBJECTS_PERMISSIONS = {
     'bucket': ['group:create', 'collection:create', 'write', 'read'],
     'group': ['write', 'read'],
     'collection': ['write', 'read', 'record:create'],
     'record': ['read', 'write']
 }
 
+ID_FIELD = 'id'
 
 def create_session(server_url=None, auth=None, session=None):
     """Returns a session from the passed arguments.
@@ -66,7 +67,7 @@ class Session(object):
 class Permissions(object):
     """Handles the permissions as sets"""
     def __init__(self, container, permissions=None):
-        containers = CONTAINER_PERMISSIONS.keys()
+        containers = OBJECTS_PERMISSIONS.keys()
         if container not in containers:
             msg = 'container should be one of %s' % ','.join(containers)
             raise AttributeError(msg)
@@ -77,14 +78,14 @@ class Permissions(object):
         self.container = container
         self.permissions = permissions
 
-        for permission_type in CONTAINER_PERMISSIONS[container]:
+        for permission_type in OBJECTS_PERMISSIONS[container]:
             attr = permission_type.replace(':', '_')
             setattr(self, attr, set(permissions.get(permission_type, set())))
 
     def serialize(self):
         """Serialize the permissions to be sent to the server"""
         to_save = {}
-        for permission_type in CONTAINER_PERMISSIONS[self.container]:
+        for permission_type in OBJECTS_PERMISSIONS[self.container]:
             attr = permission_type.replace(':', '_')
             to_save[permission_type] = getattr(self, attr)
         return to_save
@@ -120,7 +121,7 @@ class Bucket(object):
         self.data = info['data']
         self.permissions = Permissions(
             container='bucket',
-            permissions=info.get('permissions'))
+            permissions=info['permissions'])
 
     def _get_collection_uri(self, collection_id):
         return '%s/collections/%s' % (self.uri, collection_id)
@@ -132,7 +133,7 @@ class Bucket(object):
         uri = "%s/%s" % (self.uri, 'collections')
         resp, _ = self.session.request('get', uri)
 
-        return [collection['id'] for collection in resp['data']]
+        return [collection[ID_FIELD] for collection in resp['data']]
 
     def create_collection(self, name, permissions=None):
         return Collection(name, bucket=self, session=self.session,
@@ -143,10 +144,10 @@ class Bucket(object):
         self.session.request('delete', uri)
 
     def create_group(self, name, members):
-        pass
+        raise NotImplementedError
 
     def delete_group(self, name):
-        pass
+        raise NotImplementedError
 
     def save(self):
         # self.groups.save()

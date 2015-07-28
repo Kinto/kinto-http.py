@@ -2,10 +2,10 @@ Kinto python client
 ###################
 
 Kinto is a service allowing you to store and synchronize arbitrary data,
-attached to an user account. It's primary interface is HTTP.
+attached to an user account. Its primary interface is HTTP.
 
 `kinto-client` is a python library which aims to ease the interaction with
-kinto for clients. `A project with related goals is
+*Kinto* for clients. `A project with related goals is
 also available for JavaScript <https://github.com/mozilla-services/cliquetis>`_.
 
 .. warning::
@@ -19,16 +19,14 @@ Usage
 
 .. note::
 
-    The approach this library takes is different from the one described in the
-    `Cliquetis <https://github.com/mozilla-services/cliquetis>`_ javascript
-    client: Operations are always performed directly on the server, and no
+    Operations are always performed directly on the server, and no
     synchronisation features are implemented yet.
 
 - The first version of this API doesn't cache any access nor provide any
   refresh mechanism. If you want to be sure you have the last data available,
   issue another call.
 
-Here are is an overview of what the API looks like:
+Here is an overview of what the API looks like:
 
 .. code-block:: python
 
@@ -90,7 +88,7 @@ A collection is where records are stored.
 Records
 =======
 
-Records can be retrieved from and saved to buckets.
+Records can be retrieved from and saved to collections.
 
 .. code-block:: python
 
@@ -205,4 +203,3 @@ Installation
 To install the kinto client, use pip::
 
   $ pip install kintoclient
-

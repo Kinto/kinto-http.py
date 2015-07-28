@@ -160,10 +160,10 @@ class SessionTest(TestCase):
 
 class PermissionsTests(TestCase):
 
-    def test_should_throw_on_invalid_container(self):
+    def test_fails_with_invalid_container(self):
         self.assertRaises(AttributeError, Permissions, 'unknown_container')
 
-    def test_should_not_throw_on_valid_container(self):
+    def test_dont_fail_with_valid_container(self):
         # Should not raise.
         Permissions('bucket')
 

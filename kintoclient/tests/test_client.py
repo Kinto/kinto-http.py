@@ -160,10 +160,10 @@ class SessionTest(TestCase):
 
 class PermissionsTests(TestCase):
 
-    def test_fails_with_invalid_container(self):
-        self.assertRaises(AttributeError, Permissions, 'unknown_container')
+    def test_fails_with_invalid_object(self):
+        self.assertRaises(AttributeError, Permissions, 'unknown_object')
 
-    def test_dont_fail_with_valid_container(self):
+    def test_dont_fail_with_valid_object(self):
         # Should not raise.
         Permissions('bucket')
 
@@ -176,7 +176,7 @@ class PermissionsTests(TestCase):
 
     def test_permissions_can_be_passed_as_arguments(self):
         permissions = Permissions(
-            container='bucket',
+            object='bucket',
             permissions={
                 'group:create': ['alexis', 'natim'],
                 'collection:create': ['mat', 'niko', 'tarek'],
@@ -190,22 +190,21 @@ class PermissionsTests(TestCase):
         self.assertEquals(permissions.read, {'dale'})
 
     def test_can_be_manipulated_as_sets(self):
-        Permissions(
-            container='bucket',
+        permissions = Permissions(
+            object='bucket',
             permissions={
                 'group:create': ['alexis', 'natim'],
                 'collection:create': ['mat', 'niko', 'tarek'],
                 'read': ['dale', ],
                 'write': ['fernando', ]
             })
-        # XXX work with sets.
 
     def test_dict_serialization(self):
         permissions = {
             'group:create': ['alexis', 'natim'],
         }
         session = mock.MagicMock()
-        perm = Permissions(container='bucket', permissions=permissions)
+        perm = Permissions(object='bucket', permissions=permissions)
         serialized = perm.as_dict()
         self.assertDictEqual(serialized, {
             'collection:create': set([]),

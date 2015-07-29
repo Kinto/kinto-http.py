@@ -66,26 +66,26 @@ class Session(object):
 
 class Permissions(object):
     """Handles the permissions as sets"""
-    def __init__(self, container, permissions=None):
+    def __init__(self, object, permissions=None):
         containers = OBJECTS_PERMISSIONS.keys()
-        if container not in containers:
-            msg = 'container should be one of %s' % ','.join(containers)
+        if object not in containers:
+            msg = 'object should be one of %s' % ','.join(containers)
             raise AttributeError(msg)
 
         if permissions is None:
             permissions = {}
 
-        self.container = container
+        self.object = object
         self.permissions = permissions
 
-        for permission_type in OBJECTS_PERMISSIONS[container]:
+        for permission_type in OBJECTS_PERMISSIONS[object]:
             attr = permission_type.replace(':', '_')
             setattr(self, attr, set(permissions.get(permission_type, set())))
 
     def as_dict(self):
         """Serialize the permissions to be sent to the server"""
         to_save = {}
-        for permission_type in OBJECTS_PERMISSIONS[self.container]:
+        for permission_type in OBJECTS_PERMISSIONS[self.object]:
             attr = permission_type.replace(':', '_')
             to_save[permission_type] = getattr(self, attr)
         return to_save
@@ -120,7 +120,7 @@ class Bucket(object):
 
         self.data = info['data']
         self.permissions = Permissions(
-            container='bucket',
+            object='bucket',
             permissions=info['permissions'])
 
     def _get_collection_uri(self, collection_id):
@@ -155,7 +155,7 @@ class Bucket(object):
 
 
 class Collection(object):
-    """Represents a collection. A collection is a container for records, and
+    """Represents a collection. A collection is a object for records, and
     has attached permissions.
     """
     def __init__(self, name, bucket, permissions=None, server_url=None,

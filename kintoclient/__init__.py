@@ -6,7 +6,6 @@ import uuid
 
 DEFAULT_SERVER_URL = 'https://kinto.dev.mozaws.net/v1'
 
-# XXX rename to 'objects'?
 OBJECTS_PERMISSIONS = {
     'bucket': ['group:create', 'collection:create', 'write', 'read'],
     'group': ['write', 'read'],
@@ -80,14 +79,14 @@ class Permissions(object):
 
         for permission_type in OBJECTS_PERMISSIONS[object]:
             attr = permission_type.replace(':', '_')
-            setattr(self, attr, set(permissions.get(permission_type, set())))
+            setattr(self, attr, permissions.get(permission_type, []))
 
     def as_dict(self):
         """Serialize the permissions to be sent to the server"""
         to_save = {}
         for permission_type in OBJECTS_PERMISSIONS[self.object]:
             attr = permission_type.replace(':', '_')
-            to_save[permission_type] = getattr(self, attr)
+            to_save[permission_type] = list(getattr(self, attr))
         return to_save
 
 

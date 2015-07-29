@@ -167,12 +167,12 @@ class PermissionsTests(TestCase):
         # Should not raise.
         Permissions('bucket')
 
-    def test_permissions_default_to_empty_dict(self):
+    def test_permissions_default_to_empty_list(self):
         permissions = Permissions('bucket')
-        self.assertEquals(permissions.group_create, set())
-        self.assertEquals(permissions.collection_create, set())
-        self.assertEquals(permissions.write, set())
-        self.assertEquals(permissions.read, set())
+        self.assertEquals(permissions.group_create, [])
+        self.assertEquals(permissions.collection_create, [])
+        self.assertEquals(permissions.write, [])
+        self.assertEquals(permissions.read, [])
 
     def test_permissions_can_be_passed_as_arguments(self):
         permissions = Permissions(
@@ -183,21 +183,18 @@ class PermissionsTests(TestCase):
                 'read': ['dale', ],
                 'write': ['fernando', ]
             })
-        self.assertEquals(permissions.group_create, {'alexis', 'natim'})
+        self.assertEquals(permissions.group_create, ['alexis', 'natim'])
         self.assertEquals(permissions.collection_create,
-                          {'mat', 'niko', 'tarek'})
-        self.assertEquals(permissions.write, {'fernando'})
-        self.assertEquals(permissions.read, {'dale'})
+                          ['mat', 'niko', 'tarek'])
+        self.assertEquals(permissions.write, ['fernando', ])
+        self.assertEquals(permissions.read, ['dale', ])
 
-    def test_can_be_manipulated_as_sets(self):
-        permissions = Permissions(
-            object='bucket',
-            permissions={
-                'group:create': ['alexis', 'natim'],
-                'collection:create': ['mat', 'niko', 'tarek'],
-                'read': ['dale', ],
-                'write': ['fernando', ]
-            })
+    def test_permissions_can_be_manipulated_as_sets(self):
+        permissions = Permissions(object='bucket')
+        permissions.group_create = set(['mat', ])
+
+        serialized = permissions.as_dict()
+        self.assertEquals(serialized['group:create'], ['mat'])
 
     def test_unknown_permissions_are_ignored(self):
         permissions = Permissions(
@@ -214,10 +211,10 @@ class PermissionsTests(TestCase):
         perm = Permissions(object='bucket', permissions=permissions)
         serialized = perm.as_dict()
         self.assertDictEqual(serialized, {
-            'collection:create': set([]),
-            'group:create': {'alexis', 'natim'},
-            'read': set([]),
-            'write': set([]),
+            'collection:create': [],
+            'group:create': ['alexis', 'natim'],
+            'read': [],
+            'write': [],
         })
 
 

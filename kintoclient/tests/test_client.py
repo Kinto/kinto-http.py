@@ -199,6 +199,13 @@ class PermissionsTests(TestCase):
                 'write': ['fernando', ]
             })
 
+    def test_unknown_permissions_are_ignored(self):
+        permissions = Permissions(
+            object='bucket',
+            permissions={'record:create': ['alexis', 'natim']})
+        serialized = permissions.as_dict()
+        self.assertNotIn('record:create', serialized)
+
     def test_dict_serialization(self):
         permissions = {
             'group:create': ['alexis', 'natim'],

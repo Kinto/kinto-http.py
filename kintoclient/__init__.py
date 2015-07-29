@@ -55,7 +55,7 @@ class Session(object):
         if data is not None:
             payload['data'] = data
         if permissions is not None:
-            payload['permissions'] = permissions.serialize()
+            payload['permissions'] = permissions.as_dict()
         if payload:
             # XXX Change the Content-Type to JSON.
             kwargs.setdefault('payload', json.dumps(payload))
@@ -82,7 +82,7 @@ class Permissions(object):
             attr = permission_type.replace(':', '_')
             setattr(self, attr, set(permissions.get(permission_type, set())))
 
-    def serialize(self):
+    def as_dict(self):
         """Serialize the permissions to be sent to the server"""
         to_save = {}
         for permission_type in OBJECTS_PERMISSIONS[self.container]:

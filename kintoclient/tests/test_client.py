@@ -126,7 +126,7 @@ class SessionTest(TestCase):
     def test_passed_permissions_is_added_in_the_payload(self, requests_mock):
         session = Session('https://example.org')
         permissions = mock.MagicMock()
-        permissions.serialize.return_value = {'foo': 'bar'}
+        permissions.as_dict.return_value = {'foo': 'bar'}
         session.request('get', 'https://example.org/test',
                         permissions=permissions)
         requests_mock.request.assert_called_with(
@@ -200,13 +200,13 @@ class PermissionsTests(TestCase):
             })
         # XXX work with sets.
 
-    def test_serialization(self):
+    def test_dict_serialization(self):
         permissions = {
             'group:create': ['alexis', 'natim'],
         }
         session = mock.MagicMock()
         perm = Permissions(container='bucket', permissions=permissions)
-        serialized = perm.serialize()
+        serialized = perm.as_dict()
         self.assertDictEqual(serialized, {
             'collection:create': set([]),
             'group:create': {'alexis', 'natim'},

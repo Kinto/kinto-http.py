@@ -203,8 +203,23 @@ class FunctionalTest(unittest2.TestCase):
                             auth=alice_credentials)
 
     def test_record_sharing(self):
-        self.create_collection('payments')
+        alice_credentials = ('alice', 'p4ssw0rd')
+        alice_userid = self.get_user_id(alice_credentials)
+        collection = self.create_collection('personal-collection')
+        record = collection.create_record(
+            {'foo': 'bar'},
+            permissions={'read': [alice_userid, ]})
 
+        # Try to read the record as Alice
+        collection = Collection(
+            'personal-collection',
+            bucket='mozilla',
+            load=False,
+            server_url=self.server_url,
+            auth=alice_credentials)
+
+        record = collection.get_record(record.id)
+        self.assertEquals(record.data, {'foo': 'bar'})
 
 if __name__ == '__main__':
     unittest2.main()

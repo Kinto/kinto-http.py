@@ -280,11 +280,20 @@ class Record(object):
 
     def __init__(self, data, collection, permissions=None, id=None):
         if id is None:
-            id = str(uuid.uuid4())
+            if ID_FIELD in data:
+                id = data[ID_FIELD]
+            else:
+                # If no id is specified, generate a new one.
+                id = str(uuid.uuid4())
         self.id = id
+        self.last_modified = data.pop('last_modified', None)
+        data.pop(ID_FIELD, None)
         self.collection = collection
         self.permissions = Permissions('record', permissions)
         self.data = data
 
     def save(self):
         self.collection.save_record(self)
+
+    def delete(self):
+        self.collection.delete_record(self.id)

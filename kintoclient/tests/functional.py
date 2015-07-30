@@ -23,11 +23,15 @@ class FunctionalTest(unittest2.TestCase):
         flush_url = urlparse.urljoin(self.server_url, '/__flush__')
         requests.post(flush_url)
 
-    def create_bucket(self):
-        bucket = Bucket(
-            'mozilla', create=True, server_url=self.server_url,
-            auth=AUTH)
+    def create_bucket(self, name='mozilla'):
+        bucket = Bucket(name, create=True, server_url=self.server_url,
+                        auth=AUTH)
         return bucket
+
+    def create_collection(self, collection_name='payments',
+                          bucket_name='mozilla'):
+        bucket = self.create_bucket(bucket_name)
+        return bucket.create_collection(collection_name)
 
     def test_bucket_creation(self):
         bucket = Bucket('mozilla', create=True, server_url=self.server_url,
@@ -87,22 +91,74 @@ class FunctionalTest(unittest2.TestCase):
         self.assertEquals(set(collections), set(['receipts', 'assets']))
 
     def test_collection_deletion(self):
-        pass
+        bucket = self.create_bucket()
+        collection = bucket.create_collection('payments')
+        collection.delete()
+        self.assertEquals(len(bucket.list_collections()), 0)
 
-    def test_recod_retrieval(self):
-        pass
+    def test_record_creation_and_retrieval(self):
+        collection = self.create_collection('payments')
+        created = collection.create_record(
+            {'foo': 'bar'},
+            permissions={'read': ['alexis']})
+        record = collection.get_record(created.id)
+        self.assertIn('alexis', record.permissions.read)
+        self.assertEquals(record.data, {u'foo': u'bar'})
+        self.assertEquals(record.id, created.id)
 
-    def test_record_save(self):
-        pass
+    def test_single_record_save(self):
+        collection = self.create_collection('payments')
+        record = collection.create_record(
+            {'foo': 'bar'},
+            permissions={'read': ['alexis']})
+        record.data['bar'] = 'baz'
+        record.save()
+        retrieved = collection.get_record(record.id)
+        self.assertIn('alexis', retrieved.permissions.read)
+        self.assertEquals(retrieved.data['foo'], u'bar')
+        self.assertEquals(retrieved.data['bar'], u'baz')
+        self.assertEquals(record.id, retrieved.id)
 
-    def test_records_save(self):
-        pass
+    def test_multiple_records_save(self):
+        collection = self.create_collection('payments')
+
+        # Create 5 records and retrieve them.
+        records = [collection.create_record({'name': i})
+                   for i in range(5)]
+
+        # Update their data and save them.
+        for r in records:
+            r.data['bar'] = 'baz'
+        collection.save_records(records)
+
+        # Assert that the change has been submitted.
+        retrieved = collection.get_records()
+        self.assertTrue(all([r.data['bar'] == 'baz'
+                             for r in retrieved]))
 
     def test_one_record_deletion(self):
+        collection = self.create_collection('payments')
+        record = collection.create_record({'foo': 'bar'})
+        record.delete()
+
+        self.assertEquals(0, len(collection.get_records()))
+
+    def test_multiple_record_deletion(self):
+        collection = self.create_collection('payments')
+        records = [collection.create_record({'name': i})
+                   for i in range(5)]
+        collection.delete_records(records)
+        self.assertEquals(len(collection.get_records()), 0)
+
+    def test_bucket_sharing(self):
+        self.create_bucket()
         pass
 
-    def test_multi_record_deletion(self):
+    def test_collection_sharing(self):
         pass
+
+    def test_record_sharing(self):
+        self.create_collection('payments')
 
 
 if __name__ == '__main__':

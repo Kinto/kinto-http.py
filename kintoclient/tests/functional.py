@@ -62,7 +62,9 @@ class FunctionalTest(unittest2.TestCase):
         self.assertIn('alexis', collection.permissions.write)
 
     def test_collection_retrieval(self):
-        pass
+        bucket = self.create_bucket()
+        collection = bucket.get_collection('payments')
+        self.assertEquals(collection.name, 'payments')
 
     def test_collection_list(self):
         pass

@@ -199,8 +199,8 @@ class Bucket(object):
 
 
 class Collection(object):
-    """Represents a collection. A collection is a object for records, and
-    has attached permissions.
+    """Represents a collection. A collection is a parent for records, and
+    has permissions attached to it.
     """
     def __init__(self, name, bucket, permissions=None, server_url=None,
                  auth=None, session=None, create=False, load=True):
@@ -251,32 +251,23 @@ class Collection(object):
         resp, _ = self.session.request('get', records_uri)
 
         # XXX Support permissions for GET /records.
-        return [Record(data, collection=self) for data in resp['data']]
+        return [Record(data=data, collection=self, session=self.session)
+                for data in resp['data']]
 
     def get_record(self, id):
-        record_uri = self._get_record_uri(id)
-        resp, _ = self.session.request('get', record_uri)
-        return Record(resp['data'],
-                      collection=self,
-                      permissions=resp['permissions'])
+        return Record(id=id, collection=self, session=self.session)
 
     def save_record(self, record):
-        # XXX Rename in update_record and do a PATCH ?
-        if record.id is None:
-            record.id = str(uuid.uuid4())
-        self.session.request('put', self._get_record_uri(record.id),
-                             data=record.data, permissions=record.permissions)
+        return record.save()
 
     def save_records(self, records):
         # XXX Enhance this with a batch request.
         for record in records:
-            self.save_record(record)
+            record.save()
 
-    def create_record(self, data, permissions=None, save=True):
-        record = Record(data, permissions=permissions, collection=self)
-        if save is True:
-            self.save_record(record)
-        return record
+    def create_record(self, data, permissions=None):
+        return Record(data=data, permissions=permissions, collection=self,
+                      create=True, session=self.session)
 
     def delete_record(self, id):
         record_uri = self._get_record_uri(id)
@@ -297,23 +288,52 @@ class Collection(object):
 class Record(object):
     """Represents a record"""
 
-    def __init__(self, data, collection, bucket=None, permissions=None,
-                 id=None):
+    def __init__(self, collection, data=None, bucket=None, permissions=None,
+                 server_url=None, auth=None, session=None,
+                 id=None, create=False, load=True):
+        self.session = create_session(server_url, auth, session)
+        if isinstance(collection, six.string_types):
+            collection = Collection(
+                collection,
+                bucket=bucket,
+                session=self.session,
+                load=False)
+        self.collection = collection
+
         if id is None:
-            if ID_FIELD in data:
+            if data and ID_FIELD in data:
                 id = data[ID_FIELD]
             else:
                 # If no id is specified, generate a new one.
                 id = str(uuid.uuid4())
         self.id = id
-        self.last_modified = data.pop('last_modified', None)
-        data.pop(ID_FIELD, None)
-        self.collection = collection
-        self.permissions = Permissions('record', permissions)
         self.data = data
 
+        # self.permissions = Permissions('record', permissions)
+        # self.data = data
+
+        self.uri = "%s/records/%s" % (self.collection.uri, self.id)
+
+        if load:
+            method = 'put' if create else 'get'
+            request_kwargs = {}
+            if create:
+                request_kwargs['data'] = data
+                if permissions is not None:
+                    request_kwargs['permissions'] = permissions
+
+            info, _ = self.session.request(method, self.uri, **request_kwargs)
+            self.data = info['data']
+            self.permissions = Permissions('record', info['permissions'])
+
+        self.last_modified = self.data.pop('last_modified', None)
+        self.data.pop(ID_FIELD, None)
+
     def save(self):
-        self.collection.save_record(self)
+        # XXX Rename in update_record and do a PATCH ?
+        self.session.request('put', self.uri,
+                             data=self.data,
+                             permissions=self.permissions)
 
     def delete(self):
-        self.collection.delete_record(self.id)
+        self.session.request('delete', self.uri)

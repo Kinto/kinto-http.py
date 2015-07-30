@@ -8,7 +8,8 @@ import ConfigParser
 from cliquet import utils as cliquet_utils
 
 from kintoclient import (
-    Bucket, Collection, BucketNotFound, KintoException, create_session
+    Bucket, Collection, Record, BucketNotFound, KintoException,
+    create_session
 )
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
@@ -206,19 +207,18 @@ class FunctionalTest(unittest2.TestCase):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)
         collection = self.create_collection('personal-collection')
-        record = collection.create_record(
+        saved = collection.create_record(
             {'foo': 'bar'},
             permissions={'read': [alice_userid, ]})
 
         # Try to read the record as Alice
-        collection = Collection(
-            'personal-collection',
+        record = Record(
+            id=saved.id,
             bucket='mozilla',
-            load=False,
+            collection='personal-collection',
             server_url=self.server_url,
             auth=alice_credentials)
 
-        record = collection.get_record(record.id)
         self.assertEquals(record.data, {'foo': 'bar'})
 
 if __name__ == '__main__':

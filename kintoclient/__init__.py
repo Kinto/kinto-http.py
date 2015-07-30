@@ -70,7 +70,12 @@ class Session(object):
                   .setdefault('Content-Type', 'application/json')
             kwargs.setdefault('data', json.dumps(payload))
         resp = requests.request(method, actual_url, **kwargs)
-        resp.raise_for_status()
+        if not 200 <= resp.status_code < 400:
+            exception = KintoException(resp.status_code)
+            exception.request = resp.request
+            exception.response = resp
+            raise exception
+
         return resp.json(), resp.headers
 
 
@@ -132,14 +137,14 @@ class Bucket(object):
 
         try:
             info, _ = self.session.request(method, self.uri)
-        except requests.exceptions.HTTPError as e:
+        except KintoException as e:
             if method == 'get' and e.response.status_code == 403:
                 exception = BucketNotFound(name)
+                exception.response = e.response
+                exception.request = e.request
+                raise exception
             else:
-                exception = KintoException(e.message)
-            exception.response = e.response
-            exception.request = e.request
-            raise exception
+                raise
 
 
         self.data = info['data']

@@ -115,11 +115,13 @@ class Bucket(object):
     one application to handle multiple buckets at once.
     """
 
-    def __init__(self, name, server_url=None, auth=None, session=None,
-                 create=False):
+    def __init__(self, name, permissions=None, server_url=None, auth=None,
+                 session=None, create=False, load=True):
         """
         :param name:
             The name of the bucket to retrieve.
+        :param permissions:
+            Permissions to be used when creating a bucket.
         :param server_url:
             The URL of the server to use.
         :param auth:
@@ -127,30 +129,40 @@ class Bucket(object):
         :param session:
             An optional session object to use, rather than creating a new one.
         :param create:
-            Defines if the bucket should be created. (default to False)
+            Defines if the bucket should be created. (defaults to False)
+        :param load:
+            Defines if bucket data should be loaded or not (defaults to True)
         """
         self.session = create_session(server_url, auth, session)
         self.name = name
-
-        method = 'put' if create and name != 'default' else 'get'
         self.uri = '/buckets/%s' % self.name
+        self.permissions = Permissions(object='bucket')
+        self.data = None
 
-        try:
-            info, _ = self.session.request(method, self.uri)
-        except KintoException as e:
-            if method == 'get' and e.response.status_code == 403:
-                exception = BucketNotFound(name)
-                exception.response = e.response
-                exception.request = e.request
-                raise exception
-            else:
-                raise
+        if load:
+            # XXX put this logic in a separate method.
+            method = 'put' if create and name != 'default' else 'get'
 
+            # In the case of a creation, check if permissions have been passed.
+            kwargs = {}
+            if method == 'put':
+                kwargs['permissions'] = permissions
 
-        self.data = info['data']
-        self.permissions = Permissions(
-            object='bucket',
-            permissions=info['permissions'])
+            try:
+                info, _ = self.session.request(method, self.uri, **kwargs)
+            except KintoException as e:
+                if method == 'get' and e.response.status_code == 403:
+                    exception = BucketNotFound(name)
+                    exception.response = e.response
+                    exception.request = e.request
+                    raise exception
+                else:
+                    raise
+
+            self.data = info['data']
+            self.permissions = Permissions(
+                object='bucket',
+                permissions=info['permissions'])
 
     def _get_collection_uri(self, collection_id):
         return '%s/collections/%s' % (self.uri, collection_id)
@@ -191,7 +203,7 @@ class Collection(object):
     has attached permissions.
     """
     def __init__(self, name, bucket, permissions=None, server_url=None,
-                 auth=None, session=None, create=False):
+                 auth=None, session=None, create=False, load=True):
         """
         :param name:
             The name of the collection.
@@ -205,22 +217,29 @@ class Collection(object):
             An optional session object to use, rather than creating a new one.
         :param create:
             Defines if the collection should be created. (default to False)
+        :param load:
+            Defines if collection data should be loaded or not
+            (defaults to True)
         """
         self.session = create_session(server_url, auth, session)
         if isinstance(bucket, six.string_types):
-            bucket = Bucket(bucket, session=session)
+            bucket = Bucket(bucket, session=self.session, load=False)
         self.bucket = bucket
         self.name = name
         self.uri = "%s/collections/%s" % (self.bucket.uri, self.name)
+        self.permissions = Permissions('collection')
+        self.data = None
 
-        method = 'put' if create and self.bucket.name != 'default' else 'get'
-        request_kwargs = {}
-        if method == 'put' and permissions is not None:
-            request_kwargs['permissions'] = permissions
+        if load:
+            # XXX put this logic in a separate method.
+            method = 'put' if create and self.bucket.name != 'default' else 'get'
+            request_kwargs = {}
+            if method == 'put' and permissions is not None:
+                request_kwargs['permissions'] = permissions
 
-        info, _ = self.session.request(method, self.uri, **request_kwargs)
-        self.data = info['data']
-        self.permissions = Permissions('collection', info['permissions'])
+            info, _ = self.session.request(method, self.uri, **request_kwargs)
+            self.data = info['data']
+            self.permissions = Permissions('collection', info['permissions'])
 
     def _get_record_uri(self, record_id):
         return '%s/records/%s' % (self.uri, record_id)
@@ -278,7 +297,8 @@ class Collection(object):
 class Record(object):
     """Represents a record"""
 
-    def __init__(self, data, collection, permissions=None, id=None):
+    def __init__(self, data, collection, bucket=None, permissions=None,
+                 id=None):
         if id is None:
             if ID_FIELD in data:
                 id = data[ID_FIELD]

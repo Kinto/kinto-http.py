@@ -1,21 +1,32 @@
 import urlparse
+import os.path
 
 import unittest2
 import requests
+import ConfigParser
 
-from kintoclient import Bucket, BucketNotFound, KintoException, create_session
+from cliquet import utils as cliquet_utils
+
+from kintoclient import (
+    Bucket, Collection, BucketNotFound, KintoException, create_session
+)
+
+__HERE__ = os.path.abspath(os.path.dirname(__file__))
 
 SERVER_URL = "http://localhost:8888/v1"
-AUTH = ('user', 'p4ssw0rd')
-DEFAULT_USER_ID = ('basicauth:7f1ca4d2d6211a69c6e1d2032545d746371047398b0f1e847'
-                   '1bea6eaea1e8091')
+DEFAULT_AUTH = ('user', 'p4ssw0rd')
 
 class FunctionalTest(unittest2.TestCase):
 
-    def setUp(self):
+    def __init__(self, *args, **kwargs):
+        super(FunctionalTest, self).__init__(*args, **kwargs)
         # XXX Read the configuration from env variables.
         self.server_url = SERVER_URL
-        self.auth = AUTH
+        self.auth = DEFAULT_AUTH
+
+        # Read the configuration.
+        self.config = ConfigParser.RawConfigParser()
+        self.config.read(os.path.join(__HERE__, 'config/kinto.ini'))
 
     def tearDown(self):
         # Delete all the created objects
@@ -23,9 +34,15 @@ class FunctionalTest(unittest2.TestCase):
         flush_url = urlparse.urljoin(self.server_url, '/__flush__')
         requests.post(flush_url)
 
+    def get_user_id(self, credentials):
+        hmac_secret =  self.config.get('app:main', 'cliquet.userid_hmac_secret')
+        credentials = '%s:%s' % credentials
+        digest = cliquet_utils.hmac_digest(hmac_secret, credentials)
+        return 'basicauth:%s' % digest
+
     def create_bucket(self, name='mozilla'):
         bucket = Bucket(name, create=True, server_url=self.server_url,
-                        auth=AUTH)
+                        auth=self.auth)
         return bucket
 
     def create_collection(self, collection_name='payments',
@@ -36,7 +53,8 @@ class FunctionalTest(unittest2.TestCase):
     def test_bucket_creation(self):
         bucket = Bucket('mozilla', create=True, server_url=self.server_url,
                         auth=self.auth)
-        self.assertIn(DEFAULT_USER_ID, bucket.permissions.write)
+        user_id = self.get_user_id(self.auth)
+        self.assertIn(user_id, bucket.permissions.write)
 
     def test_bucket_retrieval(self):
         self.create_bucket()
@@ -151,11 +169,38 @@ class FunctionalTest(unittest2.TestCase):
         self.assertEquals(len(collection.get_records()), 0)
 
     def test_bucket_sharing(self):
-        self.create_bucket()
-        pass
+        alice_credentials = ('alice', 'p4ssw0rd')
+        alice_userid = self.get_user_id(alice_credentials)
+
+        # Create a bucket and share it with alice.
+        Bucket('shared-bucket',
+               permissions={'read': [alice_userid, ]},
+               create=True,
+               server_url=self.server_url,
+               auth=self.auth)
+
+        # Try to get the bucket as Alice.
+        bucket = Bucket('shared-bucket',
+                        server_url=self.server_url,
+                        auth=alice_credentials)
 
     def test_collection_sharing(self):
-        pass
+        alice_credentials = ('alice', 'p4ssw0rd')
+        alice_userid = self.get_user_id(alice_credentials)
+
+        bucket = Bucket('personal-bucket',
+           create=True,
+           server_url=self.server_url,
+           auth=self.auth)
+
+        bucket.create_collection(
+            'shared',
+            permissions={'read': [alice_userid, ]})
+
+        # Try to read the collection as Alice.
+        bucket = Collection('shared', bucket='personal-bucket',
+                            server_url=self.server_url,
+                            auth=alice_credentials)
 
     def test_record_sharing(self):
         self.create_collection('payments')

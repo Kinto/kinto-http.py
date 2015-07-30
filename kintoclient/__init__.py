@@ -271,6 +271,9 @@ class Collection(object):
         for record in records:
             self.delete_record(record.id)
 
+    def delete(self):
+        self.session.request('delete', self.uri)
+
 
 class Record(object):
     """Represents a record"""

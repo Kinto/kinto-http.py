@@ -1,6 +1,9 @@
-import unittest2
+import urlparse
 
-from kintoclient import Bucket, BucketNotFound, KintoException
+import unittest2
+import requests
+
+from kintoclient import Bucket, BucketNotFound, KintoException, create_session
 
 SERVER_URL = "http://localhost:8888/v1"
 AUTH = ('user', 'p4ssw0rd')
@@ -13,29 +16,23 @@ class FunctionalTest(unittest2.TestCase):
         # XXX Read the configuration from env variables.
         self.server_url = SERVER_URL
         self.auth = AUTH
-        self.to_delete =  []
 
     def tearDown(self):
         # Delete all the created objects
-        for object in self.to_delete:
-            try:
-                object.delete()
-            except KintoException:
-                # Ignore errors during deletion.
-                pass
+        session = create_session(self.server_url, self.auth)
+        flush_url = urlparse.urljoin(self.server_url, '/__flush__')
+        requests.post(flush_url)
 
     def create_bucket(self):
         bucket = Bucket(
             'mozilla', create=True, server_url=self.server_url,
             auth=AUTH)
-        self.to_delete.append(bucket)
         return bucket
 
     def test_bucket_creation(self):
         bucket = Bucket('mozilla', create=True, server_url=self.server_url,
                         auth=self.auth)
         self.assertIn(DEFAULT_USER_ID, bucket.permissions.write)
-        self.to_delete.append(bucket)
 
     def test_bucket_retrieval(self):
         self.create_bucket()
@@ -72,17 +69,22 @@ class FunctionalTest(unittest2.TestCase):
         # Test retrieval of a collection gets the permissions as well.
         collection = bucket.get_collection('payments')
         self.assertIn('alexis', collection.permissions.write)
-        self.to_delete.append(collection)
 
     def test_collection_retrieval(self):
         bucket = self.create_bucket()
         bucket.create_collection('payments')
         collection = bucket.get_collection('payments')
         self.assertEquals(collection.name, 'payments')
-        self.to_delete.append(collection)
 
     def test_collection_list(self):
-        pass
+        bucket = self.create_bucket()
+        for collection in ['receipts', 'assets']:
+            collection = bucket.create_collection(collection)
+
+        # The returned collections should be strings.
+        collections = bucket.list_collections()
+        self.assertEquals(2, len(collections))
+        self.assertEquals(set(collections), set(['receipts', 'assets']))
 
     def test_collection_deletion(self):
         pass

@@ -57,6 +57,10 @@ class FunctionalTest(unittest2.TestCase):
         bucket.create_collection('payments',
                                  permissions={'write': ['alexis', ]})
 
+        # Test retrieval of a collection gets the permissions as well.
+        collection = bucket.get_collection('payments')
+        self.assertIn('alexis', collection.permissions.write)
+
     def test_collection_retrieval(self):
         pass
 

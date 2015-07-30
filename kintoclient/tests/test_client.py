@@ -54,6 +54,16 @@ class BucketTest(TestCase):
         pass
 
     @mock.patch('kintoclient.Collection')
+    def test_collections_can_be_retrieved_from_buckets(self, collection_mock):
+        bucket = Bucket('testbucket', session=self.session)
+        bucket.get_collection('mycollection')
+        collection_mock.assert_called_with(
+            'mycollection',
+            bucket=bucket,
+            permissions=None,
+            session=self.session)
+
+    @mock.patch('kintoclient.Collection')
     def test_collections_can_be_created_from_buckets(self, collection_mock):
         bucket = Bucket('testbucket', session=self.session)
         bucket.create_collection('mycollection')

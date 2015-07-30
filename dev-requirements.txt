@@ -1,0 +1,7 @@
+pytest
+pytest-cache
+pytest-cover
+pytest-sugar
+mock
+kinto
+unittest2

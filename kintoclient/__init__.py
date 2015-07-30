@@ -15,11 +15,19 @@ OBJECTS_PERMISSIONS = {
 
 ID_FIELD = 'id'
 
+class KintoException(Exception):
+    pass
+
+
+class BucketNotFound(KintoException):
+    pass
+
+
 def create_session(server_url=None, auth=None, session=None):
     """Returns a session from the passed arguments.
 
     :param server_url:
-        The URL of the server to use.
+        The URL of the server to use, with the prefix.
     :param auth:
         A requests authentication policy object.
     :param session:
@@ -51,13 +59,16 @@ class Session(object):
             kwargs.setdefault('auth', self.auth)
 
         payload = {}
-        if data is not None:
-            payload['data'] = data
+        # if data is not None:
+        payload['data'] = data or {}
         if permissions is not None:
-            payload['permissions'] = permissions.as_dict()
+            if hasattr(permissions, 'as_dict'):
+                permissions = permissions.as_dict()
+            payload['permissions'] = permissions
         if payload:
-            # XXX Change the Content-Type to JSON.
-            kwargs.setdefault('payload', json.dumps(payload))
+            kwargs.setdefault('headers', {})\
+                  .setdefault('Content-Type', 'application/json')
+            kwargs.setdefault('data', json.dumps(payload))
         resp = requests.request(method, actual_url, **kwargs)
         resp.raise_for_status()
         return resp.json(), resp.headers
@@ -66,8 +77,8 @@ class Session(object):
 class Permissions(object):
     """Handles the permissions as sets"""
     def __init__(self, object, permissions=None):
-        containers = OBJECTS_PERMISSIONS.keys()
-        if object not in containers:
+        objects = OBJECTS_PERMISSIONS.keys()
+        if object not in objects:
             msg = 'object should be one of %s' % ','.join(containers)
             raise AttributeError(msg)
 
@@ -88,6 +99,9 @@ class Permissions(object):
             attr = permission_type.replace(':', '_')
             to_save[permission_type] = list(getattr(self, attr))
         return to_save
+
+    def __repr__(self):
+        return "<Permissions on %s: %s>" % (self.object, str(self.permissions))
 
 
 class Bucket(object):
@@ -115,7 +129,18 @@ class Bucket(object):
 
         method = 'put' if create and name != 'default' else 'get'
         self.uri = '/buckets/%s' % self.name
-        info, _ = self.session.request(method, self.uri)
+
+        try:
+            info, _ = self.session.request(method, self.uri)
+        except requests.exceptions.HTTPError as e:
+            if method == 'get' and e.response.status_code == 403:
+                exception = BucketNotFound(name)
+            else:
+                exception = KintoException(e.message)
+            exception.response = e.response
+            exception.request = e.request
+            raise exception
+
 
         self.data = info['data']
         self.permissions = Permissions(
@@ -150,7 +175,10 @@ class Bucket(object):
 
     def save(self):
         # self.groups.save()
-        self.permissions.save()
+        self.session.request('patch', self.uri, permissions=self.permissions)
+
+    def delete(self):
+        self.session.request('delete', self.uri)
 
 
 class Collection(object):

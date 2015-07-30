@@ -84,7 +84,7 @@ class Permissions(object):
     def __init__(self, object, permissions=None):
         objects = OBJECTS_PERMISSIONS.keys()
         if object not in objects:
-            msg = 'object should be one of %s' % ','.join(containers)
+            msg = 'object should be one of %s' % ','.join(objects)
             raise AttributeError(msg)
 
         if permissions is None:
@@ -288,10 +288,12 @@ class Collection(object):
 class Record(object):
     """Represents a record"""
 
-    def __init__(self, collection, data=None, bucket=None, permissions=None,
+    def __init__(self, data=None, collection=None, bucket=None, permissions=None,
                  server_url=None, auth=None, session=None,
                  id=None, create=False, load=True):
         self.session = create_session(server_url, auth, session)
+        if collection is None:
+            raise AttributeError("collection is mandatory")
         if isinstance(collection, six.string_types):
             collection = Collection(
                 collection,
@@ -309,9 +311,7 @@ class Record(object):
         self.id = id
         self.data = data
 
-        # self.permissions = Permissions('record', permissions)
-        # self.data = data
-
+        self.permissions = Permissions('record', permissions)
         self.uri = "%s/records/%s" % (self.collection.uri, self.id)
 
         if load:

@@ -35,7 +35,8 @@ class BucketTest(TestCase):
 
     def test_put_is_issued_on_creation(self):
         Bucket('testbucket', session=self.session, create=True)
-        self.session.request.assert_called_with('put', '/buckets/testbucket')
+        self.session.request.assert_called_with('put', '/buckets/testbucket',
+                                                permissions=None)
 
     def test_get_is_issued_on_retrieval(self):
         Bucket('testbucket', session=self.session)
@@ -99,41 +100,63 @@ class SessionTest(TestCase):
 
     @mock.patch('kintoclient.requests')
     def test_no_auth_is_used_by_default(self, requests_mock):
+        response = mock.MagicMock()
+        response.status_code = 200
+        requests_mock.request.return_value = response
         session = Session('https://example.org')
         self.assertEquals(session.auth, None)
         session.request('get', 'https://example.org/test')
         requests_mock.request.assert_called_with(
-            'get', 'https://example.org/test')
+            'get', 'https://example.org/test',
+            data=json.dumps({'data': {}}),
+            headers={'Content-Type': 'application/json'})
 
     @mock.patch('kintoclient.requests')
     def test_session_injects_auth_on_requests(self, requests_mock):
+        response = mock.MagicMock()
+        response.status_code = 200
+        requests_mock.request.return_value = response
         session = Session(auth=mock.sentinel.auth,
                           server_url='https://example.org')
         session.request('get', '/test')
         requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            auth=mock.sentinel.auth)
+            auth=mock.sentinel.auth,
+            data='{"data": {}}',
+            headers={'Content-Type': 'application/json'})
 
     @mock.patch('kintoclient.requests')
     def test_requests_arguments_are_forwarded(self, requests_mock):
+        response = mock.MagicMock()
+        response.status_code = 200
+        requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('get', 'https://example.org/test',
                         foo=mock.sentinel.bar)
         requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            foo=mock.sentinel.bar)
+            foo=mock.sentinel.bar,
+            data='{"data": {}}',
+            headers={'Content-Type': 'application/json'})
 
     @mock.patch('kintoclient.requests')
     def test_passed_data_is_encoded_to_json(self, requests_mock):
+        response = mock.MagicMock()
+        response.status_code = 200
+        requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('get', 'https://example.org/test',
                         data={'foo': 'bar'})
         requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            payload=json.dumps({'data': {'foo': 'bar'}}))
+            data=json.dumps({'data': {'foo': 'bar'}}),
+            headers={'Content-Type': 'application/json'})
 
     @mock.patch('kintoclient.requests')
     def test_passed_permissions_is_added_in_the_payload(self, requests_mock):
+        response = mock.MagicMock()
+        response.status_code = 200
+        requests_mock.request.return_value = response
         session = Session('https://example.org')
         permissions = mock.MagicMock()
         permissions.as_dict.return_value = {'foo': 'bar'}
@@ -141,7 +164,8 @@ class SessionTest(TestCase):
                         permissions=permissions)
         requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            payload=json.dumps({'permissions': {'foo': 'bar'}}))
+            data=json.dumps({'data': {}, 'permissions': {'foo': 'bar'}}),
+            headers={'Content-Type': 'application/json'})
 
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(
@@ -269,7 +293,8 @@ class CollectionTest(TestCase):
     @mock.patch('kintoclient.Bucket')
     def test_bucket_can_be_passed_as_a_string(self, bucket_mock):
         Collection('mycollection', bucket='default', session=self.session)
-        bucket_mock.assert_called_with('default', session=self.session)
+        bucket_mock.assert_called_with('default', session=self.session,
+                                       load=False)
 
     @mock.patch('kintoclient.Record')
     def test_collection_can_create_records(self, record_mock):
@@ -279,20 +304,23 @@ class CollectionTest(TestCase):
             {'foo': 'bar'},
             permissions=mock.sentinel.permissions)
         record_mock.assert_called_with(
-            {'foo': 'bar'},
+            data={'foo': 'bar'},
             permissions=mock.sentinel.permissions,
-            collection=collection)
+            collection=collection,
+            create=True,
+            session=self.session)
 
     @mock.patch('kintoclient.Record')
     def test_create_record_can_save(self, record_mock):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
-        collection.save_record = mock.MagicMock()
         record = collection.create_record(
             {'foo': 'bar'},
-            permissions=mock.sentinel.permissions,
-            save=True)
-        collection.save_record.assert_called_with(record)
+            permissions=mock.sentinel.permissions)
+        record_mock.assert_called_with(
+            collection=collection, create=True, data={'foo': 'bar'},
+            permissions=mock.sentinel.permissions, session=self.session
+        )
 
     @mock.patch('kintoclient.Record')
     def test_collection_can_retrieve_all_records(self, record_mock):
@@ -301,41 +329,18 @@ class CollectionTest(TestCase):
         mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}])
         records = collection.get_records()
         self.assertEquals(len(records), 2)
-        record_mock.assert_any_call({'id': 'foo'}, collection=collection)
-        record_mock.assert_any_call({'id': 'bar'}, collection=collection)
+        kwargs = dict(collection=collection, session=self.session)
+        record_mock.assert_any_call(data={'id': 'foo'}, **kwargs)
+        record_mock.assert_any_call(data={'id': 'bar'}, **kwargs)
 
-    @mock.patch('kintoclient.Record')
-    def test_collection_can_retrieve_a_specific_record(self, record_mock):
-        data = {'id': '1234', 'foo': 'bar'}
-        permissions = {'read': ['Natim', 'Mat']}
-        mock_response(self.session, data=data, permissions=permissions)
+    def test_collection_can_save_a_list_records(self):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
-        collection.get_record('1234')
-        uri = '/buckets/mybucket/collections/mycollection/records/1234'
-        self.session.request.assert_called_with('get', uri)
-        record_mock.assert_called_with(data, collection=collection,
-                                       permissions=permissions)
-
-    def test_collection_can_save_a_record(self):
-        collection = Collection('mycollection', bucket=self.bucket,
-                                session=self.session)
-        record = get_record()
-        collection.save_record(record)
-        uri = '/buckets/mybucket/collections/mycollection/records/1234'
-        self.session.request.assert_called_with('put', uri, data=record.data,
-                                                permissions=record.permissions)
-
-    def test_collection_can_save_a_list_of_records(self):
-        records = [get_record(id=i) for i in range(1, 10)]
-        collection = Collection('mycollection', bucket=self.bucket,
-                                session=self.session)
+        records = [mock.MagicMock(), mock.MagicMock()]
         collection.save_records(records)
-        uri = '/buckets/mybucket/collections/mycollection/records/9'
-        self.session.request.assert_any_call(
-            'put', uri, data=records[0].data,
-            permissions=records[0].permissions)
-        self.assertEquals(self.session.request.call_count, 10)
+
+        for record in records:
+            record.save.assert_called_with()
 
     def test_collection_can_delete_a_record(self):
         collection = Collection('mycollection', bucket=self.bucket,
@@ -357,13 +362,17 @@ class CollectionTest(TestCase):
 class RecordTest(TestCase):
     def setUp(self):
         self.collection = mock.MagicMock()
+        self.collection.uri = "/collection"
+        self.session = mock.MagicMock()
 
     def test_record_id_is_created_if_not_given(self):
-        record = Record({'foo': 'bar'}, collection=self.collection)
+        record = Record({'foo': 'bar'}, collection=self.collection,
+                        session=self.session, load=False)
         self.assertIsNotNone(record.id)
 
     def test_generated_record_id_is_an_uuid(self):
-        record = Record({'foo': 'bar'}, collection=self.collection)
+        record = Record({'foo': 'bar'}, collection=self.collection,
+                        session=self.session, load=False)
 
         uuid_regexp = r'[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12}'
         self.assertRegexpMatches(record.id, uuid_regexp)
@@ -371,10 +380,39 @@ class RecordTest(TestCase):
     @mock.patch('kintoclient.Permissions')
     def test_records_handles_permissions(self, permissions_mock):
         record = Record({'foo': 'bar'}, collection=self.collection,
-                        permissions=mock.sentinel.permissions)
+                        permissions=mock.sentinel.permissions,
+                        session=self.session, load=False)
         permissions_mock.assert_called_with('record', mock.sentinel.permissions)
 
-    def test_records_save_call_parent_collection_save(self):
-        record = Record({'foo': 'bar'}, collection=self.collection)
+    def test_records_save_issues_a_request(self):
+        mock_response(self.session)
+        record = Record({'foo': 'bar'}, id='1234', collection=self.collection,
+                        session=self.session, load=False)
         record.save()
-        self.collection.save_record.assert_called_with(record)
+        self.session.request.assert_called_with(
+            'put',
+            '/collection/records/1234',
+            data={'foo': 'bar'},
+            permissions=record.permissions)
+
+    # @mock.patch('kintoclient.Record')
+    # def test_collection_can_retrieve_a_specific_record(self, record_mock):
+    #     data = {'id': '1234', 'foo': 'bar'}
+    #     permissions = {'read': ['Natim', 'Mat']}
+    #     mock_response(self.session, data=data, permissions=permissions)
+    #     collection = Collection('mycollection', bucket=self.bucket,
+    #                             session=self.session)
+    #     collection.get_record('1234')
+    #     uri = '/buckets/mybucket/collections/mycollection/records/1234'
+    #     self.session.request.assert_called_with('get', uri)
+    #     record_mock.assert_called_with(data, collection=collection,
+    #                                    permissions=permissions)
+
+    # def test_collection_can_save_a_record(self):
+    #     collection = Collection('mycollection', bucket=self.bucket,
+    #                             session=self.session)
+    #     record = get_record()
+    #     collection.save_record(record)
+    #     uri = '/buckets/mybucket/collections/mycollection/records/1234'
+    #     self.session.request.assert_called_with('put', uri, data=record.data,
+    #                                             permissions=record.permissions)

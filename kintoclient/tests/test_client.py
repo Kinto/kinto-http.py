@@ -502,8 +502,9 @@ class RecordTest(TestCase):
             permissions=record.permissions)
 
     def test_record_raises_if_collection_is_missing(self):
-        with self.assertRaises(AttributeError):
+        with self.assertRaises(AttributeError) as context:
             Record(data=mock.sentinel.test, session=self.session)
+        assert context.exception.message == 'collection is mandatory'
 
     @mock.patch('kintoclient.Collection')
     def test_collection_is_resolved_from_it_name(self, collection_mock):

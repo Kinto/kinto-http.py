@@ -194,8 +194,10 @@ bucket. It is possible to pass the session to the constructor of the `Bucket`.
     from kintoclient import BatchSession, Bucket
     session = BatchSession()
 
-    my_bucket = Bucket('personal', session=session)
-    session.commit()
+    my_bucket = Bucket('personal', session=session, create=True)
+    for collection in range(5):
+        my_bucket.create_collection("toto-%s" % collection, create=True)
+    session.execute()
 
 
 Installation

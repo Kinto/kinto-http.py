@@ -33,6 +33,8 @@ def create_session(server_url=None, auth=None, session=None):
     :param session:
         An optional session object to use, rather than creating a new one.
     """
+    # XXX Refactor the create_session to take place in the caller objects.
+    # E.g. test if the session exists before calling create_session.
     if session is not None and (
             server_url is not None or auth is not None):
         msg = ("You cannot specify session and server_url or auth. "
@@ -70,43 +72,14 @@ class Session(object):
                   .setdefault('Content-Type', 'application/json')
             kwargs.setdefault('data', json.dumps(payload))
         resp = requests.request(method, actual_url, **kwargs)
-        if not 200 <= resp.status_code < 400:
+        if not (200 <= resp.status_code < 400):
             exception = KintoException(resp.status_code)
             exception.request = resp.request
             exception.response = resp
             raise exception
 
+        # XXX Add the status code.
         return resp.json(), resp.headers
-
-
-class Permissions(object):
-    """Handles the permissions as sets"""
-    def __init__(self, object, permissions=None):
-        objects = OBJECTS_PERMISSIONS.keys()
-        if object not in objects:
-            msg = 'object should be one of %s' % ','.join(objects)
-            raise AttributeError(msg)
-
-        if permissions is None:
-            permissions = {}
-
-        self.object = object
-        self.permissions = permissions
-
-        for permission_type in OBJECTS_PERMISSIONS[object]:
-            attr = permission_type.replace(':', '_')
-            setattr(self, attr, permissions.get(permission_type, []))
-
-    def as_dict(self):
-        """Serialize the permissions to be sent to the server"""
-        to_save = {}
-        for permission_type in OBJECTS_PERMISSIONS[self.object]:
-            attr = permission_type.replace(':', '_')
-            to_save[permission_type] = list(getattr(self, attr))
-        return to_save
-
-    def __repr__(self):
-        return "<Permissions on %s: %s>" % (self.object, str(self.permissions))
 
 
 class Bucket(object):
@@ -198,12 +171,45 @@ class Bucket(object):
         self.session.request('delete', self.uri)
 
 
+# XXX Refactor the permissions to use dicts + defaultdicts rather
+# than attributes.
+class Permissions(object):
+    """Handles the permissions as sets"""
+    def __init__(self, object, permissions=None):
+        objects = OBJECTS_PERMISSIONS.keys()
+        if object not in objects:
+            msg = 'object should be one of %s' % ','.join(objects)
+            raise AttributeError(msg)
+
+        if permissions is None:
+            permissions = {}
+
+        self.object = object
+        self.permissions = permissions
+
+        for permission_type in OBJECTS_PERMISSIONS[object]:
+            attr = permission_type.replace(':', '_')
+            setattr(self, attr, permissions.get(permission_type, []))
+
+    def as_dict(self):
+        """Serialize the permissions to be sent to the server"""
+        to_save = {}
+        for permission_type in OBJECTS_PERMISSIONS[self.object]:
+            attr = permission_type.replace(':', '_')
+            to_save[permission_type] = list(getattr(self, attr))
+        return to_save
+
+    def __repr__(self):
+        return "<Permissions on %s: %s>" % (self.object, str(self.permissions))
+
+
 class Collection(object):
     """Represents a collection. A collection is a parent for records, and
     has permissions attached to it.
     """
-    def __init__(self, name, bucket, permissions=None, server_url=None,
-                 auth=None, session=None, create=False, load=True):
+    def __init__(self, name, bucket='default', permissions=None,
+                 server_url=None, auth=None, session=None, create=False,
+                 load=True):
         """
         :param name:
             The name of the collection.
@@ -223,6 +229,7 @@ class Collection(object):
         """
         self.session = create_session(server_url, auth, session)
         if isinstance(bucket, six.string_types):
+            # XXX refactor the url routing in a router object.
             bucket = Bucket(bucket, session=self.session, load=False)
         self.bucket = bucket
         self.name = name
@@ -258,6 +265,7 @@ class Collection(object):
         return Record(id=id, collection=self, session=self.session)
 
     def save_record(self, record):
+        # XXX Chose between different approaches.
         return record.save()
 
     def save_records(self, records):
@@ -315,6 +323,7 @@ class Record(object):
         self.uri = "%s/records/%s" % (self.collection.uri, self.id)
 
         if load:
+            # XXX put in a different method.
             method = 'put' if create else 'get'
             request_kwargs = {}
             if create:

@@ -157,15 +157,9 @@ class Bucket(object):
         uri = self._get_collection_uri(name)
         self.session.request('delete', uri)
 
-    def create_group(self, name, members):
-        raise NotImplementedError
-
-    def delete_group(self, name):
-        raise NotImplementedError
-
     def save(self):
-        # self.groups.save()
-        self.session.request('patch', self.uri, permissions=self.permissions)
+        self.session.request('patch', self.uri, data=self.data,
+                             permissions=self.permissions)
 
     def delete(self):
         self.session.request('delete', self.uri)
@@ -296,8 +290,8 @@ class Collection(object):
 class Record(object):
     """Represents a record"""
 
-    def __init__(self, data=None, collection=None, bucket=None, permissions=None,
-                 server_url=None, auth=None, session=None,
+    def __init__(self, data=None, collection=None, bucket='default',
+                 permissions=None, server_url=None, auth=None, session=None,
                  id=None, create=False, load=True):
         self.session = create_session(server_url, auth, session)
         if collection is None:

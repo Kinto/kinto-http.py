@@ -4,7 +4,7 @@ import mock
 
 from kintoclient import (
     Bucket, Session, Permissions, Collection, Record,
-    DEFAULT_SERVER_URL, create_session
+    DEFAULT_SERVER_URL, create_session, KintoException, BucketNotFound
 )
 
 
@@ -26,6 +26,7 @@ def get_record(id=None, data=None, permissions=None):
     record.data = data or {'foo': 'bar'}
     record.permissions = permissions or {'read': ['Niko', 'Mat']}
     return record
+
 
 class BucketTest(TestCase):
 
@@ -49,10 +50,44 @@ class BucketTest(TestCase):
     def test_permissions_are_retrieved(self):
         mock_response(self.session, permissions={'read': ['phrawzty', ]})
         bucket = Bucket('testbucket', session=self.session)
+
         self.assertIn('phrawzty', bucket.permissions.read)
 
     def test_groups_can_be_created_from_buckets(self):
         pass
+
+    def test_collections_throw_on_unexisting_bucket(self):
+        exception = KintoException()
+        exception.response = mock.MagicMock()
+        exception.response.status_code = 403
+        exception.request = mock.sentinel.request
+
+        self.session.request.side_effect = exception
+
+        try:
+            Bucket('test', session=self.session)
+        except BucketNotFound as e:
+            self.assertEquals(e.response, exception.response)
+            self.assertEquals(e.request, mock.sentinel.request)
+            self.assertEquals(e.message, 'test')
+        else:
+            self.fail("Exception not raised")
+
+    def test_collections_throw_on_error(self):
+        exception = KintoException()
+        exception.response = mock.MagicMock()
+        exception.response.status_code = 400
+        exception.request = mock.sentinel.request
+
+        self.session.request.side_effect = exception
+
+        try:
+            Bucket('test', session=self.session)
+        except KintoException as e:
+            self.assertEquals(e.response, exception.response)
+            self.assertEquals(e.request, mock.sentinel.request)
+        else:
+            self.fail("Exception not raised")
 
     @mock.patch('kintoclient.Collection')
     def test_collections_can_be_retrieved_from_buckets(self, collection_mock):
@@ -75,6 +110,15 @@ class BucketTest(TestCase):
             permissions=None,
             session=self.session)
 
+    @mock.patch('kintoclient.Collection')
+    def test_get_collection_uses_the_collection_object(self, collection_mock):
+        bucket = Bucket('testbucket', session=self.session)
+        bucket.get_collection('mycollection')
+        collection_mock.assert_called_with(
+            'mycollection',
+            bucket=bucket,
+            session=self.session)
+
     def test_collections_can_be_deleted_from_buckets(self):
         bucket = Bucket('testbucket', session=self.session)
         bucket.delete_collection('testcollection')
@@ -86,6 +130,26 @@ class BucketTest(TestCase):
         bucket = Bucket('testbucket', session=self.session)
         collections = bucket.list_collections()
         self.assertEquals(collections, ['foo', 'bar'])
+
+    @mock.patch('kintoclient.Permissions')
+    def test_save_issues_request_with_data_and_permissions(self,
+                                                           permissions_mock):
+        mock_response(self.session, data=mock.sentinel.data,
+                      permissions={'read': ['natim', ]})
+        bucket = Bucket('testbucket', session=self.session,
+                        permissions={'foo': 'bar'})
+        bucket.save()
+
+        self.session.request.assert_called_with(
+            'patch', '/buckets/testbucket', data=mock.sentinel.data,
+            permissions=permissions_mock({'read': ['natim', ]}))
+
+    def test_bucket_can_be_deleted(self):
+        mock_response(self.session)
+        bucket = Bucket('testbucket', session=self.session)
+        bucket.delete()
+
+        self.session.request.assert_called_with('delete', '/buckets/testbucket')
 
 
 class SessionTest(TestCase):
@@ -110,6 +174,16 @@ class SessionTest(TestCase):
             'get', 'https://example.org/test',
             data=json.dumps({'data': {}}),
             headers={'Content-Type': 'application/json'})
+
+    @mock.patch('kintoclient.requests')
+    def test_bad_http_status_raises_exception(self, requests_mock):
+        response = mock.MagicMock()
+        response.status_code = 400
+        requests_mock.request.return_value = response
+        session = Session('https://example.org')
+
+        self.assertRaises(KintoException, session.request, 'get',
+                          'https://example.org/test')
 
     @mock.patch('kintoclient.requests')
     def test_session_injects_auth_on_requests(self, requests_mock):
@@ -251,6 +325,14 @@ class PermissionsTests(TestCase):
             'write': [],
         })
 
+    def test_permissions_has_a_string_representation(self):
+        permissions = {
+            'group:create': ['alexis'],
+        }
+        perm = Permissions(object='bucket', permissions=permissions)
+        perm_repr = "<Permissions on bucket: {'group:create': ['alexis']}>"
+        self.assertEquals(str(perm), perm_repr)
+
 
 class GroupTest(TestCase):
 
@@ -333,6 +415,23 @@ class CollectionTest(TestCase):
         record_mock.assert_any_call(data={'id': 'foo'}, **kwargs)
         record_mock.assert_any_call(data={'id': 'bar'}, **kwargs)
 
+    @mock.patch('kintoclient.Record')
+    def test_collection_can_retrieve_a_record(self, record_mock):
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        mock_response(self.session, data=[{'id': 'foo', 'foo': 'bar'}, ])
+        collection.get_record('foo')
+        record_mock.assert_called_with(collection=collection, id='foo',
+                                       session=self.session)
+
+    def test_collection_can_save_a_record(self):
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        record = mock.MagicMock()
+        collection.save_record(record)
+        record.save.assert_called_with()
+
+
     def test_collection_can_save_a_list_records(self):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
@@ -357,6 +456,13 @@ class CollectionTest(TestCase):
         uri = '/buckets/mybucket/collections/mycollection/records/9'
         self.session.request.assert_any_call('delete', uri)
         self.assertEquals(self.session.request.call_count, 10)
+
+    def test_collection_can_be_deleted(self):
+        collection = Collection('mycollection', bucket=self.bucket,
+                                session=self.session)
+        collection.delete()
+        uri = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with('delete', uri)
 
 
 class RecordTest(TestCase):
@@ -395,24 +501,55 @@ class RecordTest(TestCase):
             data={'foo': 'bar'},
             permissions=record.permissions)
 
-    # @mock.patch('kintoclient.Record')
-    # def test_collection_can_retrieve_a_specific_record(self, record_mock):
-    #     data = {'id': '1234', 'foo': 'bar'}
-    #     permissions = {'read': ['Natim', 'Mat']}
-    #     mock_response(self.session, data=data, permissions=permissions)
-    #     collection = Collection('mycollection', bucket=self.bucket,
-    #                             session=self.session)
-    #     collection.get_record('1234')
-    #     uri = '/buckets/mybucket/collections/mycollection/records/1234'
-    #     self.session.request.assert_called_with('get', uri)
-    #     record_mock.assert_called_with(data, collection=collection,
-    #                                    permissions=permissions)
+    def test_record_raises_if_collection_is_missing(self):
+        with self.assertRaises(AttributeError):
+            Record(data=mock.sentinel.test, session=self.session)
 
-    # def test_collection_can_save_a_record(self):
-    #     collection = Collection('mycollection', bucket=self.bucket,
-    #                             session=self.session)
-    #     record = get_record()
-    #     collection.save_record(record)
-    #     uri = '/buckets/mybucket/collections/mycollection/records/1234'
-    #     self.session.request.assert_called_with('put', uri, data=record.data,
-    #                                             permissions=record.permissions)
+    @mock.patch('kintoclient.Collection')
+    def test_collection_is_resolved_from_it_name(self, collection_mock):
+        mock_response(self.session)
+        Record(session=self.session, collection='testcollection')
+        collection_mock.assert_called_with(
+            'testcollection', bucket='default', load=False,
+            session=self.session)
+
+    def test_record_id_is_derived_from_data_if_not_present(self):
+        mock_response(self.session)
+        record = Record(session=self.session, collection='testcollection',
+                        data={'id': 'foo'})
+        self.assertEquals('foo', record.id)
+
+    def test_data_and_permissions_are_added_on_create(self):
+        mock_response(self.session)
+        data = {'foo': 'bar'}
+        permissions = {'read': ['mle']}
+
+        record = Record(id='1234',
+                        session=self.session,
+                        collection='testcollection',
+                        data=data,
+                        permissions={'read': ['mle', ]},
+                        create=True)
+
+        uri = '/buckets/default/collections/testcollection/records/1234'
+        self.session.request.assert_called_with(
+            'put', uri, data=data, permissions=permissions)
+
+    def test_records_issues_a_request_on_delete(self):
+        mock_response(self.session)
+        record = Record(id='1234',
+                        session=self.session,
+                        collection='testcollection')
+        record.delete()
+        uri = '/buckets/default/collections/testcollection/records/1234'
+        self.session.request.assert_called_with('delete', uri)
+
+    def test_record_issues_a_request_on_retrieval(self):
+        mock_response(self.session, data={'foo': 'bar'})
+        record = Record(id='1234',
+                        session=self.session,
+                        collection='testcollection')
+
+        self.assertEquals(record.data, {'foo': 'bar'})
+        uri = '/buckets/default/collections/testcollection/records/1234'
+        self.session.request.assert_called_with('get', uri)

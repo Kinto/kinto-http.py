@@ -4,4 +4,4 @@ env:
     - TOX_ENV=py27
     - TOX_ENV=flake8
 script:
-    - tox -e $TOX_ENV; fi
+    - tox -e $TOX_ENV

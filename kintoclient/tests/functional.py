@@ -7,15 +7,13 @@ import ConfigParser
 
 from cliquet import utils as cliquet_utils
 
-from kintoclient import (
-    Bucket, Collection, Record, BucketNotFound, KintoException,
-    create_session
-)
+from kintoclient import Bucket, Collection, Record, BucketNotFound
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 
 SERVER_URL = "http://localhost:8888/v1"
 DEFAULT_AUTH = ('user', 'p4ssw0rd')
+
 
 class FunctionalTest(unittest2.TestCase):
 
@@ -31,12 +29,11 @@ class FunctionalTest(unittest2.TestCase):
 
     def tearDown(self):
         # Delete all the created objects
-        session = create_session(self.server_url, self.auth)
         flush_url = urlparse.urljoin(self.server_url, '/__flush__')
         requests.post(flush_url)
 
     def get_user_id(self, credentials):
-        hmac_secret =  self.config.get('app:main', 'cliquet.userid_hmac_secret')
+        hmac_secret = self.config.get('app:main', 'cliquet.userid_hmac_secret')
         credentials = '%s:%s' % credentials
         digest = cliquet_utils.hmac_digest(hmac_secret, credentials)
         return 'basicauth:%s' % digest
@@ -59,7 +56,7 @@ class FunctionalTest(unittest2.TestCase):
 
     def test_bucket_retrieval(self):
         self.create_bucket()
-        bucket = Bucket('mozilla', server_url=self.server_url, auth=self.auth)
+        Bucket('mozilla', server_url=self.server_url, auth=self.auth)
         # XXX Add permissions handling during creation and check they are
         # present during retrieval.
 
@@ -82,7 +79,6 @@ class FunctionalTest(unittest2.TestCase):
         bucket = Bucket('mozilla', server_url=self.server_url,
                         auth=self.auth)
         self.assertIn("alexis", bucket.permissions.write)
-
 
     def test_collection_creation(self):
         bucket = self.create_bucket()
@@ -181,18 +177,18 @@ class FunctionalTest(unittest2.TestCase):
                auth=self.auth)
 
         # Try to get the bucket as Alice.
-        bucket = Bucket('shared-bucket',
-                        server_url=self.server_url,
-                        auth=alice_credentials)
+        Bucket('shared-bucket',
+               server_url=self.server_url,
+               auth=alice_credentials)
 
     def test_collection_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)
 
         bucket = Bucket('personal-bucket',
-           create=True,
-           server_url=self.server_url,
-           auth=self.auth)
+                        create=True,
+                        server_url=self.server_url,
+                        auth=self.auth)
 
         bucket.create_collection(
             'shared',

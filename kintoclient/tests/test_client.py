@@ -20,6 +20,7 @@ def mock_response(session, data=None, permissions=None, headers=None,
     else:
         session.request.return_value = (info, headers)
 
+
 def get_record(id=None, data=None, permissions=None):
     record = mock.MagicMock()
     record.id = id or '1234'
@@ -89,14 +90,19 @@ class BucketTest(TestCase):
         else:
             self.fail("Exception not raised")
 
+    def test_collections_can_be_retrieved_from_buckets(self):
+        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}])
+        bucket = Bucket('testbucket', session=self.session)
+        collections = bucket.list_collections()
+        self.assertEquals(collections, ['foo', 'bar'])
+
     @mock.patch('kintoclient.Collection')
-    def test_collections_can_be_retrieved_from_buckets(self, collection_mock):
+    def test_unique_collections_can_be_retrieved(self, collection_mock):
         bucket = Bucket('testbucket', session=self.session)
         bucket.get_collection('mycollection')
         collection_mock.assert_called_with(
             'mycollection',
             bucket=bucket,
-            permissions=None,
             session=self.session)
 
     @mock.patch('kintoclient.Collection')
@@ -125,12 +131,6 @@ class BucketTest(TestCase):
         uri = '/buckets/testbucket/collections/testcollection'
         self.session.request.assert_called_with('delete', uri)
 
-    def test_collections_can_be_retrieved_from_buckets(self):
-        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}])
-        bucket = Bucket('testbucket', session=self.session)
-        collections = bucket.list_collections()
-        self.assertEquals(collections, ['foo', 'bar'])
-
     @mock.patch('kintoclient.Permissions')
     def test_save_issues_request_with_data_and_permissions(self,
                                                            permissions_mock):
@@ -149,7 +149,8 @@ class BucketTest(TestCase):
         bucket = Bucket('testbucket', session=self.session)
         bucket.delete()
 
-        self.session.request.assert_called_with('delete', '/buckets/testbucket')
+        self.session.request.assert_called_with(
+            'delete', '/buckets/testbucket')
 
 
 class SessionTest(TestCase):
@@ -315,7 +316,6 @@ class PermissionsTests(TestCase):
         permissions = {
             'group:create': ['alexis', 'natim'],
         }
-        session = mock.MagicMock()
         perm = Permissions(object='bucket', permissions=permissions)
         serialized = perm.as_dict()
         self.assertDictEqual(serialized, {
@@ -332,21 +332,6 @@ class PermissionsTests(TestCase):
         perm = Permissions(object='bucket', permissions=permissions)
         perm_repr = "<Permissions on bucket: {'group:create': ['alexis']}>"
         self.assertEquals(str(perm), perm_repr)
-
-
-class GroupTest(TestCase):
-
-    def test_group_can_be_saved(self):
-        pass
-
-    def test_group_issues_a_get_on_retrieval(self):
-        pass
-
-    def test_groups_can_be_manipulated_as_lists(self):
-        pass
-
-    def test_groups_can_be_cleared(self):
-        pass
 
 
 class CollectionTest(TestCase):
@@ -396,7 +381,7 @@ class CollectionTest(TestCase):
     def test_create_record_can_save(self, record_mock):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
-        record = collection.create_record(
+        collection.create_record(
             {'foo': 'bar'},
             permissions=mock.sentinel.permissions)
         record_mock.assert_called_with(
@@ -430,7 +415,6 @@ class CollectionTest(TestCase):
         record = mock.MagicMock()
         collection.save_record(record)
         record.save.assert_called_with()
-
 
     def test_collection_can_save_a_list_records(self):
         collection = Collection('mycollection', bucket=self.bucket,
@@ -485,10 +469,11 @@ class RecordTest(TestCase):
 
     @mock.patch('kintoclient.Permissions')
     def test_records_handles_permissions(self, permissions_mock):
-        record = Record({'foo': 'bar'}, collection=self.collection,
-                        permissions=mock.sentinel.permissions,
-                        session=self.session, load=False)
-        permissions_mock.assert_called_with('record', mock.sentinel.permissions)
+        Record({'foo': 'bar'}, collection=self.collection,
+               permissions=mock.sentinel.permissions,
+               session=self.session, load=False)
+        permissions_mock.assert_called_with(
+            'record', mock.sentinel.permissions)
 
     def test_records_save_issues_a_request(self):
         mock_response(self.session)
@@ -525,12 +510,12 @@ class RecordTest(TestCase):
         data = {'foo': 'bar'}
         permissions = {'read': ['mle']}
 
-        record = Record(id='1234',
-                        session=self.session,
-                        collection='testcollection',
-                        data=data,
-                        permissions={'read': ['mle', ]},
-                        create=True)
+        Record(id='1234',
+               session=self.session,
+               collection='testcollection',
+               data=data,
+               permissions={'read': ['mle', ]},
+               create=True)
 
         uri = '/buckets/default/collections/testcollection/records/1234'
         self.session.request.assert_called_with(

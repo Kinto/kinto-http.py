@@ -15,6 +15,7 @@ OBJECTS_PERMISSIONS = {
 
 ID_FIELD = 'id'
 
+
 class KintoException(Exception):
     pass
 
@@ -233,7 +234,8 @@ class Collection(object):
 
         if load:
             # XXX put this logic in a separate method.
-            method = 'put' if create and self.bucket.name != 'default' else 'get'
+            bucket_name = self.bucket.name
+            method = 'put' if create and bucket_name != 'default' else 'get'
             request_kwargs = {}
             if method == 'put' and permissions is not None:
                 request_kwargs['permissions'] = permissions

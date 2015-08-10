@@ -4,6 +4,8 @@ import json
 import six
 import uuid
 
+from kintoclient.exceptions import BucketNotFound, KintoException
+
 DEFAULT_SERVER_URL = 'https://kinto.dev.mozaws.net/v1'
 
 OBJECTS_PERMISSIONS = {
@@ -14,14 +16,6 @@ OBJECTS_PERMISSIONS = {
 }
 
 ID_FIELD = 'id'
-
-
-class KintoException(Exception):
-    pass
-
-
-class BucketNotFound(KintoException):
-    pass
 
 
 def create_session(server_url=None, auth=None, session=None):

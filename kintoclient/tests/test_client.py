@@ -70,14 +70,12 @@ class BucketTest(TestCase):
 
         self.session.request.side_effect = exception
 
-        try:
+        with self.assertRaises(BucketNotFound) as cm:
             Bucket('test', session=self.session)
-        except BucketNotFound as e:
-            self.assertEquals(e.response, exception.response)
-            self.assertEquals(e.request, mock.sentinel.request)
-            self.assertEquals(e.message, 'test')
-        else:
-            self.fail("Exception not raised")
+        e = cm.exception
+        self.assertEquals(e.response, exception.response)
+        self.assertEquals(e.request, mock.sentinel.request)
+        self.assertEquals(e.message, 'test')
 
     def test_collections_throw_on_error(self):
         exception = KintoException()
@@ -159,6 +157,10 @@ class BucketTest(TestCase):
 
 
 class SessionTest(TestCase):
+    def setUp(self):
+        p = mock.patch('kintoclient.requests')
+        self.requests_mock = p.start()
+        self.addCleanup(p.stop)
 
     def test_default_server_url_used_if_not_provided(self):
         session = Session()
@@ -168,81 +170,75 @@ class SessionTest(TestCase):
         session = Session(mock.sentinel.server_url)
         self.assertEquals(session.server_url, mock.sentinel.server_url)
 
-    @mock.patch('kintoclient.requests')
-    def test_no_auth_is_used_by_default(self, requests_mock):
+    def test_no_auth_is_used_by_default(self):
         response = mock.MagicMock()
         response.status_code = 200
-        requests_mock.request.return_value = response
+        self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         self.assertEquals(session.auth, None)
         session.request('get', 'https://example.org/test')
-        requests_mock.request.assert_called_with(
+        self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
             data=json.dumps({'data': {}}),
             headers={'Content-Type': 'application/json'})
 
-    @mock.patch('kintoclient.requests')
-    def test_bad_http_status_raises_exception(self, requests_mock):
+    def test_bad_http_status_raises_exception(self):
         response = mock.MagicMock()
         response.status_code = 400
-        requests_mock.request.return_value = response
+        self.requests_mock.request.return_value = response
         session = Session('https://example.org')
 
         self.assertRaises(KintoException, session.request, 'get',
                           'https://example.org/test')
 
-    @mock.patch('kintoclient.requests')
-    def test_session_injects_auth_on_requests(self, requests_mock):
+    def test_session_injects_auth_on_requests(self):
         response = mock.MagicMock()
         response.status_code = 200
-        requests_mock.request.return_value = response
+        self.requests_mock.request.return_value = response
         session = Session(auth=mock.sentinel.auth,
                           server_url='https://example.org')
         session.request('get', '/test')
-        requests_mock.request.assert_called_with(
+        self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
             auth=mock.sentinel.auth,
             data='{"data": {}}',
             headers={'Content-Type': 'application/json'})
 
-    @mock.patch('kintoclient.requests')
-    def test_requests_arguments_are_forwarded(self, requests_mock):
+    def test_requests_arguments_are_forwarded(self):
         response = mock.MagicMock()
         response.status_code = 200
-        requests_mock.request.return_value = response
+        self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('get', 'https://example.org/test',
                         foo=mock.sentinel.bar)
-        requests_mock.request.assert_called_with(
+        self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
             foo=mock.sentinel.bar,
             data='{"data": {}}',
             headers={'Content-Type': 'application/json'})
 
-    @mock.patch('kintoclient.requests')
-    def test_passed_data_is_encoded_to_json(self, requests_mock):
+    def test_passed_data_is_encoded_to_json(self):
         response = mock.MagicMock()
         response.status_code = 200
-        requests_mock.request.return_value = response
+        self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('get', 'https://example.org/test',
                         data={'foo': 'bar'})
-        requests_mock.request.assert_called_with(
+        self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
             data=json.dumps({'data': {'foo': 'bar'}}),
             headers={'Content-Type': 'application/json'})
 
-    @mock.patch('kintoclient.requests')
-    def test_passed_permissions_is_added_in_the_payload(self, requests_mock):
+    def test_passed_permissions_is_added_in_the_payload(self):
         response = mock.MagicMock()
         response.status_code = 200
-        requests_mock.request.return_value = response
+        self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         permissions = mock.MagicMock()
         permissions.as_dict.return_value = {'foo': 'bar'}
         session.request('get', 'https://example.org/test',
                         permissions=permissions)
-        requests_mock.request.assert_called_with(
+        self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
             data=json.dumps({'data': {}, 'permissions': {'foo': 'bar'}}),
             headers={'Content-Type': 'application/json'})

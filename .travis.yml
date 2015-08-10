@@ -3,6 +3,9 @@ python: 2.7
 env:
     - TOX_ENV=py27
     - TOX_ENV=flake8
+before_install:
+    - pip install kinto
+    - make runkinto &
 install:
     - pip install tox
 script:

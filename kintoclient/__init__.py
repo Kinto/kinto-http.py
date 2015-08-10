@@ -4,6 +4,7 @@ import json
 import six
 import uuid
 
+from kintoclient import utils
 from kintoclient.exceptions import BucketNotFound, KintoException
 
 DEFAULT_SERVER_URL = 'https://kinto.dev.mozaws.net/v1'
@@ -102,7 +103,7 @@ class Bucket(object):
             Defines if bucket data should be loaded or not (defaults to True)
         """
         self.session = create_session(server_url, auth, session)
-        self.name = name
+        self.name = utils.slugify(name)
         self.uri = '/buckets/%s' % self.name
         self.permissions = Permissions(object='bucket')
         self.data = None
@@ -221,7 +222,7 @@ class Collection(object):
             # XXX refactor the url routing in a router object.
             bucket = Bucket(bucket, session=self.session, load=False)
         self.bucket = bucket
-        self.name = name
+        self.name = utils.slugify(name)
         self.uri = "%s/collections/%s" % (self.bucket.uri, self.name)
         self.permissions = Permissions('collection')
         self.data = None

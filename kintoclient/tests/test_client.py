@@ -44,6 +44,11 @@ class BucketTest(TestCase):
         Bucket('testbucket', session=self.session)
         self.session.request.assert_called_with('get', '/buckets/testbucket')
 
+    def test_bucket_names_are_slugified(self):
+        Bucket('my bucket', session=self.session)
+        uri = '/buckets/my-bucket'
+        self.session.request.assert_called_with('get', uri)
+
     def test_collection_is_not_created_for_personal_bucket(self):
         Bucket('default', session=self.session, create=True)
         self.session.request.assert_called_with('get', '/buckets/default')
@@ -344,6 +349,11 @@ class CollectionTest(TestCase):
 
     def test_collection_can_be_instanciated(self):
         Collection('mycollection', bucket=self.bucket, session=self.session)
+
+    def test_collection_names_are_slugified(self):
+        Collection('my collection', bucket=self.bucket, session=self.session)
+        uri = '/buckets/mybucket/collections/my-collection'
+        self.session.request.assert_called_with('get', uri)
 
     def test_collection_retrieval_issues_an_http_get(self):
         Collection('mycollection', bucket=self.bucket, session=self.session)

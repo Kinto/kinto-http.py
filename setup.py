@@ -11,6 +11,8 @@ REQUIREMENTS = [
     'PyFxA',
     'requests',
     'requests-hawk',
+    'unidecode',
+    'six'
 ]
 
 setup(name='kinto-client',

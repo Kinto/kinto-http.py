@@ -151,14 +151,16 @@ class Bucket(object):
 
     def delete_collection(self, name):
         uri = self._get_collection_uri(name)
-        self.session.request('delete', uri)
+        resp, _ = self.session.request('delete', uri)
+        return resp['data']
 
     def save(self):
         self.session.request('patch', self.uri, data=self.data,
                              permissions=self.permissions)
 
     def delete(self):
-        self.session.request('delete', self.uri)
+        resp, _ = self.session.request('delete', self.uri)
+        return resp['data']
 
 
 # XXX Refactor the permissions to use dicts + defaultdicts rather
@@ -281,7 +283,8 @@ class Collection(object):
             self.delete_record(record.id)
 
     def delete(self):
-        self.session.request('delete', self.uri)
+        resp, _ = self.session.request('delete', self.uri)
+        return resp['data']
 
 
 class Record(object):

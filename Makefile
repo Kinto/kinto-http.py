@@ -36,3 +36,6 @@ tests-once: install-dev
 
 functional: need-kinto-running
 	$(VENV)/bin/py.test kintoclient/tests/functional.py
+
+tests: install-dev need-kinto-running
+	$(VENV)/bin/py.test -f kintoclient/tests/ kintoclient/tests/functional.py

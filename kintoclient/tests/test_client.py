@@ -130,7 +130,10 @@ class BucketTest(TestCase):
 
     def test_collections_can_be_deleted_from_buckets(self):
         bucket = Bucket('testbucket', session=self.session)
-        bucket.delete_collection('testcollection')
+        data = {'deleted': True, 'last_modified': 1234, 'id': 'testcollection'}
+        mock_response(self.session, data=data)
+        deleted = bucket.delete_collection('testcollection')
+        assert deleted == data
         uri = '/buckets/testbucket/collections/testcollection'
         self.session.request.assert_called_with('delete', uri)
 
@@ -148,9 +151,11 @@ class BucketTest(TestCase):
             permissions=permissions_mock({'read': ['natim', ]}))
 
     def test_bucket_can_be_deleted(self):
-        mock_response(self.session)
+        data = {'deleted': True, 'last_modified': 1234, 'id': 'testbucket'}
+        mock_response(self.session, data=data)
         bucket = Bucket('testbucket', session=self.session)
-        bucket.delete()
+        deleted = bucket.delete()
+        assert deleted == data
 
         self.session.request.assert_called_with(
             'delete', '/buckets/testbucket')
@@ -450,7 +455,10 @@ class CollectionTest(TestCase):
     def test_collection_can_be_deleted(self):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
-        collection.delete()
+        data = {'deleted': True, 'last_modified': 1234, 'id': 'mycollection'}
+        mock_response(self.session, data=data)
+        deleted = collection.delete()
+        assert deleted == data
         uri = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with('delete', uri)
 

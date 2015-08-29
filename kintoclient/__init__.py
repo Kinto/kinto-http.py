@@ -1,5 +1,4 @@
 import requests
-import urlparse
 import json
 import six
 import uuid
@@ -52,7 +51,7 @@ class Session(object):
         self.auth = auth
 
     def request(self, method, url, data=None, permissions=None, **kwargs):
-        actual_url = urlparse.urljoin(self.server_url, url)
+        actual_url = utils.urljoin(self.server_url, url)
         if self.auth is not None:
             kwargs.setdefault('auth', self.auth)
 

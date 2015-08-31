@@ -135,8 +135,8 @@ class Bucket(object):
     def _get_collection_uri(self, collection_id):
         return '%s/collections/%s' % (self.uri, collection_id)
 
-    def get_collection(self, name):
-        return Collection(name, bucket=self, session=self.session)
+    def get_collection(self, name, **kwargs):
+        return Collection(name, bucket=self, session=self.session, **kwargs)
 
     def list_collections(self):
         uri = "%s/%s" % (self.uri, 'collections')

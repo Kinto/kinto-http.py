@@ -1,1 +1,2 @@
 include *.rst README.rst CHANGELOG.rst
+recursive-include kintoclient *.ini

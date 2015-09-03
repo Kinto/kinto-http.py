@@ -109,6 +109,16 @@ class BucketTest(TestCase):
             session=self.session)
 
     @mock.patch('kintoclient.Collection')
+    def test_get_collections_params_are_passed_though(self, collection_mock):
+        bucket = Bucket('testbucket', session=self.session)
+        bucket.get_collection('mycollection', loads=False)
+        collection_mock.assert_called_with(
+            'mycollection',
+            bucket=bucket,
+            session=self.session,
+            loads=False)
+
+    @mock.patch('kintoclient.Collection')
     def test_collections_can_be_created_from_buckets(self, collection_mock):
         bucket = Bucket('testbucket', session=self.session)
         bucket.create_collection('mycollection')

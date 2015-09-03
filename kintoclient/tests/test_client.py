@@ -181,7 +181,7 @@ class SessionTest(TestCase):
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         self.assertEquals(session.auth, None)
-        session.request('get', 'https://example.org/test')
+        session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
             data=json.dumps({'data': {}}),
@@ -193,8 +193,7 @@ class SessionTest(TestCase):
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
 
-        self.assertRaises(KintoException, session.request, 'get',
-                          'https://example.org/test')
+        self.assertRaises(KintoException, session.request, 'get', '/test')
 
     def test_session_injects_auth_on_requests(self):
         response = mock.MagicMock()
@@ -214,7 +213,7 @@ class SessionTest(TestCase):
         response.status_code = 200
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
-        session.request('get', 'https://example.org/test',
+        session.request('get', '/test',
                         foo=mock.sentinel.bar)
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
@@ -227,7 +226,7 @@ class SessionTest(TestCase):
         response.status_code = 200
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
-        session.request('get', 'https://example.org/test',
+        session.request('get', '/test',
                         data={'foo': 'bar'})
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
@@ -241,7 +240,7 @@ class SessionTest(TestCase):
         session = Session('https://example.org')
         permissions = mock.MagicMock()
         permissions.as_dict.return_value = {'foo': 'bar'}
-        session.request('get', 'https://example.org/test',
+        session.request('get', '/test',
                         permissions=permissions)
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',

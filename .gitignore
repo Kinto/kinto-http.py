@@ -1,1 +1,5 @@
 .cache
+*.pyc
+kinto_client.egg-info/
+.coverage
+.venv/

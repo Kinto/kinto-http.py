@@ -16,7 +16,7 @@ REQUIREMENTS = [
 ]
 
 setup(name='kinto-client',
-      version='0.0.1',
+      version='0.1.1',
       description='Firefox Kinto client',
       long_description=README,
       license='Apache License (2.0)',

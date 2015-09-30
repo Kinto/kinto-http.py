@@ -1,5 +1,6 @@
 from contextlib import contextmanager
 
+
 @contextmanager
 def batch_requests(session, endpoints):
     batch = Batch(session, endpoints)

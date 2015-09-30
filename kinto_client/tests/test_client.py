@@ -2,7 +2,7 @@ from unittest2 import TestCase
 import json
 import mock
 
-from kintoclient import (
+from kinto_client import (
     Bucket, Session, Permissions, Collection, Record,
     DEFAULT_SERVER_URL, create_session, KintoException, BucketNotFound
 )
@@ -99,7 +99,7 @@ class BucketTest(TestCase):
         collections = bucket.list_collections()
         self.assertEquals(collections, ['foo', 'bar'])
 
-    @mock.patch('kintoclient.Collection')
+    @mock.patch('kinto_client.Collection')
     def test_unique_collections_can_be_retrieved(self, collection_mock):
         bucket = Bucket('testbucket', session=self.session)
         bucket.get_collection('mycollection')
@@ -108,7 +108,7 @@ class BucketTest(TestCase):
             bucket=bucket,
             session=self.session)
 
-    @mock.patch('kintoclient.Collection')
+    @mock.patch('kinto_client.Collection')
     def test_get_collections_params_are_passed_though(self, collection_mock):
         bucket = Bucket('testbucket', session=self.session)
         bucket.get_collection('mycollection', loads=False)
@@ -118,7 +118,7 @@ class BucketTest(TestCase):
             session=self.session,
             loads=False)
 
-    @mock.patch('kintoclient.Collection')
+    @mock.patch('kinto_client.Collection')
     def test_collections_can_be_created_from_buckets(self, collection_mock):
         bucket = Bucket('testbucket', session=self.session)
         bucket.create_collection('mycollection')
@@ -129,7 +129,7 @@ class BucketTest(TestCase):
             permissions=None,
             session=self.session)
 
-    @mock.patch('kintoclient.Collection')
+    @mock.patch('kinto_client.Collection')
     def test_get_collection_uses_the_collection_object(self, collection_mock):
         bucket = Bucket('testbucket', session=self.session)
         bucket.get_collection('mycollection')
@@ -147,7 +147,7 @@ class BucketTest(TestCase):
         uri = '/buckets/testbucket/collections/testcollection'
         self.session.request.assert_called_with('delete', uri)
 
-    @mock.patch('kintoclient.Permissions')
+    @mock.patch('kinto_client.Permissions')
     def test_save_issues_request_with_data_and_permissions(self,
                                                            permissions_mock):
         mock_response(self.session, data=mock.sentinel.data,
@@ -173,7 +173,7 @@ class BucketTest(TestCase):
 
 class SessionTest(TestCase):
     def setUp(self):
-        p = mock.patch('kintoclient.requests')
+        p = mock.patch('kinto_client.requests')
         self.requests_mock = p.start()
         self.addCleanup(p.stop)
 
@@ -268,7 +268,7 @@ class SessionTest(TestCase):
     def test_initialization_fails_on_missing_args(self):
         self.assertRaises(AttributeError, create_session)
 
-    @mock.patch('kintoclient.Session')
+    @mock.patch('kinto_client.Session')
     def test_creates_a_session_if_needed(self, session_mock):
         # Mock the session response.
         create_session(server_url=mock.sentinel.server_url,
@@ -377,13 +377,13 @@ class CollectionTest(TestCase):
         self.session.request.assert_called_with(
             'put', uri, permissions=mock.sentinel.permissions)
 
-    @mock.patch('kintoclient.Bucket')
+    @mock.patch('kinto_client.Bucket')
     def test_bucket_can_be_passed_as_a_string(self, bucket_mock):
         Collection('mycollection', bucket='default', session=self.session)
         bucket_mock.assert_called_with('default', session=self.session,
                                        load=False)
 
-    @mock.patch('kintoclient.Record')
+    @mock.patch('kinto_client.Record')
     def test_collection_can_create_records(self, record_mock):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
@@ -397,7 +397,7 @@ class CollectionTest(TestCase):
             create=True,
             session=self.session)
 
-    @mock.patch('kintoclient.Record')
+    @mock.patch('kinto_client.Record')
     def test_create_record_can_save(self, record_mock):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
@@ -409,7 +409,7 @@ class CollectionTest(TestCase):
             permissions=mock.sentinel.permissions, session=self.session
         )
 
-    @mock.patch('kintoclient.Record')
+    @mock.patch('kinto_client.Record')
     def test_collection_can_retrieve_all_records(self, record_mock):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
@@ -420,7 +420,7 @@ class CollectionTest(TestCase):
         record_mock.assert_any_call(data={'id': 'foo'}, **kwargs)
         record_mock.assert_any_call(data={'id': 'bar'}, **kwargs)
 
-    @mock.patch('kintoclient.Record')
+    @mock.patch('kinto_client.Record')
     def test_collection_can_retrieve_a_record(self, record_mock):
         collection = Collection('mycollection', bucket=self.bucket,
                                 session=self.session)
@@ -490,7 +490,7 @@ class RecordTest(TestCase):
         uuid_regexp = r'[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12}'
         self.assertRegexpMatches(record.id, uuid_regexp)
 
-    @mock.patch('kintoclient.Permissions')
+    @mock.patch('kinto_client.Permissions')
     def test_records_handles_permissions(self, permissions_mock):
         Record({'foo': 'bar'}, collection=self.collection,
                permissions=mock.sentinel.permissions,
@@ -514,7 +514,7 @@ class RecordTest(TestCase):
             Record(data=mock.sentinel.test, session=self.session)
         assert context.exception.message == 'collection is mandatory'
 
-    @mock.patch('kintoclient.Collection')
+    @mock.patch('kinto_client.Collection')
     def test_collection_is_resolved_from_it_name(self, collection_mock):
         mock_response(self.session)
         Record(session=self.session, collection='testcollection')

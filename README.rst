@@ -24,7 +24,7 @@ Here is an overview of what the API looks like:
 
 .. code-block:: python
 
-    from kintoclient import Bucket
+    from kinto_client import Bucket
 
     bucket = Bucket('default', server_url='http://localhost:8888/v1',
                     auth=('alexis', 'p4ssw0rd'))
@@ -143,4 +143,4 @@ Installation
 
 To install the kinto client, use pip::
 
-  $ pip install kintoclient
+  $ pip install kinto_client

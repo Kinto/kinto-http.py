@@ -7,7 +7,7 @@ import ConfigParser
 
 from cliquet import utils as cliquet_utils
 
-from kintoclient import Bucket, Collection, Record, BucketNotFound
+from kinto_client import Bucket, Collection, Record, BucketNotFound
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 

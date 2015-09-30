@@ -28,14 +28,14 @@ need-kinto-running:
 	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make runkinto' before starting tests." && exit 1)
 
 runkinto:
-	$(VENV)/bin/cliquet --ini kintoclient/tests/config/kinto.ini migrate
-	$(VENV)/bin/pserve kintoclient/tests/config/kinto.ini --reload
+	$(VENV)/bin/cliquet --ini kinto_client/tests/config/kinto.ini migrate
+	$(VENV)/bin/pserve kinto_client/tests/config/kinto.ini --reload
 
 tests-once: install-dev
-	$(VENV)/bin/py.test --cov-report term-missing --cov-fail-under 100 --cov kintoclient
+	$(VENV)/bin/py.test --cov-report term-missing --cov-fail-under 100 --cov kinto_client
 
 functional: need-kinto-running
-	$(VENV)/bin/py.test kintoclient/tests/functional.py
+	$(VENV)/bin/py.test kinto_client/tests/functional.py
 
 tests: install-dev need-kinto-running
-	$(VENV)/bin/py.test -f kintoclient/tests/ kintoclient/tests/functional.py
+	$(VENV)/bin/py.test -f kinto_client/tests/ kinto_client/tests/functional.py

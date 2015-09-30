@@ -3,8 +3,8 @@ import json
 import six
 import uuid
 
-from kintoclient import utils
-from kintoclient.exceptions import BucketNotFound, KintoException
+from kinto_client import utils
+from kinto_client.exceptions import BucketNotFound, KintoException
 
 DEFAULT_SERVER_URL = 'https://kinto.dev.mozaws.net/v1'
 

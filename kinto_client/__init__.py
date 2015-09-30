@@ -4,6 +4,7 @@ import six
 import uuid
 
 from kinto_client import utils
+from kinto_client.batch import batch_requests
 from kinto_client.exceptions import BucketNotFound, KintoException
 
 DEFAULT_SERVER_URL = 'https://kinto.dev.mozaws.net/v1'

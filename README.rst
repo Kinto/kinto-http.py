@@ -24,27 +24,26 @@ Here is an overview of what the API looks like:
 
 .. code-block:: python
 
-    from kinto_client import Bucket
+    from kinto_client import Client
 
-    bucket = Bucket('default', server_url='http://localhost:8888/v1',
+    client = Client(server_url="http://localhost:8888/v1",
                     auth=('alexis', 'p4ssw0rd'))
-    todo = bucket.get_collection('todo')
-
-    records = todo.get_records()
+    records = client.get_records(bucket='default', collection='todos')
     for i, record in enumerate(records):
         record.data.title = 'Todo #%d' %i
 
-    todo.save_records(records)
+    client.update_records(records)
 
 
 Handling buckets
 ================
 
 All operations are rooted in a bucket. It makes little sense for
-one application to handle multiple buckets at once.
+one application to handle multiple buckets at once, but it is possible.
 
 The passed `auth` parameter is a `requests <docs.python-requests.org>`_
-authentication policy, allowing authenticating using whatever fits you best.
+authentication policy, allowing authenticating using whatever scheme fits you
+best.
 
 By default, Kinto supports
 `Firefox Accounts <https://wiki.mozilla.org/Identity/Firefox_Accounts>`_ and
@@ -52,15 +51,16 @@ Basic authentication policies.
 
 .. code-block:: python
 
+    from kinto_client import Client
     credentials = ('alexis', 'p4ssw0rd')
 
-    bucket = Bucket('payments', server_url='http://localhost:8888/v1',
+    client = Client(server_url='http://localhost:8888/v1',
                     auth=credentials)
+    client.create_bucket('payments')
+    client.get_bucket('payments')
 
-    # Passing `create=True` to the bucket will make an HTTP request to
-    # create it.
-    bucket = Bucket('payments', server_url='http://localhost:8888/v1',
-                    auth=credentials, create=True)
+    # It is also possible to manipulate bucket permissions (see later)
+    client.update_bucket('payments', permissions={})
 
 
 Collections
@@ -70,14 +70,13 @@ A collection is where records are stored.
 
 .. code-block:: python
 
-    # Once the bucket handy, use it to handle collections or groups.
-    collection = bucket.create_collection('receipts')
+    client.create_collection('receipts', bucket='payments')
 
     # Or get an existing one.
-    collection = bucket.get_collection('receipts')
+    client.get_collection('receipts', bucket='payments')
 
     # To delete an existing collection.
-    bucket.delete_collection('receipts')
+    client.delete_collection('receipts', bucket='payments')
 
 
 Records
@@ -88,55 +87,60 @@ Records can be retrieved from and saved to collections.
 .. code-block:: python
 
     # You can pass a python dictionary to create the record
-    record = collection.create_record(dict(id='XXX', status='done',
-                                           title='Todo #1'))
+    # bucket='default' can be ommited since it's the default value
+    client.create_record({'id': 1234, status: 'done', title: 'Todo #1'},
+                         collection='todos', bucket='default')
 
-    # Get all records
-    record = collection.get_records()
-    record = collection.get_record(id='89881454-e4e9-4ef0-99a9-404d95900352')
-    collection.save_record(record)
-    collection.save_records([record1, record2])
-    collection.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352')
-    collection.delete_records([record1, record2])
+    # Retrieve all records.
+    record = client.get_records(collection='todos', bucket='default')
 
-    # Alternative use
-    record.save()
+    # Retrieve a specific record and update it.
+    record = client.get_record('89881454-e4e9-4ef0-99a9-404d95900352',
+                               collection='todos', bucket='default')
+    client.update_record(record, collection='todos', bucket='default')
 
+    # Update multiple records at once.
+    client.update_records(records, collection='todos')
+
+    # It is also possible to delete records.
+    client.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352',
+                         collection='todos')
 
 Permissions
 ===========
 
- By default, authenticated users will get read and write access to the
- manipulated objects. It is possible to change this behavior by passing a dict
- to the `permissions` parameter.
+ By default, authors will get read and write access to the manipulated objects.
+ It is possible to change this behavior by passing a dict to the `permissions`
+ parameter.
 
  .. code-block:: python
 
-    record = collection.create_record(
-        data={},
-        permissions={'read': ['group:groupid']})
+    client.create_record(data={}, permissions={'read': ['group:groupid']},
+                         collection='todos')
 
 .. note::
 
     Every creation or modification operation on a distant object can be given
     a `permissions` parameter.
 
-The `Bucket`, `Collection`, `Group` and `Record` classes have a special
-`permissions` object that can be mutated in order to update the permissions
-model attached to the object.
+Buckets, Collections and Groups and records have permissions which can be
+edited.
 
-.. code-block:: python
+  # Different proposals below.
+  # 1. Change the API to return the permissions when asked, in a separate
+  # object.
+  record, permissions = client.get_record(1234, collection='todos',
+                                          include_permissions=True)
+  client.update_record(record, permissions=permissions, collection='todos')
 
-    bucket = Bucket('default', auth=('alexis', 'p4ssw0rd'))
+  # 2. Allow the mutation of the permissions object, attached to a record.
+  record = client.get_record(1234, collection='todos')
+  record.permissions.write += ['leplatrem', ]
+  client.update_record(record)
 
-    friends = ['natim', 'niko', 'mat', 'tarek']
-    bucket.permissions.write += friends
-    bucket.permissions.create_collection += friends
-
-    # You *need* to call save in order to have these changes reflected in the
-    # remote.
-    bucket.save()
-
+  # In any case, for the creation it will be possible to pass the permissions.
+  client.create_record(record, permissions={})
+  
 
 Installation
 ============

@@ -4,7 +4,8 @@ import mock
 
 from kinto_client import (
     Bucket, Session, Permissions, Collection, Record,
-    DEFAULT_SERVER_URL, create_session, KintoException, BucketNotFound
+    DEFAULT_SERVER_URL, create_session, KintoException, BucketNotFound,
+    Endpoints
 )
 
 
@@ -562,3 +563,33 @@ class RecordTest(TestCase):
         self.assertEquals(record.data, {'foo': 'bar'})
         uri = '/buckets/default/collections/testcollection/records/1234'
         self.session.request.assert_called_with('get', uri)
+
+
+class EndpointsTest(TestCase):
+
+    def test_endpoints(self):
+        endpoints = Endpoints()
+
+        root_endpoint = '/'
+        assert endpoints.root() == root_endpoint
+
+        batch_endpoint = '/batch'
+        assert endpoints.batch() == batch_endpoint
+
+        buckets_endpoint = '/buckets'
+        assert endpoints.buckets() == buckets_endpoint
+
+        bucket_endpoint = '/buckets/buck'
+        assert endpoints.bucket('buck') == bucket_endpoint
+
+        collections_endpoint = '/buckets/buck/collections'
+        assert endpoints.collections('buck') == collections_endpoint
+
+        collection_endpoint = '/buckets/buck/collections/coll'
+        assert endpoints.collection('buck', 'coll') == collection_endpoint
+
+        records_endpoint = '/buckets/buck/collections/coll/records'
+        assert endpoints.records('buck', 'coll') == records_endpoint
+
+        record_endpoint = '/buckets/buck/collections/coll/records/1'
+        assert endpoints.record('buck', 'coll', '1') == record_endpoint

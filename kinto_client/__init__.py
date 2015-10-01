@@ -4,7 +4,13 @@ import six
 import uuid
 
 from kinto_client import utils
+from kinto_client.batch import batch_requests  # noqa
 from kinto_client.exceptions import BucketNotFound, KintoException
+
+__all__ = ('Endpoints', 'Session', 'Bucket', 'Permissions', 'Collection',
+           'Record', 'batch_requests', 'DEFAULT_SERVER_URL', 'create_session',
+           'BucketNotFound', 'KintoException')
+
 
 DEFAULT_SERVER_URL = 'https://kinto.dev.mozaws.net/v1'
 
@@ -41,6 +47,40 @@ def create_session(server_url=None, auth=None, session=None):
     if session is None:
         session = Session(server_url=server_url, auth=auth)
     return session
+
+
+class Endpoints(object):
+    def __init__(self, root=''):
+        self._root = root
+
+    def root(self):
+        return '{root}/'.format(root=self._root)
+
+    def buckets(self):
+        return '{root}/buckets'.format(root=self._root)
+
+    def bucket(self, bucket):
+        return '{root}/buckets/{bucket}'.format(root=self._root, bucket=bucket)
+
+    def collections(self, bucket):
+        return ('{root}/buckets/{bucket}/collections'
+                .format(root=self._root, bucket=bucket))
+
+    def collection(self, bucket, coll):
+        return ('{root}/buckets/{bucket}/collections/{coll}'
+                .format(root=self._root, bucket=bucket, coll=coll))
+
+    def records(self, bucket, coll):
+        return ('{root}/buckets/{bucket}/collections/{coll}/records'
+                .format(root=self._root, bucket=bucket, coll=coll))
+
+    def record(self, bucket, coll, record_id):
+        return ('{root}/buckets/{bucket}/collections/{coll}/records/{rid}'
+                .format(root=self._root, bucket=bucket, coll=coll,
+                        rid=record_id))
+
+    def batch(self):
+        return '{root}/batch'.format(root=self._root)
 
 
 class Session(object):

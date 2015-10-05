@@ -34,12 +34,8 @@ Here is an overview of what the API looks like:
 
     client.update_records(records)
 
-
-Handling buckets
-================
-
-All operations are rooted in a bucket. It makes little sense for
-one application to handle multiple buckets at once, but it is possible.
+Creating a client
+=================
 
 The passed `auth` parameter is a `requests <docs.python-requests.org>`_
 authentication policy, allowing authenticating using whatever scheme fits you
@@ -48,6 +44,29 @@ best.
 By default, Kinto supports
 `Firefox Accounts <https://wiki.mozilla.org/Identity/Firefox_Accounts>`_ and
 Basic authentication policies.
+
+.. code-block:: python
+
+    from kinto_client import Client
+    credentials = ('alexis', 'p4ssw0rd')
+
+    client = Client(server_url='http://localhost:8888/v1',
+                    auth=credentials)
+
+It is also possible to pass the bucket and the collection to the client
+at creation time, so that this value will be used by default.
+
+.. code-block:: python
+
+    client = Client(bucket="payments", collection="receipts", auth=auth)
+
+
+Handling buckets
+================
+
+All operations are rooted in a bucket. It makes little sense for
+one application to handle multiple buckets at once, but it is possible.
+If no specific bucket name is provided, the "default" bucket is used.
 
 .. code-block:: python
 
@@ -84,11 +103,15 @@ Records
 
 Records can be retrieved from and saved to collections.
 
+A record is either:
+- A dict with the "permissions" and "data" keys. This is useful on creation.
+- An object with the "permissions" and "data" attributes.
+
 .. code-block:: python
 
     # You can pass a python dictionary to create the record
     # bucket='default' can be ommited since it's the default value
-    client.create_record({'id': 1234, status: 'done', title: 'Todo #1'},
+    client.create_record(data={'id': 1234, status: 'done', title: 'Todo #1'},
                          collection='todos', bucket='default')
 
     # Retrieve all records.
@@ -126,21 +149,13 @@ Permissions
 Buckets, Collections and Groups and records have permissions which can be
 edited.
 
-  # Different proposals below.
-  # 1. Change the API to return the permissions when asked, in a separate
-  # object.
-  record, permissions = client.get_record(1234, collection='todos',
-                                          include_permissions=True)
-  client.update_record(record, permissions=permissions, collection='todos')
-
-  # 2. Allow the mutation of the permissions object, attached to a record.
   record = client.get_record(1234, collection='todos')
   record.permissions.write += ['leplatrem', ]
   client.update_record(record)
 
-  # In any case, for the creation it will be possible to pass the permissions.
-  client.create_record(record, permissions={})
-  
+  # For the creation it is possible to pass the permissions dict.
+  client.create_record(data={'foo': 'bar'}, permissions={})
+
 
 Installation
 ============

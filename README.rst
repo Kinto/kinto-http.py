@@ -30,7 +30,7 @@ Here is an overview of what the API looks like:
                     auth=('alexis', 'p4ssw0rd'))
     records = client.get_records(bucket='default', collection='todos')
     for i, record in enumerate(records):
-        record.data.title = 'Todo #%d' %i
+        record['data']['title'] = 'Todo #%d' %i
 
     client.update_records(records)
 
@@ -103,9 +103,7 @@ Records
 
 Records can be retrieved from and saved to collections.
 
-A record is either:
-- A dict with the "permissions" and "data" keys. This is useful on creation.
-- An object with the "permissions" and "data" attributes.
+A record is a dict with the "permissions" and "data" keys.
 
 .. code-block:: python
 
@@ -150,7 +148,7 @@ Buckets, Collections and Groups and records have permissions which can be
 edited.
 
   record = client.get_record(1234, collection='todos')
-  record.permissions.write += ['leplatrem', ]
+  record['permissions']['write'].append('leplatrem')
   client.update_record(record)
 
   # For the creation it is possible to pass the permissions dict.

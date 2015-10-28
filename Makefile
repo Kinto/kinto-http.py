@@ -4,7 +4,7 @@ PYTHON = $(VENV)/bin/python
 DEV_STAMP = $(VENV)/.dev_env_installed.stamp
 INSTALL_STAMP = $(VENV)/.install.stamp
 
-.IGNORE: clean
+.IGNORE: clean distclean maintainer-clean
 .PHONY: all install virtualenv tests
 
 OBJECTS = .venv .coverage
@@ -39,3 +39,13 @@ functional: need-kinto-running
 
 tests: install-dev need-kinto-running
 	$(VENV)/bin/py.test -f kinto_client/tests/ kinto_client/tests/functional.py
+
+clean:
+	find . -name '*.pyc' -delete
+	find . -name '__pycache__' -type d -exec rm -fr {} \;
+
+distclean: clean
+	rm -fr *.egg *.egg-info/ dist/ build/
+
+maintainer-clean: distclean
+	rm -fr .venv/ .tox/

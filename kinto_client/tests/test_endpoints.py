@@ -40,4 +40,18 @@ class EndpointsTest(unittest.TestCase):
     def test_record(self):
         assert self.endpoints.get('record', **self.kwargs) ==\
             '/buckets/buck/collections/coll/records/1'
-    
+
+    def test_missing_arguments_raise_an_error(self):
+        # Don't include the record id; it should raise an error.
+        with self.assertRaises(KeyError) as context:
+            self.endpoints.get('record', bucket='buck',  collection='coll')
+        msg = "Cannot get record endpoint, id is missing"
+        assert context.exception.message == msg
+
+    def test_null_arguments_raise_an_error(self):
+        # Include a null record id; it should raise an error.
+        with self.assertRaises(KeyError) as context:
+            self.endpoints.get('record', bucket='buck',  collection='coll',
+                               id=None)
+        msg = "Cannot get record endpoint, id is missing"
+        assert context.exception.message == msg

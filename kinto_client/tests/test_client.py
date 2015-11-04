@@ -122,13 +122,6 @@ class RecordTest(unittest.TestCase):
             data={'foo': 'bar'},
             permissions=mock.sentinel.permissions)
 
-    def test_record_raises_if_collection_is_missing(self):
-        # Intentionally don't specify the collection on client creation.
-        client = Client(session=self.session, bucket='bucketname')
-        with self.assertRaises(AttributeError) as context:
-            client.create_record(data=mock.sentinel.test)
-        assert context.exception.message == 'collection is mandatory'
-
     def test_collection_is_resolved_from_it_name(self):
         mock_response(self.session)
         # Specify a different collection name for the client and the operation.

@@ -63,7 +63,14 @@ class Endpoints(object):
         self._root = root
 
     def get(self, endpoint, **kwargs):
-        return self.endpoints[endpoint].format(root=self._root, **kwargs)
+        # Remove nullable values from the kwargs.
+        kwargs = dict((k, v) for k, v in kwargs.iteritems() if v)
+
+        try:
+            return self.endpoints[endpoint].format(root=self._root, **kwargs)
+        except KeyError as e:
+            msg = "Cannot get {endpoint} endpoint, {field} is missing"
+            raise KeyError(msg.format(endpoint=endpoint, field=','.join(e.args)))
 
 
 class Session(object):

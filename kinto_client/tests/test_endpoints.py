@@ -55,3 +55,7 @@ class EndpointsTest(unittest.TestCase):
                                id=None)
         msg = "Cannot get record endpoint, id is missing"
         assert context.exception.message == msg
+
+    def test_endpoints_are_slugified(self):
+        assert self.endpoints.get('bucket', bucket='My Bucket') ==\
+            "/buckets/my-bucket"

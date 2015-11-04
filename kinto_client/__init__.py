@@ -63,11 +63,13 @@ class Endpoints(object):
         self._root = root
 
     def get(self, endpoint, **kwargs):
-        # Remove nullable values from the kwargs.
-        kwargs = dict((k, v) for k, v in kwargs.iteritems() if v)
+        # Remove nullable values from the kwargs, and slugify the values.
+        kwargs = dict((k, utils.slugify(v))
+                      for k, v in kwargs.iteritems() if v)
 
         try:
-            return self.endpoints[endpoint].format(root=self._root, **kwargs)
+            pattern = self.endpoints[endpoint]
+            return pattern.format(root=self._root, **kwargs)
         except KeyError as e:
             msg = "Cannot get {endpoint} endpoint, {field} is missing"
             raise KeyError(msg.format(endpoint=endpoint, field=','.join(e.args)))
@@ -115,7 +117,6 @@ class Client(object):
         self._bucket_name = bucket
         self._collection_name = collection
         self.endpoints = Endpoints()
-        self.update_bucket = self.create_bucket  # Alias.
 
     def _get_endpoint(self, name, bucket=None, collection=None, id=None):
         kwargs = {
@@ -125,13 +126,28 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
-    def create_bucket(self, bucket=None):
+    # Buckets
+
+    def update_bucket(self, bucket=None):
         endpoint = self._get_endpoint('bucket', bucket)
-        return self.session.request('put', endpoint)
+        resp, _ =  self.session.request('put', endpoint)
+        return resp
 
     def delete_bucket(self, bucket=None):
         endpoint = self._get_endpoint('bucket', bucket)
-        return self.session.request('delete', endpoint)
+        resp, _ = self.session.request('delete', endpoint)
+        return resp['data']
+
+    def get_bucket(self, bucket=None):
+        endpoint = self._get_endpoint('bucket', bucket)
+        resp, _ = self.session.request('get', endpoint)
+        return resp
+
+    def create_bucket(self, *args, **kwargs):
+        # Alias to update bucket.
+        return self.update_bucket(*args, **kwargs)
+
+    # Collections
 
     def get_collections(self, bucket=None):
         endpoint = self._get_endpoint('collections', bucket)
@@ -151,6 +167,8 @@ class Client(object):
         resp, _ = self.session.request('delete', endpoint)
         return resp['data']
 
+    # Records
+
     def get_records(self, collection=None, bucket=None):
         """Returns all the records"""
         # XXX Add filter and sorting.
@@ -161,7 +179,8 @@ class Client(object):
 
     def get_record(self, id, collection=None, bucket=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        return self.session.request('get', endpoint)
+        resp, _ = self.session.request('get', endpoint)
+        return resp
 
     def create_record(self, data, collection=None, bucket=None):
         # XXX Add permissions support

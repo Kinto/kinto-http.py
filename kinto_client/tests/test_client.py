@@ -165,7 +165,7 @@ class RecordTest(unittest.TestCase):
     def test_records_issues_a_request_on_delete(self):
         mock_response(self.session)
         self.client.delete_record('1234')
-        url = '/buckets/default/collections/testcollection/records/1234'
+        url = '/buckets/bucketname/collections/collectionname/records/1234'
         self.session.request.assert_called_with('delete', url)
 
     def test_record_issues_a_request_on_retrieval(self):
@@ -173,7 +173,7 @@ class RecordTest(unittest.TestCase):
         record = self.client.get_record('1234')
 
         self.assertEquals(record['data'], {'foo': 'bar'})
-        url = '/buckets/default/collections/testcollection/records/1234'
+        url = '/buckets/bucketname/collections/collectionname/records/1234'
         self.session.request.assert_called_with('get', url)
 
     def test_collection_can_retrieve_all_records(self, record_mock):

@@ -3,8 +3,7 @@ import json
 import mock
 
 from .support import unittest
-from kinto_client import (Session, create_session, DEFAULT_SERVER_URL,
-                          KintoException)
+from kinto_client import (Session, create_session, KintoException)
 
 
 class SessionTest(unittest.TestCase):
@@ -12,10 +11,6 @@ class SessionTest(unittest.TestCase):
         p = mock.patch('kinto_client.requests')
         self.requests_mock = p.start()
         self.addCleanup(p.stop)
-
-    def test_default_server_url_used_if_not_provided(self):
-        session = Session()
-        self.assertEquals(session.server_url, DEFAULT_SERVER_URL)
 
     def test_uses_specified_server_url(self):
         session = Session(mock.sentinel.server_url)

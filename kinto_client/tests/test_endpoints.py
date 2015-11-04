@@ -5,29 +5,39 @@ from kinto_client import Endpoints
 
 class EndpointsTest(unittest.TestCase):
 
-    def test_endpoints(self):
-        endpoints = Endpoints()
+    def setUp(self):
+        self.endpoints = Endpoints()
+        self.kwargs = {
+            'bucket': 'buck',
+            'collection': 'coll',
+            'id': 1
+        }
 
-        root_endpoint = '/'
-        assert endpoints.root() == root_endpoint
+    def test_root(self):
+        assert self.endpoints.get('root', **self.kwargs) == '/'
 
-        batch_endpoint = '/batch'
-        assert endpoints.batch() == batch_endpoint
+    def test_batch(self):
+        assert self.endpoints.get('batch', **self.kwargs) == '/batch'
 
-        buckets_endpoint = '/buckets'
-        assert endpoints.buckets() == buckets_endpoint
+    def test_buckets(self):
+        assert self.endpoints.get('buckets', **self.kwargs) == '/buckets'
 
-        bucket_endpoint = '/buckets/buck'
-        assert endpoints.bucket('buck') == bucket_endpoint
+    def test_bucket(self):
+        assert self.endpoints.get('bucket', **self.kwargs) == '/buckets/buck'
 
-        collections_endpoint = '/buckets/buck/collections'
-        assert endpoints.collections('buck') == collections_endpoint
+    def test_collections(self):
+        assert self.endpoints.get('collections', **self.kwargs) ==\
+            '/buckets/buck/collections'
 
-        collection_endpoint = '/buckets/buck/collections/coll'
-        assert endpoints.collection('buck', 'coll') == collection_endpoint
+    def test_collection(self):
+        assert self.endpoints.get('collection', **self.kwargs) ==\
+            '/buckets/buck/collections/coll'
 
-        records_endpoint = '/buckets/buck/collections/coll/records'
-        assert endpoints.records('buck', 'coll') == records_endpoint
+    def test_records(self):
+        assert self.endpoints.get('records', **self.kwargs) ==\
+            '/buckets/buck/collections/coll/records'
 
-        record_endpoint = '/buckets/buck/collections/coll/records/1'
-        assert endpoints.record('buck', 'coll', '1') == record_endpoint
+    def test_record(self):
+        assert self.endpoints.get('record', **self.kwargs) ==\
+            '/buckets/buck/collections/coll/records/1'
+    

@@ -6,6 +6,9 @@ from kinto_client import utils
 
 class UtilsTest(TestCase):
 
+    def test_slugify_converts_integers(self):
+        assert utils.slugify(1) == '1'
+
     def test_slugify_replaces_spaces_by_hyphens(self):
         assert utils.slugify(u'text with spaces') == 'text-with-spaces'
 

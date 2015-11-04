@@ -1,7 +1,7 @@
 import requests
 import json
 # import six
-# import uuid
+import uuid
 
 from kinto_client import utils
 from kinto_client.batch import batch_requests  # noqa
@@ -128,9 +128,10 @@ class Client(object):
 
     # Buckets
 
-    def update_bucket(self, bucket=None):
+    def update_bucket(self, bucket=None, permissions=None):
         endpoint = self._get_endpoint('bucket', bucket)
-        resp, _ =  self.session.request('put', endpoint)
+        resp, _ =  self.session.request('put', endpoint,
+                                        permissions=permissions)
         return resp
 
     def delete_bucket(self, bucket=None):
@@ -140,7 +141,13 @@ class Client(object):
 
     def get_bucket(self, bucket=None):
         endpoint = self._get_endpoint('bucket', bucket)
-        resp, _ = self.session.request('get', endpoint)
+        try:
+            resp, _ = self.session.request('get', endpoint)
+        except KintoException as e:
+            exception = BucketNotFound(bucket or self._bucket_name)
+            exception.response = e.response
+            exception.request = e.request
+            raise exception
         return resp
 
     def create_bucket(self, *args, **kwargs):
@@ -153,10 +160,13 @@ class Client(object):
         endpoint = self._get_endpoint('collections', bucket)
         return self.session.request('get', endpoint)
 
-    def create_collection(self, collection=None, bucket=None):
+    def create_collection(self, collection=None, bucket=None, permissions=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
         # XXX Add permissions
-        return self.session.request('put', endpoint)
+        return self.session.request('put', endpoint, permissions=permissions)
+
+    def update_collection(self, *args, **kwargs):
+        return self.create_collection(*args, **kwargs)
 
     def get_collection(self, collection=None, bucket=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
@@ -182,17 +192,23 @@ class Client(object):
         resp, _ = self.session.request('get', endpoint)
         return resp
 
-    def create_record(self, data, collection=None, bucket=None):
-        # XXX Add permissions support
-        endpoint = self._get_endpoint('records', bucket, collection)
-        return self.session.request('post', endpoint, data=data)
+    def create_record(self, data, id=None, collection=None, permissions=None,
+                      bucket=None):
+        id = id or data.get('id', None) or str(uuid.uuid4())
 
-    def update_record(self, record, collection=None, bucket=None):
+        endpoint = self._get_endpoint('record', bucket, collection, id)
+        resp, _ =  self.session.request('put', endpoint, data=data,
+                                        permissions=permissions)
+        return resp
+
+    def update_record(self, data, collection=None, permissions=None,
+                      bucket=None):
         # XXX How should we deal with permissions? Should a dict with the
         # data and permissions keys be passed?
         endpoint = self._get_endpoint('record', bucket, collection,
-                                      record['id'])
-        return self.session.request('put', endpoint, data=record)
+                                      data['id'])
+        return self.session.request('put', endpoint, data=data,
+                                    permissions=permissions)
 
     def delete_record(self, id, collection=None, bucket=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)

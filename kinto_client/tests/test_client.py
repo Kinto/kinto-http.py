@@ -33,7 +33,6 @@ class BucketTest(unittest.TestCase):
         self.assertIn('phrawzty', bucket['permissions']['read'])
 
     def test_unexisting_bucket_raises(self):
-
         # Make the next call to sess.request raise a 403.
         exception = KintoException()
         exception.response = mock.MagicMock()
@@ -63,6 +62,10 @@ class BucketTest(unittest.TestCase):
             self.assertEquals(e.request, mock.sentinel.request)
         else:
             self.fail("Exception not raised")
+
+    def test_delete_bucket_returns_the_contained_data(self):
+        mock_response(self.session, data={'deleted': True})
+        assert self.client.delete_bucket('bucket') == {'deleted': True}
 
 
 class CollectionTest(unittest.TestCase):
@@ -94,6 +97,20 @@ class CollectionTest(unittest.TestCase):
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
             'put', url, permissions=mock.sentinel.permissions)
+
+    def test_get_collections_returns_the_list_of_collections(self):
+        mock_response(
+            self.session,
+            data=[
+                {'id': 'foo', 'last_modified': '12345'},
+                {'id': 'bar', 'last_modified': '59874'},
+            ])
+
+        collections = self.client.get_collections(bucket='default')
+        assert collections == [
+            {'id': 'foo', 'last_modified': '12345'},
+            {'id': 'bar', 'last_modified': '59874'},
+        ]
 
 
 class RecordTest(unittest.TestCase):
@@ -204,3 +221,22 @@ class RecordTest(unittest.TestCase):
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with('delete', url)
+
+    def test_update_record_gets_the_id_from_data_if_exists(self):
+        mock_response(self.session)
+        self.client.update_record(
+            bucket='mybucket', collection='mycollection',
+            data={'id': 1, 'foo': 'bar'})
+
+        self.session.request.assert_called_with(
+            'put', '/buckets/mybucket/collections/mycollection/records/1',
+            data={'id': 1, 'foo': 'bar'}, permissions=None)
+
+    def test_update_record_raises_if_no_id_is_given(self):
+        with self.assertRaises(KeyError) as cm:
+            self.client.update_record(
+                data={'foo': 'bar'},  # Omit the id on purpose here.
+                bucket='mybucket',
+                collection='mycollection'
+            )
+        assert cm.exception.message == 'Unable to update a record, need an id.'

@@ -212,7 +212,7 @@ class Client(object):
                       bucket=None):
         id = id or data.get('id')
         if id is None:
-            raise AttributeError('Unable to update a record, need an id.')
+            raise KeyError('Unable to update a record, need an id.')
         endpoint = self._get_endpoint('record', bucket, collection, id)
         resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions)

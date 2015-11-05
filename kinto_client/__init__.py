@@ -1,6 +1,5 @@
 import requests
 import json
-# import six
 import uuid
 
 from kinto_client import utils
@@ -26,7 +25,7 @@ def create_session(server_url=None, auth=None, session=None):
     """Returns a session from the passed arguments.
 
     :param server_url:
-        The url of the server to use, with the prefix.
+        The URL of the server to use, with the prefix.
     :param auth:
         A requests authentication policy object.
     :param session:
@@ -72,8 +71,8 @@ class Endpoints(object):
             return pattern.format(root=self._root, **kwargs)
         except KeyError as e:
             msg = "Cannot get {endpoint} endpoint, {field} is missing"
-            raise KeyError(msg.format(endpoint=endpoint,
-                                      field=','.join(e.args)))
+            raise KintoException(msg.format(endpoint=endpoint,
+                                 field=','.join(e.args)))
 
 
 class Session(object):
@@ -145,10 +144,7 @@ class Client(object):
         try:
             resp, _ = self.session.request('get', endpoint)
         except KintoException as e:
-            exception = BucketNotFound(bucket or self._bucket_name)
-            exception.response = e.response
-            exception.request = e.request
-            raise exception
+            raise BucketNotFound(bucket or self._bucket_name, e)
         return resp
 
     def create_bucket(self, *args, **kwargs):

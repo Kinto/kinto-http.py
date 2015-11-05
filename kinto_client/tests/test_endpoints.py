@@ -1,6 +1,6 @@
 from .support import unittest
 
-from kinto_client import Endpoints
+from kinto_client import Endpoints, KintoException
 
 
 class EndpointsTest(unittest.TestCase):
@@ -43,14 +43,14 @@ class EndpointsTest(unittest.TestCase):
 
     def test_missing_arguments_raise_an_error(self):
         # Don't include the record id; it should raise an error.
-        with self.assertRaises(KeyError) as context:
+        with self.assertRaises(KintoException) as context:
             self.endpoints.get('record', bucket='buck',  collection='coll')
         msg = "Cannot get record endpoint, id is missing"
         assert context.exception.message == msg
 
     def test_null_arguments_raise_an_error(self):
         # Include a null record id; it should raise an error.
-        with self.assertRaises(KeyError) as context:
+        with self.assertRaises(KintoException) as context:
             self.endpoints.get('record', bucket='buck',  collection='coll',
                                id=None)
         msg = "Cannot get record endpoint, id is missing"

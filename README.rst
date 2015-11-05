@@ -1,12 +1,12 @@
 Kinto python client
 ###################
 
-Kinto is a service allowing you to store and synchronize arbitrary data,
+Kinto is a service that allows to store and synchronize arbitrary data,
 attached to a user account. Its primary interface is HTTP.
 
-`kinto-client` is a Python library aiming at easing interacting with
+`kinto-client` is a Python library aiming at easing the interactions with
 a *Kinto* server instance. `A project with related goals is
-also available for JavaScript <https://github.com/mozilla-services/cliquetis>`_.
+also available for JavaScript <https://github.com/kinto/kinto.js>`_.
 
 Usage
 =====
@@ -20,7 +20,7 @@ Usage
   refresh mechanism. If you want to be sure you have the latest data available,
   issue another call.
 
-Here is an overview of what the API looks like:
+Here is an overview of what the API provides:
 
 .. code-block:: python
 
@@ -28,11 +28,13 @@ Here is an overview of what the API looks like:
 
     client = Client(server_url="http://localhost:8888/v1",
                     auth=('alexis', 'p4ssw0rd'))
-    records = client.get_records(bucket='default', collection='todos')
-    for i, record in enumerate(records):
-        record['data']['title'] = 'Todo #%d' %i
 
-    client.update_records(records)
+    records = client.get_records(bucket='default', collection='todos')
+    for i, record in enumerate(records['data']):
+        record['title'] = 'Todo #%d' %i
+
+    for record in records:
+        client.update_record(record)
 
 Creating a client
 =================
@@ -65,7 +67,7 @@ Handling buckets
 ================
 
 All operations are rooted in a bucket. It makes little sense for
-one application to handle multiple buckets at once, but it is possible.
+one application to handle multiple buckets at once (but it is possible).
 If no specific bucket name is provided, the "default" bucket is used.
 
 .. code-block:: python
@@ -108,7 +110,8 @@ A record is a dict with the "permissions" and "data" keys.
 .. code-block:: python
 
     # You can pass a python dictionary to create the record
-    # bucket='default' can be ommited since it's the default value
+    # bucket='default' can be omitted since it's the default value
+
     client.create_record(data={'id': 1234, status: 'done', title: 'Todo #1'},
                          collection='todos', bucket='default')
 
@@ -136,22 +139,24 @@ Permissions
 
  .. code-block:: python
 
-    client.create_record(data={}, permissions={'read': ['group:groupid']},
-                         collection='todos')
+    client.create_record(
+        data={'foo': 'bar'},
+        permissions={'read': ['group:groupid']},
+        collection='todos')
 
 .. note::
 
     Every creation or modification operation on a distant object can be given
     a `permissions` parameter.
 
-Buckets, Collections and Groups and records have permissions which can be
-edited.
+Buckets, collections and records have permissions which can be edited.
+For instance to give access to "leplatrem" to a specific record, you would do:
 
-  record = client.get_record(1234, collection='todos')
+  record = client.get_record(1234, collection='todos', bucket='alexis')
   record['permissions']['write'].append('leplatrem')
   client.update_record(record)
 
-  # For the creation it is possible to pass the permissions dict.
+  # During creation, it is possible to pass the permissions dict.
   client.create_record(data={'foo': 'bar'}, permissions={})
 
 

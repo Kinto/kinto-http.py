@@ -159,20 +159,25 @@ class Client(object):
 
     def get_collections(self, bucket=None):
         endpoint = self._get_endpoint('collections', bucket)
-        return self.session.request('get', endpoint)
+        resp, _ = self.session.request('get', endpoint)
+        return resp['data']
 
-    def create_collection(self, collection=None, bucket=None,
+    def update_collection(self, collection=None, bucket=None,
                           permissions=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
         # XXX Add permissions
-        return self.session.request('put', endpoint, permissions=permissions)
+        resp, _ = self.session.request('put', endpoint,
+                                       permissions=permissions)
+        return resp
 
-    def update_collection(self, *args, **kwargs):
-        return self.create_collection(*args, **kwargs)
+    def create_collection(self, *args, **kwargs):
+        # Alias to update collection.
+        return self.update_collection(*args, **kwargs)
 
     def get_collection(self, collection=None, bucket=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
-        return self.session.request('get', endpoint)
+        resp, _ = self.session.request('get', endpoint)
+        return resp
 
     def delete_collection(self, collection=None, bucket=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
@@ -203,14 +208,15 @@ class Client(object):
                                        permissions=permissions)
         return resp
 
-    def update_record(self, data, collection=None, permissions=None,
+    def update_record(self, data, id=None, collection=None, permissions=None,
                       bucket=None):
-        # XXX How should we deal with permissions? Should a dict with the
-        # data and permissions keys be passed?
-        endpoint = self._get_endpoint('record', bucket, collection,
-                                      data['id'])
-        return self.session.request('put', endpoint, data=data,
-                                    permissions=permissions)
+        id = id or data.get('id')
+        if id is None:
+            raise AttributeError('Unable to update a record, need an id.')
+        endpoint = self._get_endpoint('record', bucket, collection, id)
+        resp, _ = self.session.request('put', endpoint, data=data,
+                                       permissions=permissions)
+        return resp
 
     def delete_record(self, id, collection=None, bucket=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)

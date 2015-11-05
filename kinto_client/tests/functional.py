@@ -31,7 +31,8 @@ class FunctionalTest(unittest2.TestCase):
     def tearDown(self):
         # Delete all the created objects
         flush_url = urlparse.urljoin(self.server_url, '/__flush__')
-        requests.post(flush_url)
+        resp = requests.post(flush_url)
+        resp.raise_for_status()
 
     def get_user_id(self, credentials):
         hmac_secret = self.config.get('app:main', 'cliquet.userid_hmac_secret')
@@ -65,6 +66,7 @@ class FunctionalTest(unittest2.TestCase):
         assert 'alexis' in bucket['permissions']['write']
 
     def test_collection_creation(self):
+        self.client.create_bucket('mozilla')
         self.client.create_collection(
             'payments', bucket='mozilla',
             permissions={'write': ['alexis', ]}
@@ -82,13 +84,15 @@ class FunctionalTest(unittest2.TestCase):
         # The returned collections should be strings.
         collections = self.client.get_collections('mozilla')
         self.assertEquals(2, len(collections))
-        self.assertEquals(set(collections), set(['receipts', 'assets']))
+
+        self.assertEquals(set([coll['id'] for coll in collections]),
+                          set(['receipts', 'assets']))
 
     def test_collection_deletion(self):
         self.client.create_bucket('mozilla')
         self.client.create_collection('payments', bucket='mozilla')
         self.client.delete_collection('payments', bucket='mozilla')
-        assert len(self.client.get_collections()) == 0
+        assert len(self.client.get_collections(bucket='mozilla')) == 0
 
     def test_record_creation_and_retrieval(self):
         client = Client(server_url=self.server_url, auth=self.auth,
@@ -97,9 +101,8 @@ class FunctionalTest(unittest2.TestCase):
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
                                        permissions={'read': ['alexis']})
-        record = client.get_record(created['id'])
-        assert 'alexis' in record.permissions.read
-        assert record == {'id': created['id'], u'foo': u'bar'}
+        record = client.get_record(created['data']['id'])
+        assert 'alexis' in record['permissions']['read']
 
     def test_single_record_save(self):
         client = Client(server_url=self.server_url, auth=self.auth,
@@ -111,12 +114,13 @@ class FunctionalTest(unittest2.TestCase):
         created['data']['bar'] = 'baz'
 
         # XXX enhance this in order to have to pass only one argument, created.
-        client.update_record(id=created['id'], data=created['data'])
+        client.update_record(id=created['data']['id'], data=created['data'])
 
-        retrieved = client.get_record(created['id'])
+        retrieved = client.get_record(created['data']['id'])
         assert 'alexis' in retrieved['permissions']['read']
-        assert retrieved['data'] == {'foo': u'bar', 'bar': u'baz'}
-        assert created['id'] == retrieved['id']
+        assert retrieved['data']['foo'] == u'bar'
+        assert retrieved['data']['bar'] == u'baz'
+        assert created['data']['id'] == retrieved['data']['id']
 
     def test_one_record_deletion(self):
         client = Client(server_url=self.server_url, auth=self.auth,
@@ -124,8 +128,8 @@ class FunctionalTest(unittest2.TestCase):
         client.create_bucket()
         client.create_collection()
         record = client.create_record({'foo': 'bar'})
-        deleted = client.delete_record(record['id'])
-        assert deleted['data'] == record
+        deleted = client.delete_record(record['data']['id'])
+        assert deleted['deleted'] is True
         assert len(client.get_records()) == 0
 
     def test_bucket_sharing(self):
@@ -147,6 +151,7 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('bob-bucket')
         self.client.create_collection(
             'shared',
+            bucket='bob-bucket',
             permissions={'read': [alice_userid, ]})
 
         # Try to read the collection as Alice.
@@ -158,21 +163,25 @@ class FunctionalTest(unittest2.TestCase):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)
 
+        # Create a record, and share it with Alice.
         self.client.create_bucket('bob-bucket')
-        self.client.create_collection('bob-personal-collection')
+        self.client.create_collection('bob-personal-collection',
+                                      bucket='bob-bucket')
         record = self.client.create_record(
-            {'foo': 'bar'},
-            permissions={'read': [alice_userid, ]})
+            data={'foo': 'bar'},
+            permissions={'read': [alice_userid, ]},
+            bucket='bob-bucket',
+            collection='bob-personal-collection')
 
         # Try to read the record as Alice
         alice_client = Client(server_url=self.server_url,
                               auth=alice_credentials)
         record = alice_client.get_record(
-            id=record['id'],
-            bucket='mozilla',
+            id=record['data']['id'],
+            bucket='bob-bucket',
             collection='bob-personal-collection')
 
-        assert record['data'] == {'id': record['id'], 'foo': 'bar'}
+        assert record['data']['foo'] == 'bar'
 
 if __name__ == '__main__':
     unittest2.main()

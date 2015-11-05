@@ -72,7 +72,8 @@ class Endpoints(object):
             return pattern.format(root=self._root, **kwargs)
         except KeyError as e:
             msg = "Cannot get {endpoint} endpoint, {field} is missing"
-            raise KeyError(msg.format(endpoint=endpoint, field=','.join(e.args)))
+            raise KeyError(msg.format(endpoint=endpoint,
+                                      field=','.join(e.args)))
 
 
 class Session(object):
@@ -130,8 +131,8 @@ class Client(object):
 
     def update_bucket(self, bucket=None, permissions=None):
         endpoint = self._get_endpoint('bucket', bucket)
-        resp, _ =  self.session.request('put', endpoint,
-                                        permissions=permissions)
+        resp, _ = self.session.request('put', endpoint,
+                                       permissions=permissions)
         return resp
 
     def delete_bucket(self, bucket=None):
@@ -160,7 +161,8 @@ class Client(object):
         endpoint = self._get_endpoint('collections', bucket)
         return self.session.request('get', endpoint)
 
-    def create_collection(self, collection=None, bucket=None, permissions=None):
+    def create_collection(self, collection=None, bucket=None,
+                          permissions=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
         # XXX Add permissions
         return self.session.request('put', endpoint, permissions=permissions)
@@ -197,8 +199,8 @@ class Client(object):
         id = id or data.get('id', None) or str(uuid.uuid4())
 
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        resp, _ =  self.session.request('put', endpoint, data=data,
-                                        permissions=permissions)
+        resp, _ = self.session.request('put', endpoint, data=data,
+                                       permissions=permissions)
         return resp
 
     def update_record(self, data, collection=None, permissions=None,

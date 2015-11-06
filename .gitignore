@@ -3,3 +3,4 @@
 kinto_client.egg-info/
 .coverage
 .venv/
+.tox

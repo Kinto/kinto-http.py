@@ -1,12 +1,12 @@
 Kinto python client
 ###################
 
-Kinto is a service allowing you to store and synchronize arbitrary data,
+Kinto is a service that allows to store and synchronize arbitrary data,
 attached to a user account. Its primary interface is HTTP.
 
-`kinto-client` is a Python library aiming at easing interacting with
+`kinto-client` is a Python library aiming at easing the interactions with
 a *Kinto* server instance. `A project with related goals is
-also available for JavaScript <https://github.com/mozilla-services/cliquetis>`_.
+also available for JavaScript <https://github.com/kinto/kinto.js>`_.
 
 Usage
 =====
@@ -20,31 +20,28 @@ Usage
   refresh mechanism. If you want to be sure you have the latest data available,
   issue another call.
 
-Here is an overview of what the API looks like:
+Here is an overview of what the API provides:
 
 .. code-block:: python
 
-    from kinto_client import Bucket
+    from kinto_client import Client
 
-    bucket = Bucket('default', server_url='http://localhost:8888/v1',
+    client = Client(server_url="http://localhost:8888/v1",
                     auth=('alexis', 'p4ssw0rd'))
-    todo = bucket.get_collection('todo')
 
-    records = todo.get_records()
-    for i, record in enumerate(records):
-        record.data.title = 'Todo #%d' %i
+    records = client.get_records(bucket='default', collection='todos')
+    for i, record in enumerate(records['data']):
+        record['title'] = 'Todo #%d' %i
 
-    todo.save_records(records)
+    for record in records:
+        client.update_record(record)
 
-
-Handling buckets
-================
-
-All operations are rooted in a bucket. It makes little sense for
-one application to handle multiple buckets at once.
+Creating a client
+=================
 
 The passed `auth` parameter is a `requests <docs.python-requests.org>`_
-authentication policy, allowing authenticating using whatever fits you best.
+authentication policy, allowing authenticating using whatever scheme fits you
+best.
 
 By default, Kinto supports
 `Firefox Accounts <https://wiki.mozilla.org/Identity/Firefox_Accounts>`_ and
@@ -52,15 +49,39 @@ Basic authentication policies.
 
 .. code-block:: python
 
+    from kinto_client import Client
     credentials = ('alexis', 'p4ssw0rd')
 
-    bucket = Bucket('payments', server_url='http://localhost:8888/v1',
+    client = Client(server_url='http://localhost:8888/v1',
                     auth=credentials)
 
-    # Passing `create=True` to the bucket will make an HTTP request to
-    # create it.
-    bucket = Bucket('payments', server_url='http://localhost:8888/v1',
-                    auth=credentials, create=True)
+It is also possible to pass the bucket and the collection to the client
+at creation time, so that this value will be used by default.
+
+.. code-block:: python
+
+    client = Client(bucket="payments", collection="receipts", auth=auth)
+
+
+Handling buckets
+================
+
+All operations are rooted in a bucket. It makes little sense for
+one application to handle multiple buckets at once (but it is possible).
+If no specific bucket name is provided, the "default" bucket is used.
+
+.. code-block:: python
+
+    from kinto_client import Client
+    credentials = ('alexis', 'p4ssw0rd')
+
+    client = Client(server_url='http://localhost:8888/v1',
+                    auth=credentials)
+    client.create_bucket('payments')
+    client.get_bucket('payments')
+
+    # It is also possible to manipulate bucket permissions (see later)
+    client.update_bucket('payments', permissions={})
 
 
 Collections
@@ -70,14 +91,13 @@ A collection is where records are stored.
 
 .. code-block:: python
 
-    # Once the bucket handy, use it to handle collections or groups.
-    collection = bucket.create_collection('receipts')
+    client.create_collection('receipts', bucket='payments')
 
     # Or get an existing one.
-    collection = bucket.get_collection('receipts')
+    client.get_collection('receipts', bucket='payments')
 
     # To delete an existing collection.
-    bucket.delete_collection('receipts')
+    client.delete_collection('receipts', bucket='payments')
 
 
 Records
@@ -85,57 +105,59 @@ Records
 
 Records can be retrieved from and saved to collections.
 
+A record is a dict with the "permissions" and "data" keys.
+
 .. code-block:: python
 
     # You can pass a python dictionary to create the record
-    record = collection.create_record(dict(id='XXX', status='done',
-                                           title='Todo #1'))
+    # bucket='default' can be omitted since it's the default value
 
-    # Get all records
-    record = collection.get_records()
-    record = collection.get_record(id='89881454-e4e9-4ef0-99a9-404d95900352')
-    collection.save_record(record)
-    collection.save_records([record1, record2])
-    collection.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352')
-    collection.delete_records([record1, record2])
+    client.create_record(data={'id': 1234, status: 'done', title: 'Todo #1'},
+                         collection='todos', bucket='default')
 
-    # Alternative use
-    record.save()
+    # Retrieve all records.
+    record = client.get_records(collection='todos', bucket='default')
 
+    # Retrieve a specific record and update it.
+    record = client.get_record('89881454-e4e9-4ef0-99a9-404d95900352',
+                               collection='todos', bucket='default')
+    client.update_record(record, collection='todos', bucket='default')
+
+    # Update multiple records at once.
+    client.update_records(records, collection='todos')
+
+    # It is also possible to delete records.
+    client.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352',
+                         collection='todos')
 
 Permissions
 ===========
 
- By default, authenticated users will get read and write access to the
- manipulated objects. It is possible to change this behavior by passing a dict
- to the `permissions` parameter.
+ By default, authors will get read and write access to the manipulated objects.
+ It is possible to change this behavior by passing a dict to the `permissions`
+ parameter.
 
  .. code-block:: python
 
-    record = collection.create_record(
-        data={},
-        permissions={'read': ['group:groupid']})
+    client.create_record(
+        data={'foo': 'bar'},
+        permissions={'read': ['group:groupid']},
+        collection='todos')
 
 .. note::
 
     Every creation or modification operation on a distant object can be given
     a `permissions` parameter.
 
-The `Bucket`, `Collection`, `Group` and `Record` classes have a special
-`permissions` object that can be mutated in order to update the permissions
-model attached to the object.
+Buckets, collections and records have permissions which can be edited.
+For instance to give access to "leplatrem" to a specific record, you would do:
 
-.. code-block:: python
+  record = client.get_record(1234, collection='todos', bucket='alexis')
+  record['permissions']['write'].append('leplatrem')
+  client.update_record(record)
 
-    bucket = Bucket('default', auth=('alexis', 'p4ssw0rd'))
-
-    friends = ['natim', 'niko', 'mat', 'tarek']
-    bucket.permissions.write += friends
-    bucket.permissions.create_collection += friends
-
-    # You *need* to call save in order to have these changes reflected in the
-    # remote.
-    bucket.save()
+  # During creation, it is possible to pass the permissions dict.
+  client.create_record(data={'foo': 'bar'}, permissions={})
 
 
 Installation

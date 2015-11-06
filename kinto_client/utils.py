@@ -8,7 +8,7 @@ def slugify(value):
     """Normalizes string, converts to lowercase, removes non-alpha characters
     and converts spaces to hyphens.
     """
-    value = unidecode(value)
+    value = unidecode(six.text_type(value))
     if isinstance(value, six.binary_type):
         value = value.decode('ascii')
     value = unicodedata.normalize('NFKD', value).lower()

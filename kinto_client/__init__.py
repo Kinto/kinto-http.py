@@ -1,5 +1,6 @@
 import requests
 import json
+import urlparse
 import uuid
 
 from kinto_client import utils
@@ -126,6 +127,20 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
+    def _paginated(self, url, records=None):
+        if records is None:
+            records = []
+
+        record_resp, headers = self.session.request('get', url)
+
+        records.extend(record_resp['data'])
+
+        if 'Next-Page' in headers.keys():
+            parsed = urlparse.urlparse(headers['Next-Page'])
+            url = "{0}?{1}".format(parsed.path, parsed.query)
+            return self._paginated(url, records)
+        return records
+
     # Buckets
 
     def update_bucket(self, bucket=None, permissions=None):
@@ -155,8 +170,7 @@ class Client(object):
 
     def get_collections(self, bucket=None):
         endpoint = self._get_endpoint('collections', bucket)
-        resp, _ = self.session.request('get', endpoint)
-        return resp['data']
+        return self._paginated(endpoint)
 
     def update_collection(self, collection=None, bucket=None,
                           permissions=None):
@@ -185,10 +199,8 @@ class Client(object):
     def get_records(self, collection=None, bucket=None):
         """Returns all the records"""
         # XXX Add filter and sorting.
-        # XXX Add support for pagination.
         endpoint = self._get_endpoint('records', bucket, collection)
-        resp, _ = self.session.request('get', endpoint)
-        return resp['data']
+        return self._paginated(endpoint)
 
     def get_record(self, id, collection=None, bucket=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)

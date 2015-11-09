@@ -1,6 +1,6 @@
 import mock
 
-from .support import unittest, mock_response
+from .support import unittest, mock_response, build_response
 
 from kinto_client import KintoException, BucketNotFound, Client
 
@@ -201,6 +201,32 @@ class RecordTest(unittest.TestCase):
         mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}])
         records = self.client.get_records()
         assert records == [{'id': 'foo'}, {'id': 'bar'}]
+
+    def test_pagination_is_followed(self):
+        # Mock the calls to request.
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        self.session.request.side_effect = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+            ),
+        ]
+        records = self.client.get_records('bucket', 'collection')
+
+        assert records == [
+            {'id': '1', 'value': 'item1'},
+            {'id': '2', 'value': 'item2'},
+            {'id': '3', 'value': 'item3'},
+            {'id': '4', 'value': 'item4'},
+        ]
 
     def test_collection_can_delete_a_record(self):
         mock_response(self.session, data={'id': 1234})

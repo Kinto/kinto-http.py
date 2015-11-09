@@ -16,14 +16,16 @@ REQUIREMENTS = [
 ]
 
 setup(name='kinto-client',
-      version='0.3.0.dev0',
-      description='Firefox Kinto client',
+      version='1.0.0',
+      description='Kinto client',
       long_description=README,
       license='Apache License (2.0)',
       classifiers=[
           "Programming Language :: Python",
+          "Programming Language :: Python :: 2",
+          "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: Implementation :: CPython",
           "Topic :: Internet :: WWW/HTTP",
-          "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
           "License :: OSI Approved :: Apache Software License"
       ],
       keywords="web services",

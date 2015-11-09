@@ -2,7 +2,8 @@ import mock
 
 from .support import unittest, mock_response, build_response
 
-from kinto_client import KintoException, BucketNotFound, Client
+from kinto_client import (KintoException, BucketNotFound, Client,
+                          DO_NOT_OVERWRITE)
 
 
 class ClientTest(unittest.TestCase):
@@ -28,8 +29,9 @@ class BucketTest(unittest.TestCase):
 
     def test_put_is_issued_on_creation(self):
         self.client.create_bucket('testbucket')
-        self.session.request.assert_called_with('put', '/buckets/testbucket',
-                                                permissions=None)
+        self.session.request.assert_called_with(
+            'put', '/buckets/testbucket', permissions=None,
+            headers=DO_NOT_OVERWRITE)
 
     def test_get_is_issued_on_retrieval(self):
         self.client.get_bucket('testbucket')
@@ -101,7 +103,8 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, permissions=mock.sentinel.permissions)
+            'put', url, permissions=mock.sentinel.permissions,
+            headers=DO_NOT_OVERWRITE)
 
     def test_collection_update_issues_an_http_put(self):
         self.client.update_collection(
@@ -110,7 +113,7 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, permissions=mock.sentinel.permissions)
+            'put', url, permissions=mock.sentinel.permissions, headers=None)
 
     def test_get_collections_returns_the_list_of_collections(self):
         mock_response(
@@ -156,7 +159,8 @@ class RecordTest(unittest.TestCase):
             'put',
             '/buckets/mybucket/collections/mycollection/records/1234',
             data={'foo': 'bar', 'id': '1234'},
-            permissions=mock.sentinel.permissions)
+            permissions=mock.sentinel.permissions,
+            headers=DO_NOT_OVERWRITE)
 
     def test_collection_is_resolved_from_it_name(self):
         mock_response(self.session)
@@ -181,7 +185,8 @@ class RecordTest(unittest.TestCase):
             'put',
             '/buckets/mybucket/collections/mycollection/records/1234',
             data={'id': '1234', 'foo': 'bar'},
-            permissions=mock.sentinel.permissions)
+            permissions=mock.sentinel.permissions,
+            headers=DO_NOT_OVERWRITE)
 
     def test_data_and_permissions_are_added_on_create(self):
         mock_response(self.session)
@@ -191,11 +196,34 @@ class RecordTest(unittest.TestCase):
         self.client.create_record(
             id='1234',
             data=data,
-            permissions={'read': ['mle', ]})
+            permissions=permissions)
 
         url = '/buckets/mybucket/collections/mycollection/records/1234'
         self.session.request.assert_called_with(
-            'put', url, data=data, permissions=permissions)
+            'put', url, data=data, permissions=permissions,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_creation_sends_if_none_match_by_default(self):
+        mock_response(self.session)
+        data = {'foo': 'bar'}
+
+        self.client.create_record(
+            id='1234',
+            data=data)
+
+        url = '/buckets/mybucket/collections/mycollection/records/1234'
+        self.session.request.assert_called_with(
+            'put', url, data=data, permissions=None, headers=DO_NOT_OVERWRITE)
+
+    def test_creation_doesnt_add_if_none_match_when_overwrite(self):
+        mock_response(self.session)
+        data = {'foo': 'bar'}
+
+        self.client.create_record(id='1234', data=data, overwrite=True)
+
+        url = '/buckets/mybucket/collections/mycollection/records/1234'
+        self.session.request.assert_called_with(
+            'put', url, data=data, permissions=None, headers=None)
 
     def test_records_issues_a_request_on_delete(self):
         mock_response(self.session)

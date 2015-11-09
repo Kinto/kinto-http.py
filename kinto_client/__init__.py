@@ -23,6 +23,7 @@ OBJECTS_PERMISSIONS = {
 }
 
 ID_FIELD = 'id'
+DO_NOT_OVERWRITE = {'If-None-Match': '*'}
 
 
 def create_session(server_url=None, auth=None, session=None):
@@ -171,10 +172,12 @@ class Client(object):
 
     # Buckets
 
-    def update_bucket(self, bucket=None, permissions=None):
+    def update_bucket(self, bucket=None, permissions=None, overwrite=True):
+        headers = None if overwrite else DO_NOT_OVERWRITE
         endpoint = self._get_endpoint('bucket', bucket)
         resp, _ = self.session.request('put', endpoint,
-                                       permissions=permissions)
+                                       permissions=permissions,
+                                       headers=headers)
         return resp
 
     def delete_bucket(self, bucket=None):
@@ -192,6 +195,7 @@ class Client(object):
 
     def create_bucket(self, *args, **kwargs):
         # Alias to update bucket.
+        kwargs.setdefault('overwrite', False)
         return self.update_bucket(*args, **kwargs)
 
     # Collections
@@ -201,15 +205,16 @@ class Client(object):
         return self._paginated(endpoint)
 
     def update_collection(self, collection=None, bucket=None,
-                          permissions=None):
+                          permissions=None, overwrite=True):
+        headers = None if overwrite else DO_NOT_OVERWRITE
         endpoint = self._get_endpoint('collection', bucket, collection)
-        # XXX Add permissions
-        resp, _ = self.session.request('put', endpoint,
-                                       permissions=permissions)
+        resp, _ = self.session.request(
+            'put', endpoint, permissions=permissions, headers=headers)
         return resp
 
     def create_collection(self, *args, **kwargs):
         # Alias to update collection.
+        kwargs.setdefault('overwrite', False)
         return self.update_collection(*args, **kwargs)
 
     def get_collection(self, collection=None, bucket=None):
@@ -236,12 +241,15 @@ class Client(object):
         return resp
 
     def create_record(self, data, id=None, collection=None, permissions=None,
-                      bucket=None):
+                      bucket=None, overwrite=False):
         id = id or data.get('id', None) or str(uuid.uuid4())
+        # Make sure that no record already exists with this id.
+        headers = None if overwrite else DO_NOT_OVERWRITE
 
         endpoint = self._get_endpoint('record', bucket, collection, id)
         resp, _ = self.session.request('put', endpoint, data=data,
-                                       permissions=permissions)
+                                       permissions=permissions,
+                                       headers=headers)
         return resp
 
     def update_record(self, data, id=None, collection=None, permissions=None,

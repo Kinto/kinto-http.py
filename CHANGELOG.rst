@@ -4,10 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-0.3.0 (unreleased)
+1.0.0 (2015-11-09)
 ==================
 
-- Nothing changed yet.
+**Breaking changes**
+
+- Rewrote the API to be easier to use (#10)
 
 
 0.2.0 (2015-10-28)

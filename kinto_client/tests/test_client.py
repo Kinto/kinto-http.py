@@ -1,4 +1,3 @@
-import mock
 
 from .support import unittest, mock_response, build_response
 
@@ -32,6 +31,18 @@ class BucketTest(unittest.TestCase):
         self.session.request.assert_called_with(
             'put', '/buckets/testbucket', permissions=None,
             headers=DO_NOT_OVERWRITE)
+
+    def test_patch_is_issued_on_update(self):
+        self.client.update_bucket(
+            'testbucket',
+            data={'last_modified': '1234'},
+            permissions={'read': ['natim']})
+        self.session.request.assert_called_with(
+            'patch',
+            '/buckets/testbucket',
+            data={'last_modified': '1234'},
+            permissions={'read': ['natim']},
+            headers={'If-Match': '1234'})
 
     def test_get_is_issued_on_retrieval(self):
         self.client.get_bucket('testbucket')
@@ -103,17 +114,45 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, permissions=mock.sentinel.permissions,
+            'put', url, data=None, permissions=mock.sentinel.permissions,
             headers=DO_NOT_OVERWRITE)
 
-    def test_collection_update_issues_an_http_put(self):
+    def test_data_can_be_sent_on_creation(self):
+        self.client.create_collection(
+            'mycollection',
+            'testbucket',
+            data={'foo': 'bar'})
+
+        self.session.request.assert_called_with(
+            'put',
+            '/buckets/testbucket/collections/mycollection',
+            data={'foo': 'bar'},
+            permissions=None,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_collection_update_issues_an_http_patch(self):
         self.client.update_collection(
             'mycollection',
+            data={'foo': 'bar'},
             permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, permissions=mock.sentinel.permissions, headers=None)
+            'patch', url, data={'foo': 'bar'},
+            permissions=mock.sentinel.permissions, headers=None)
+
+    def test_collection_update_use_an_if_match_header(self):
+        data = {'foo': 'bar', 'last_modified': '1234'}
+        self.client.update_collection(
+            'mycollection',
+            data=data,
+            permissions=mock.sentinel.permissions)
+
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with(
+            'patch', url, data=data,
+            permissions=mock.sentinel.permissions,
+            headers={'If-Match': '1234'})
 
     def test_get_collections_returns_the_list_of_collections(self):
         mock_response(
@@ -162,7 +201,7 @@ class RecordTest(unittest.TestCase):
             permissions=mock.sentinel.permissions,
             headers=DO_NOT_OVERWRITE)
 
-    def test_collection_is_resolved_from_it_name(self):
+    def test_collection_argument_takes_precedence(self):
         mock_response(self.session)
         # Specify a different collection name for the client and the operation.
         client = Client(session=self.session, bucket='mybucket',
@@ -174,6 +213,7 @@ class RecordTest(unittest.TestCase):
             'put',
             '/buckets/mybucket/collections/good_collection/records/1234',
             data={'id': '1234'},
+            headers=None,
             permissions=mock.sentinel.permissions)
 
     def test_record_id_is_derived_from_data_if_present(self):
@@ -298,7 +338,7 @@ class RecordTest(unittest.TestCase):
 
         self.session.request.assert_called_with(
             'put', '/buckets/mybucket/collections/mycollection/records/1',
-            data={'id': 1, 'foo': 'bar'}, permissions=None)
+            data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
 
     def test_update_record_raises_if_no_id_is_given(self):
         with self.assertRaises(KeyError) as cm:

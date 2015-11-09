@@ -42,7 +42,7 @@ class BucketTest(unittest.TestCase):
             '/buckets/testbucket',
             data={'last_modified': '1234'},
             permissions={'read': ['natim']},
-            headers={'If-Match': '1234'})
+            headers={'If-Match': '"1234"'})
 
     def test_get_is_issued_on_retrieval(self):
         self.client.get_bucket('testbucket')
@@ -152,7 +152,7 @@ class CollectionTest(unittest.TestCase):
         self.session.request.assert_called_with(
             'patch', url, data=data,
             permissions=mock.sentinel.permissions,
-            headers={'If-Match': '1234'})
+            headers={'If-Match': '"1234"'})
 
     def test_get_collections_returns_the_list_of_collections(self):
         mock_response(

@@ -174,7 +174,7 @@ class Client(object):
 
     def _get_cache_headers(self, data, overwrite):
         if not overwrite and data and data.get('last_modified'):
-            return {'If-Match': six.text_type(data['last_modified'])}
+            return {'If-Match': utils.quote(data['last_modified'])}
         # else return None
 
     # Buckets

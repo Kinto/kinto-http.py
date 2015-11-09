@@ -127,18 +127,19 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
-    def _paginated(self, url, records=None):
+    def _paginated(self, endpoint, records=None):
         if records is None:
             records = []
 
-        record_resp, headers = self.session.request('get', url)
+        record_resp, headers = self.session.request('get', endpoint)
 
         records.extend(record_resp['data'])
 
         if 'Next-Page' in headers.keys():
+            # Paginated wants a relative URL, but the returned one is absolute.
             parsed = urlparse.urlparse(headers['Next-Page'])
-            url = "{0}?{1}".format(parsed.path, parsed.query)
-            return self._paginated(url, records)
+            endpoint = "{0}?{1}".format(parsed.path, parsed.query)
+            return self._paginated(endpoint, records)
         return records
 
     # Buckets

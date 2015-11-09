@@ -16,7 +16,7 @@ REQUIREMENTS = [
 ]
 
 setup(name='kinto-client',
-      version='1.0.0',
+      version='1.0.1.dev0',
       description='Kinto client',
       long_description=README,
       license='Apache License (2.0)',

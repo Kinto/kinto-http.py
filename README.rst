@@ -39,7 +39,7 @@ Here is an overview of what the API provides:
 Creating a client
 =================
 
-The passed `auth` parameter is a `requests <docs.python-requests.org>`_
+The passed `auth` parameter is a `requests <http://docs.python-requests.org>`_
 authentication policy, allowing authenticating using whatever scheme fits you
 best.
 
@@ -151,6 +151,8 @@ Permissions
 
 Buckets, collections and records have permissions which can be edited.
 For instance to give access to "leplatrem" to a specific record, you would do:
+
+.. code-block:: python
 
   record = client.get_record(1234, collection='todos', bucket='alexis')
   record['permissions']['write'].append('leplatrem')

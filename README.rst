@@ -1,6 +1,16 @@
 Kinto python client
 ###################
 
+.. image:: https://img.shields.io/travis/Kinto/kinto.py.svg
+        :target: https://travis-ci.org/Kinto/kinto.py
+
+.. image:: https://img.shields.io/pypi/v/kinto-client.svg
+        :target: https://pypi.python.org/pypi/kinto-client
+
+.. image:: https://coveralls.io/repos/Kinto/kinto.py/badge.svg?branch=master
+        :target: https://coveralls.io/r/Kinto/kinto.py
+
+
 Kinto is a service that allows to store and synchronize arbitrary data,
 attached to a user account. Its primary interface is HTTP.
 

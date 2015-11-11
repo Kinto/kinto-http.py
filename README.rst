@@ -14,9 +14,18 @@ Kinto python client
 Kinto is a service that allows to store and synchronize arbitrary data,
 attached to a user account. Its primary interface is HTTP.
 
-`kinto-client` is a Python library aiming at easing the interactions with
+*kinto-client* is a Python library that eases the interactions with
 a *Kinto* server instance. `A project with related goals is
 also available for JavaScript <https://github.com/kinto/kinto.js>`_.
+
+
+Installation
+============
+
+Use pip::
+
+  $ pip install kinto-client
+
 
 Usage
 =====
@@ -47,7 +56,7 @@ Here is an overview of what the API provides:
         client.update_record(record)
 
 Creating a client
-=================
+-----------------
 
 The passed `auth` parameter is a `requests <http://docs.python-requests.org>`_
 authentication policy, allowing authenticating using whatever scheme fits you
@@ -74,7 +83,7 @@ at creation time, so that this value will be used by default.
 
 
 Handling buckets
-================
+----------------
 
 All operations are rooted in a bucket. It makes little sense for
 one application to handle multiple buckets at once (but it is possible).
@@ -95,7 +104,7 @@ If no specific bucket name is provided, the "default" bucket is used.
 
 
 Collections
-===========
+-----------
 
 A collection is where records are stored.
 
@@ -111,7 +120,7 @@ A collection is where records are stored.
 
 
 Records
-=======
+-------
 
 Records can be retrieved from and saved to collections.
 
@@ -141,7 +150,7 @@ A record is a dict with the "permissions" and "data" keys.
                          collection='todos')
 
 Permissions
-===========
+-----------
 
  By default, authors will get read and write access to the manipulated objects.
  It is possible to change this behavior by passing a dict to the `permissions`
@@ -172,9 +181,18 @@ For instance to give access to "leplatrem" to a specific record, you would do:
   client.create_record(data={'foo': 'bar'}, permissions={})
 
 
-Installation
-============
+Run tests
+=========
 
-To install the kinto client, use pip::
+In one terminal, run a Kinto server:
 
-  $ pip install kinto_client
+::
+
+    $ make runkinto
+
+In another, run the tests against it:
+
+::
+
+    $ make tests
+

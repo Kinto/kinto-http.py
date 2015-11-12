@@ -34,7 +34,7 @@ runkinto:
 tests-once: install-dev
 	$(VENV)/bin/py.test --cov-report term-missing --cov-fail-under 100 --cov kinto_client
 
-functional: need-kinto-running
+functional: install-dev need-kinto-running
 	$(VENV)/bin/py.test kinto_client/tests/functional.py
 
 tests: install-dev need-kinto-running

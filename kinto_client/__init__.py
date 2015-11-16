@@ -1,7 +1,8 @@
-import requests
+import collections
 import json
-import urlparse
+import requests
 import uuid
+import urlparse
 
 from kinto_client import utils
 from kinto_client.batch import batch_requests  # noqa
@@ -133,18 +134,17 @@ class Client(object):
         return self.endpoints.get(name, **kwargs)
 
     def _paginated(self, endpoint, records=None, visited=None):
+        print("paginated")
         if records is None:
-            records = {}
+            records = collections.OrderedDict()
         if visited is None:
             visited = set()
 
         record_resp, headers = self.session.request('get', endpoint)
-
         records.update({r['id']: r for r in record_resp['data']})
-
         visited.add(endpoint)
 
-        if 'Next-Page' in headers.keys():
+        if 'next-page' in map(str.lower, headers.keys()):
             # Paginated wants a relative URL, but the returned one is absolute.
             next_page = headers['Next-Page']
             # Due to bug mozilla-services/cliquet#366, check for recursion:

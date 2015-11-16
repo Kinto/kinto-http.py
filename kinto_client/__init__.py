@@ -83,8 +83,13 @@ class Session(object):
         self.server_url = server_url
         self.auth = auth
 
-    def request(self, method, url, data=None, permissions=None, **kwargs):
-        actual_url = utils.urljoin(self.server_url, url)
+    def request(self, method, endpoint, data=None, permissions=None, **kwargs):
+        parsed = urlparse.urlparse(endpoint)
+        if not parsed.scheme:
+            actual_url = utils.urljoin(self.server_url, endpoint)
+        else:
+            actual_url = endpoint
+
         if self.auth is not None:
             kwargs.setdefault('auth', self.auth)
 
@@ -127,20 +132,26 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
-    def _paginated(self, endpoint, records=None):
+    def _paginated(self, endpoint, records=None, visited=None):
         if records is None:
-            records = []
+            records = {}
+        if visited is None:
+            visited = set()
 
         record_resp, headers = self.session.request('get', endpoint)
 
-        records.extend(record_resp['data'])
+        records.update({r['id']: r for r in record_resp['data']})
+
+        visited.add(endpoint)
 
         if 'Next-Page' in headers.keys():
             # Paginated wants a relative URL, but the returned one is absolute.
-            parsed = urlparse.urlparse(headers['Next-Page'])
-            endpoint = "{0}?{1}".format(parsed.path, parsed.query)
-            return self._paginated(endpoint, records)
-        return records
+            next_page = headers['Next-Page']
+            # Due to bug mozilla-services/cliquet#366, check for recursion:
+            if next_page not in visited:
+                return self._paginated(next_page, records, visited)
+
+        return records.values()
 
     # Buckets
 

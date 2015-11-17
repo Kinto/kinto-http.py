@@ -178,6 +178,41 @@ class CollectionTest(unittest.TestCase):
             {'id': 'bar', 'last_modified': '59874'},
         ]
 
+    def test_collection_can_delete_a_list_of_records(self):
+        self.client.delete_records(['1234', '5678'])
+        # url = '/buckets/mybucket/collections/mycollection/records/9'
+        # XXX check that the delete is done in a BATCH.
+
+    def test_collection_can_be_deleted(self):
+        data = {}
+        mock_response(self.session, data=data)
+        deleted = self.client.delete_collection('mycollection')
+        assert deleted == data
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with('delete', url, headers=None)
+
+    def test_collection_delete_if_match(self):
+        data = {}
+        mock_response(self.session, data=data)
+        deleted = self.client.delete_collection(
+            'mycollection',
+            last_modified=1234)
+        assert deleted == data
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with(
+            'delete', url, headers={'If-Match': '"1234"'})
+
+    def test_collection_delete_if_match_not_included_if_not_safe(self):
+        data = {}
+        mock_response(self.session, data=data)
+        deleted = self.client.delete_collection(
+            'mycollection',
+            last_modified=1324,
+            safe=False)
+        assert deleted == data
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with('delete', url, headers=None)
+
 
 class RecordTest(unittest.TestCase):
     def setUp(self):
@@ -279,7 +314,7 @@ class RecordTest(unittest.TestCase):
         mock_response(self.session)
         self.client.delete_record('1234')
         url = '/buckets/mybucket/collections/mycollection/records/1234'
-        self.session.request.assert_called_with('delete', url)
+        self.session.request.assert_called_with('delete', url, headers=None)
 
     def test_record_issues_a_request_on_retrieval(self):
         mock_response(self.session, data={'foo': 'bar'})
@@ -325,20 +360,39 @@ class RecordTest(unittest.TestCase):
         resp = self.client.delete_record(id=1234)
         assert resp == {'id': 1234}
         url = '/buckets/mybucket/collections/mycollection/records/1234'
-        self.session.request.assert_called_with('delete', url)
+        self.session.request.assert_called_with('delete', url, headers=None)
 
     def test_collection_can_delete_a_list_of_records(self):
         self.client.delete_records(['1234', '5678'])
         # url = '/buckets/mybucket/collections/mycollection/records/9'
         # XXX check that the delete is done in a BATCH.
 
-    def test_collection_can_be_deleted(self):
+    def test_record_delete_if_match(self):
         data = {}
         mock_response(self.session, data=data)
-        deleted = self.client.delete_collection('mycollection')
+        deleted = self.client.delete_record(
+            collection='mycollection',
+            bucket='mybucket',
+            id='1',
+            last_modified=1234)
         assert deleted == data
-        url = '/buckets/mybucket/collections/mycollection'
-        self.session.request.assert_called_with('delete', url)
+        url = '/buckets/mybucket/collections/mycollection/records/1'
+        self.session.request.assert_called_with(
+            'delete', url, headers={'If-Match': '"1234"'})
+
+    def test_record_delete_if_match_not_included_if_not_safe(self):
+        data = {}
+        mock_response(self.session, data=data)
+        deleted = self.client.delete_record(
+            collection='mycollection',
+            bucket='mybucket',
+            id='1',
+            last_modified=1234,
+            safe=False)
+        assert deleted == data
+        url = '/buckets/mybucket/collections/mycollection/records/1'
+        self.session.request.assert_called_with(
+            'delete', url, headers=None)
 
     def test_update_record_gets_the_id_from_data_if_exists(self):
         mock_response(self.session)

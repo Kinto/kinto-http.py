@@ -171,9 +171,13 @@ class Client(object):
 
         return records.values()
 
-    def _get_cache_headers(self, data, safe):
-        if safe and data and data.get('last_modified'):
-            return {'If-Match': utils.quote(data['last_modified'])}
+    def _get_cache_headers(self, safe, data=None, last_modified=None):
+        if (last_modified is None
+                and data is not None and data.get('last_modified')):
+            last_modified = data['last_modified']
+
+        if safe and last_modified is not None:
+            return {'If-Match': utils.quote(last_modified)}
         # else return None
 
     # Buckets
@@ -194,7 +198,7 @@ class Client(object):
             'patch', endpoint,
             data=data,
             permissions=permissions,
-            headers=self._get_cache_headers(data, safe))
+            headers=self._get_cache_headers(safe, data))
 
         return resp
 
@@ -238,7 +242,7 @@ class Client(object):
             endpoint,
             data=data,
             permissions=permissions,
-            headers=self._get_cache_headers(data, safe))
+            headers=self._get_cache_headers(safe, data))
         return resp
 
     def patch_collection(self, *args, **kwargs):
@@ -250,9 +254,13 @@ class Client(object):
         resp, _ = self.session.request('get', endpoint)
         return resp
 
-    def delete_collection(self, collection=None, bucket=None):
+    def delete_collection(self, collection=None, bucket=None,
+                          last_modified=None, safe=True):
         endpoint = self._get_endpoint('collection', bucket, collection)
-        resp, _ = self.session.request('delete', endpoint)
+        resp, _ = self.session.request(
+            'delete',
+            endpoint,
+            headers=self._get_cache_headers(safe, last_modified=last_modified))
         return resp['data']
 
     # Records
@@ -290,7 +298,7 @@ class Client(object):
             method,
             endpoint,
             data=data,
-            headers=self._get_cache_headers(data, safe),
+            headers=self._get_cache_headers(safe, data),
             permissions=permissions)
         return resp
 
@@ -298,9 +306,12 @@ class Client(object):
         kwargs['method'] = 'patch'
         return self.update_record(*args, **kwargs)
 
-    def delete_record(self, id, collection=None, bucket=None):
+    def delete_record(self, id, collection=None, bucket=None,
+                      last_modified=None, safe=True):
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        resp, _ = self.session.request('delete', endpoint)
+        resp, _ = self.session.request(
+            'delete', endpoint,
+            headers=self._get_cache_headers(safe, last_modified=last_modified))
         return resp['data']
 
     def delete_records(self, records):

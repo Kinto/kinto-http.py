@@ -88,6 +88,19 @@ class SessionTest(unittest.TestCase):
             data=json.dumps({'data': {}, 'permissions': {'foo': 'bar'}}),
             headers={'Content-Type': 'application/json'})
 
+    def test_url_is_used_if_schema_is_present(self):
+        response = mock.MagicMock()
+        response.status_code = 200
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        permissions = mock.MagicMock()
+        permissions.as_dict.return_value = {'foo': 'bar'}
+        session.request('get', 'https://example.org/anothertest')
+        self.requests_mock.request.assert_called_with(
+            'get', 'https://example.org/anothertest',
+            data=json.dumps({'data': {}}),
+            headers={'Content-Type': 'application/json'})
+
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(
             AttributeError, create_session,

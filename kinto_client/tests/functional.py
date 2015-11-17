@@ -104,6 +104,27 @@ class FunctionalTest(unittest2.TestCase):
         record = client.get_record(created['data']['id'])
         assert 'alexis' in record['permissions']['read']
 
+    def test_records_list_retrieval(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        client.create_record(data={'foo': 'bar'},
+                             permissions={'read': ['alexis']})
+        records = client.get_records()
+        assert len(records) == 1
+
+    def test_records_paginated_list_retrieval(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        for i in range(10):
+            client.create_record(data={'foo': 'bar'},
+                                 permissions={'read': ['alexis']})
+        records = client.get_records()
+        assert len(records) == 10
+
     def test_single_record_save(self):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla', collection='payments')

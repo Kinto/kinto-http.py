@@ -21,3 +21,12 @@ def get_record(id=None, data=None, permissions=None):
     record.data = data or {'foo': 'bar'}
     record.permissions = permissions or {'read': ['Niko', 'Mat']}
     return record
+
+
+def build_response(data, headers=None):
+    if headers is None:
+        headers = {}
+    resp = {
+        'data': data
+    }
+    return resp, headers

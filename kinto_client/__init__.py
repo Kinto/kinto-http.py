@@ -1,6 +1,8 @@
-import requests
+import collections
 import json
+import requests
 import uuid
+import urlparse
 
 from kinto_client import utils
 from kinto_client.batch import batch_requests  # noqa
@@ -82,8 +84,13 @@ class Session(object):
         self.server_url = server_url
         self.auth = auth
 
-    def request(self, method, url, data=None, permissions=None, **kwargs):
-        actual_url = utils.urljoin(self.server_url, url)
+    def request(self, method, endpoint, data=None, permissions=None, **kwargs):
+        parsed = urlparse.urlparse(endpoint)
+        if not parsed.scheme:
+            actual_url = utils.urljoin(self.server_url, endpoint)
+        else:
+            actual_url = endpoint
+
         if self.auth is not None:
             kwargs.setdefault('auth', self.auth)
 
@@ -126,6 +133,28 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
+    def _paginated(self, endpoint, records=None, visited=None):
+        print("paginated")
+        if records is None:
+            records = collections.OrderedDict()
+        if visited is None:
+            visited = set()
+
+        record_resp, headers = self.session.request('get', endpoint)
+        records.update(collections.OrderedDict(
+            [(r['id'], r) for r in record_resp['data']]))
+
+        visited.add(endpoint)
+
+        if 'next-page' in map(str.lower, headers.keys()):
+            # Paginated wants a relative URL, but the returned one is absolute.
+            next_page = headers['Next-Page']
+            # Due to bug mozilla-services/cliquet#366, check for recursion:
+            if next_page not in visited:
+                return self._paginated(next_page, records, visited)
+
+        return records.values()
+
     # Buckets
 
     def update_bucket(self, bucket=None, permissions=None):
@@ -155,8 +184,7 @@ class Client(object):
 
     def get_collections(self, bucket=None):
         endpoint = self._get_endpoint('collections', bucket)
-        resp, _ = self.session.request('get', endpoint)
-        return resp['data']
+        return self._paginated(endpoint)
 
     def update_collection(self, collection=None, bucket=None,
                           permissions=None):
@@ -185,10 +213,8 @@ class Client(object):
     def get_records(self, collection=None, bucket=None):
         """Returns all the records"""
         # XXX Add filter and sorting.
-        # XXX Add support for pagination.
         endpoint = self._get_endpoint('records', bucket, collection)
-        resp, _ = self.session.request('get', endpoint)
-        return resp['data']
+        return self._paginated(endpoint)
 
     def get_record(self, id, collection=None, bucket=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)

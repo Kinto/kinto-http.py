@@ -2,7 +2,6 @@ import collections
 import requests
 import uuid
 import urlparse
-import six
 
 from contextlib import contextmanager
 

@@ -2,17 +2,17 @@ from contextlib import contextmanager
 
 
 @contextmanager
-def batch_requests(session, endpoints):
-    batch = Batch(session, endpoints)
+def batch_requests(client):
+    batch = Batch(client)
     yield batch
     batch.send()
 
 
 class Batch(object):
 
-    def __init__(self, session, endpoints):
-        self.session = session
-        self.endpoints = endpoints
+    def __init__(self, client):
+        self.session = client.session
+        self.endpoints = client.endpoints
         self.requests = []
 
     def add(self, method, url, data=None, permissions=None, headers=None):

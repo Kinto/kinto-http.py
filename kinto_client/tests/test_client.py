@@ -1,4 +1,4 @@
-
+import mock
 from .support import unittest, mock_response, build_response
 
 from kinto_client import (KintoException, BucketNotFound, Client,

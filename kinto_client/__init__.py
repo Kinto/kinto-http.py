@@ -141,7 +141,9 @@ class Client(object):
             visited = set()
 
         record_resp, headers = self.session.request('get', endpoint)
-        records.update({r['id']: r for r in record_resp['data']})
+        records.update(collections.OrderedDict(
+            [(r['id'], r)  for r in record_resp['data']]))
+
         visited.add(endpoint)
 
         if 'next-page' in map(str.lower, headers.keys()):

@@ -1,5 +1,4 @@
 import collections
-import json
 import requests
 import uuid
 import urlparse

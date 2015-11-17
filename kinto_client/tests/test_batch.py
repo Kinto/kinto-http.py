@@ -11,8 +11,8 @@ class BatchRequestsTest(unittest.TestCase):
     def test_requests_are_stacked(self):
         batch = Batch(self.client)
         batch.request('GET', '/foobar/baz',
-                  mock.sentinel.data,
-                  mock.sentinel.permissions)
+                      mock.sentinel.data,
+                      mock.sentinel.permissions)
         assert len(batch.requests) == 1
 
     def test_send_adds_data_attribute(self):
@@ -32,7 +32,8 @@ class BatchRequestsTest(unittest.TestCase):
 
     def test_send_adds_permissions_attribute(self):
         batch = Batch(self.client)
-        batch.request('GET', '/foobar/baz', permissions=mock.sentinel.permissions)
+        batch.request('GET', '/foobar/baz',
+                      permissions=mock.sentinel.permissions)
         batch.send()
 
         self.client.session.request.assert_called_with(

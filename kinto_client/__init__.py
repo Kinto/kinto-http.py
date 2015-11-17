@@ -142,7 +142,7 @@ class Client(object):
 
         record_resp, headers = self.session.request('get', endpoint)
         records.update(collections.OrderedDict(
-            [(r['id'], r)  for r in record_resp['data']]))
+            [(r['id'], r) for r in record_resp['data']]))
 
         visited.add(endpoint)
 

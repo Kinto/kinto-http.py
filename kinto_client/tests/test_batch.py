@@ -1,7 +1,7 @@
 import unittest2 as unittest
 import mock
 
-from kinto_client.batch import Batch, batch_requests
+from kinto_client.batch import Batch
 
 
 class BatchRequestsTest(unittest.TestCase):
@@ -22,8 +22,8 @@ class BatchRequestsTest(unittest.TestCase):
 
         self.client.session.request.assert_called_with(
             'POST',
-            self.client.endpoints.batch(),
-            data={'requests': [{
+            self.client.endpoints.get('batch'),
+            payload={'requests': [{
                 'method': 'GET',
                 'path': '/foobar/baz',
                 'body': {'data': {'foo': 'bar'}}
@@ -37,8 +37,8 @@ class BatchRequestsTest(unittest.TestCase):
 
         self.client.session.request.assert_called_with(
             'POST',
-            self.client.endpoints.batch(),
-            data={'requests': [{
+            self.client.endpoints.get('batch'),
+            payload={'requests': [{
                 'method': 'GET',
                 'path': '/foobar/baz',
                 'body': {'permissions': mock.sentinel.permissions}
@@ -52,8 +52,8 @@ class BatchRequestsTest(unittest.TestCase):
 
         self.client.session.request.assert_called_with(
             'POST',
-            self.client.endpoints.batch(),
-            data={'requests': [{
+            self.client.endpoints.get('batch'),
+            payload={'requests': [{
                 'method': 'GET',
                 'path': '/foobar/baz',
                 'headers': {'Foo': 'Bar'},
@@ -68,11 +68,3 @@ class BatchRequestsTest(unittest.TestCase):
         assert len(batch.requests) == 1
         batch.send()
         assert len(batch.requests) == 0
-
-    def test_context_manager_works_as_expected(self):
-        batcher = batch_requests
-        with batcher(self.client) as batch:
-            batch.request('PUT', '/records/1234', data={'foo': 'bar'})
-            batch.request('PUT', '/records/5678', data={'bar': 'baz'})
-
-        assert self.client.session.request.called

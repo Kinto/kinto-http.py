@@ -5,6 +5,20 @@ from .support import unittest, mock_response, build_response
 from kinto_client import KintoException, BucketNotFound, Client
 
 
+class ClientTest(unittest.TestCase):
+    def setUp(self):
+        self.session = mock.MagicMock()
+        self.client = Client(session=self.session)
+        mock_response(self.session)
+
+    def test_context_manager_works_as_expected(self):
+        with self.client.batch(bucket='mozilla', collection='test') as batch:
+            batch.create_record(id=1234, data={'foo': 'bar'})
+            batch.create_record(id=5678, data={'bar': 'baz'})
+
+        assert self.client.session.request.called
+
+
 class BucketTest(unittest.TestCase):
 
     def setUp(self):

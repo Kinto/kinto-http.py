@@ -230,15 +230,20 @@ class Client(object):
         return resp
 
     def update_collection(self, collection=None, bucket=None,
-                          data=None, permissions=None, safe=True):
+                          data=None, permissions=None, method='put',
+                          safe=True):
         endpoint = self._get_endpoint('collection', bucket, collection)
         resp, _ = self.session.request(
-            'patch',
+            method,
             endpoint,
             data=data,
             permissions=permissions,
             headers=self._get_cache_headers(data, safe))
         return resp
+
+    def patch_collection(self, *args, **kwargs):
+        kwargs['method'] = 'patch'
+        return self.update_collection(*args, **kwargs)
 
     def get_collection(self, collection=None, bucket=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
@@ -276,18 +281,22 @@ class Client(object):
         return resp
 
     def update_record(self, data, id=None, collection=None, permissions=None,
-                      bucket=None, safe=True):
+                      bucket=None, safe=True, method='put'):
         id = id or data.get('id')
         if id is None:
             raise KeyError('Unable to update a record, need an id.')
         endpoint = self._get_endpoint('record', bucket, collection, id)
         resp, _ = self.session.request(
-            'put',
+            method,
             endpoint,
             data=data,
             headers=self._get_cache_headers(data, safe),
             permissions=permissions)
         return resp
+
+    def patch_record(self, *args, **kwargs):
+        kwargs['method'] = 'patch'
+        return self.update_record(*args, **kwargs)
 
     def delete_record(self, id, collection=None, bucket=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)

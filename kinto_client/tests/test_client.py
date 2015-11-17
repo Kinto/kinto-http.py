@@ -130,7 +130,7 @@ class CollectionTest(unittest.TestCase):
             permissions=None,
             headers=DO_NOT_OVERWRITE)
 
-    def test_collection_update_issues_an_http_patch(self):
+    def test_collection_update_issues_an_http_put(self):
         self.client.update_collection(
             'mycollection',
             data={'foo': 'bar'},
@@ -138,7 +138,7 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'patch', url, data={'foo': 'bar'},
+            'put', url, data={'foo': 'bar'},
             permissions=mock.sentinel.permissions, headers=None)
 
     def test_collection_update_use_an_if_match_header(self):
@@ -150,9 +150,19 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'patch', url, data=data,
+            'put', url, data=data,
             permissions=mock.sentinel.permissions,
             headers={'If-Match': '"1234"'})
+
+    def test_patch_collection_issues_an_http_patch(self):
+        self.client.patch_collection(
+            collection='mycollection',
+            data={'key': 'secret'})
+
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with(
+            'patch', url, data={'key': 'secret'}, headers=None,
+            permissions=None)
 
     def test_get_collections_returns_the_list_of_collections(self):
         mock_response(
@@ -338,6 +348,16 @@ class RecordTest(unittest.TestCase):
 
         self.session.request.assert_called_with(
             'put', '/buckets/mybucket/collections/mycollection/records/1',
+            data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
+
+    def test_patch_record_uses_the_patch_method(self):
+        mock_response(self.session)
+        self.client.patch_record(
+            bucket='mybucket', collection='mycollection',
+            data={'id': 1, 'foo': 'bar'})
+
+        self.session.request.assert_called_with(
+            'patch', '/buckets/mybucket/collections/mycollection/records/1',
             data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
 
     def test_update_record_raises_if_no_id_is_given(self):

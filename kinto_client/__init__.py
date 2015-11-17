@@ -201,7 +201,7 @@ class Client(object):
         return self._paginated(endpoint)
 
     def update_collection(self, collection=None, bucket=None,
-                          permissions=None, data=None, method='put'):
+                          data=None, permissions=None, method='put'):
         endpoint = self._get_endpoint('collection', bucket, collection)
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions)

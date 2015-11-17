@@ -101,7 +101,7 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, permissions=mock.sentinel.permissions)
+            'put', url, data=None, permissions=mock.sentinel.permissions)
 
     def test_collection_update_issues_an_http_put(self):
         self.client.update_collection(
@@ -110,7 +110,16 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, permissions=mock.sentinel.permissions)
+            'put', url, data=None, permissions=mock.sentinel.permissions)
+
+    def test_patch_collection_issues_an_http_patch(self):
+        self.client.patch_collection(
+            collection='mycollection',
+            data={'key': 'secret'})
+
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with(
+            'patch', url, data={'key': 'secret'}, permissions=None)
 
     def test_get_collections_returns_the_list_of_collections(self):
         mock_response(
@@ -270,6 +279,16 @@ class RecordTest(unittest.TestCase):
 
         self.session.request.assert_called_with(
             'put', '/buckets/mybucket/collections/mycollection/records/1',
+            data={'id': 1, 'foo': 'bar'}, permissions=None)
+
+    def test_patch_record_uses_the_patch_method(self):
+        mock_response(self.session)
+        self.client.patch_record(
+            bucket='mybucket', collection='mycollection',
+            data={'id': 1, 'foo': 'bar'})
+
+        self.session.request.assert_called_with(
+            'patch', '/buckets/mybucket/collections/mycollection/records/1',
             data={'id': 1, 'foo': 'bar'}, permissions=None)
 
     def test_update_record_raises_if_no_id_is_given(self):

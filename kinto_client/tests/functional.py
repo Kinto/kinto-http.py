@@ -165,6 +165,16 @@ class FunctionalTest(unittest2.TestCase):
                               auth=alice_credentials)
         alice_client.get_bucket('shared-bucket')
 
+    def test_updating_data_on_a_collection(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+
+        client.patch_collection(data={'secret': 'psssssst!'})
+        collection = client.get_collection()
+        assert collection['data']['secret'] == 'psssssst!'
+
     def test_collection_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)

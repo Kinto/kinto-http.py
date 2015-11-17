@@ -201,12 +201,15 @@ class Client(object):
         return self._paginated(endpoint)
 
     def update_collection(self, collection=None, bucket=None,
-                          permissions=None):
+                          permissions=None, data=None, method='put'):
         endpoint = self._get_endpoint('collection', bucket, collection)
-        # XXX Add permissions
-        resp, _ = self.session.request('put', endpoint,
+        resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions)
         return resp
+
+    def patch_collection(self, *args, **kwargs):
+        kwargs['method'] = 'patch'
+        return self.update_collection(*args, **kwargs)
 
     def create_collection(self, *args, **kwargs):
         # Alias to update collection.
@@ -245,14 +248,18 @@ class Client(object):
         return resp
 
     def update_record(self, data, id=None, collection=None, permissions=None,
-                      bucket=None):
+                      bucket=None, method='put'):
         id = id or data.get('id')
         if id is None:
             raise KeyError('Unable to update a record, need an id.')
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        resp, _ = self.session.request('put', endpoint, data=data,
+        resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions)
         return resp
+
+    def patch_record(self, *args, **kwargs):
+        kwargs['method'] = 'patch'
+        return self.update_record(*args, **kwargs)
 
     def delete_record(self, id, collection=None, bucket=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)

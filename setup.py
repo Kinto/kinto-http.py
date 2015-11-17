@@ -9,7 +9,7 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 REQUIREMENTS = [
     'PyFxA',
-    'requests',
+    'requests>=2.8.1',
     'requests-hawk',
     'unidecode',
     'six'

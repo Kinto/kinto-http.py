@@ -1,5 +1,3 @@
-import json
-
 import mock
 
 from .support import unittest
@@ -25,8 +23,7 @@ class SessionTest(unittest.TestCase):
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            data=json.dumps({'data': {}}),
-            headers={'Content-Type': 'application/json'})
+            json={'data': {}})
 
     def test_bad_http_status_raises_exception(self):
         response = mock.MagicMock()
@@ -46,8 +43,7 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
             auth=mock.sentinel.auth,
-            data='{"data": {}}',
-            headers={'Content-Type': 'application/json'})
+            json={"data": {}})
 
     def test_requests_arguments_are_forwarded(self):
         response = mock.MagicMock()
@@ -59,8 +55,7 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
             foo=mock.sentinel.bar,
-            data='{"data": {}}',
-            headers={'Content-Type': 'application/json'})
+            json={"data": {}})
 
     def test_passed_data_is_encoded_to_json(self):
         response = mock.MagicMock()
@@ -71,8 +66,7 @@ class SessionTest(unittest.TestCase):
                         data={'foo': 'bar'})
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            data=json.dumps({'data': {'foo': 'bar'}}),
-            headers={'Content-Type': 'application/json'})
+            json={"data": {'foo': 'bar'}})
 
     def test_passed_permissions_is_added_in_the_payload(self):
         response = mock.MagicMock()
@@ -85,8 +79,7 @@ class SessionTest(unittest.TestCase):
                         permissions=permissions)
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            data=json.dumps({'data': {}, 'permissions': {'foo': 'bar'}}),
-            headers={'Content-Type': 'application/json'})
+            json={'data': {}, 'permissions': {'foo': 'bar'}})
 
     def test_url_is_used_if_schema_is_present(self):
         response = mock.MagicMock()
@@ -98,8 +91,7 @@ class SessionTest(unittest.TestCase):
         session.request('get', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/anothertest',
-            data=json.dumps({'data': {}}),
-            headers={'Content-Type': 'application/json'})
+            json={"data": {}})
 
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(

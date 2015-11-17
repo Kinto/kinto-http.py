@@ -204,5 +204,18 @@ class FunctionalTest(unittest2.TestCase):
 
         assert record['data']['foo'] == 'bar'
 
+    def test_request_batching(self):
+        with self.client.batch(bucket='mozilla', collection='fonts') as batch:
+            batch.create_bucket()
+            batch.create_collection()
+            batch.create_record(data={'foo': 'bar'},
+                                permissions={'read': ['natim']})
+            batch.create_record(data={'bar': 'baz'},
+                                permissions={'read': ['alexis']})
+
+        records = self.client.get_records(bucket='mozilla', collection='fonts')
+        assert len(records) == 2
+
+
 if __name__ == '__main__':
     unittest2.main()

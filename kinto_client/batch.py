@@ -1,30 +1,23 @@
-from contextlib import contextmanager
-
-
-@contextmanager
-def batch_requests(session, endpoints):
-    batch = Batch(session, endpoints)
-    yield batch
-    batch.send()
-
-
 class Batch(object):
 
-    def __init__(self, session, endpoints):
-        self.session = session
-        self.endpoints = endpoints
+    def __init__(self, client):
+        self.session = client.session
+        self.endpoints = client.endpoints
         self.requests = []
 
-    def add(self, method, url, data=None, permissions=None, headers=None):
+    def request(self, method, endpoint, data=None, permissions=None,
+                headers=None):
         # Store all the requests in a dict, to be read later when .send()
         # is called.
-        self.requests.append((method, url, data, permissions, headers))
+        self.requests.append((method, endpoint, data, permissions, headers))
+        # This is the signature of the session request.
+        return None, None
 
     def _build_requests(self):
         requests = []
         for (method, url, data, permissions, headers) in self.requests:
             request = {
-                'method': method,
+                'method': method.upper(),
                 'path': url}
 
             request['body'] = {}
@@ -41,8 +34,9 @@ class Batch(object):
         requests = self._build_requests()
         resp = self.session.request(
             'POST',
-            self.endpoints.batch(),
-            data={'requests': requests}
+            self.endpoints.get('batch'),
+            payload={'requests': requests}
         )
+        # Reinitialize the batch.
         self.requests = []
         return resp

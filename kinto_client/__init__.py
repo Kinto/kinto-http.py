@@ -171,16 +171,16 @@ class Client(object):
 
         return records.values()
 
-    def _get_cache_headers(self, data, overwrite):
-        if not overwrite and data and data.get('last_modified'):
+    def _get_cache_headers(self, data, safe):
+        if safe and data and data.get('last_modified'):
             return {'If-Match': utils.quote(data['last_modified'])}
         # else return None
 
     # Buckets
 
     def create_bucket(self, bucket=None, data=None, permissions=None,
-                      overwrite=False):
-        headers = None if overwrite else DO_NOT_OVERWRITE
+                      safe=True):
+        headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('bucket', bucket)
         resp, _ = self.session.request('put', endpoint,
                                        permissions=permissions,
@@ -188,13 +188,13 @@ class Client(object):
         return resp
 
     def update_bucket(self, bucket=None, data=None, permissions=None,
-                      overwrite=False):
+                      safe=True):
         endpoint = self._get_endpoint('bucket', bucket)
         resp, _ = self.session.request(
             'patch', endpoint,
             data=data,
             permissions=permissions,
-            headers=self._get_cache_headers(data, overwrite))
+            headers=self._get_cache_headers(data, safe))
 
         return resp
 
@@ -218,8 +218,8 @@ class Client(object):
         return self._paginated(endpoint)
 
     def create_collection(self, collection=None, bucket=None,
-                          data=None, permissions=None, overwrite=False):
-        headers = None if overwrite else DO_NOT_OVERWRITE
+                          data=None, permissions=None, safe=True):
+        headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('collection', bucket, collection)
         resp, _ = self.session.request(
             'put',
@@ -230,14 +230,14 @@ class Client(object):
         return resp
 
     def update_collection(self, collection=None, bucket=None,
-                          data=None, permissions=None, overwrite=False):
+                          data=None, permissions=None, safe=True):
         endpoint = self._get_endpoint('collection', bucket, collection)
         resp, _ = self.session.request(
             'patch',
             endpoint,
             data=data,
             permissions=permissions,
-            headers=self._get_cache_headers(data, overwrite))
+            headers=self._get_cache_headers(data, safe))
         return resp
 
     def get_collection(self, collection=None, bucket=None):
@@ -264,10 +264,10 @@ class Client(object):
         return resp
 
     def create_record(self, data, id=None, collection=None, permissions=None,
-                      bucket=None, overwrite=False):
+                      bucket=None, safe=True):
         id = id or data.get('id', None) or str(uuid.uuid4())
         # Make sure that no record already exists with this id.
-        headers = None if overwrite else DO_NOT_OVERWRITE
+        headers = DO_NOT_OVERWRITE if safe else None
 
         endpoint = self._get_endpoint('record', bucket, collection, id)
         resp, _ = self.session.request('put', endpoint, data=data,
@@ -276,7 +276,7 @@ class Client(object):
         return resp
 
     def update_record(self, data, id=None, collection=None, permissions=None,
-                      bucket=None, overwrite=False):
+                      bucket=None, safe=True):
         id = id or data.get('id')
         if id is None:
             raise KeyError('Unable to update a record, need an id.')
@@ -285,7 +285,7 @@ class Client(object):
             'put',
             endpoint,
             data=data,
-            headers=self._get_cache_headers(data, overwrite),
+            headers=self._get_cache_headers(data, safe),
             permissions=permissions)
         return resp
 

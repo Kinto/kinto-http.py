@@ -259,7 +259,7 @@ class RecordTest(unittest.TestCase):
         mock_response(self.session)
         data = {'foo': 'bar'}
 
-        self.client.create_record(id='1234', data=data, overwrite=True)
+        self.client.create_record(id='1234', data=data, safe=False)
 
         url = '/buckets/mybucket/collections/mycollection/records/1234'
         self.session.request.assert_called_with(

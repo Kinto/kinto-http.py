@@ -165,7 +165,7 @@ class FunctionalTest(unittest2.TestCase):
                                        permissions={'read': ['alexis']})
 
         client.create_record(data={'id': created['data']['id'],
-                                   'bar': 'baz'}, overwrite=True)
+                                   'bar': 'baz'}, safe=False)
 
     def test_one_record_deletion(self):
         client = Client(server_url=self.server_url, auth=self.auth,

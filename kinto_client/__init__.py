@@ -4,12 +4,15 @@ import requests
 import uuid
 import urlparse
 
+from contextlib import contextmanager
+
+
 from kinto_client import utils
-from kinto_client.batch import batch_requests  # noqa
+from kinto_client.batch import Batch
 from kinto_client.exceptions import BucketNotFound, KintoException
 
 
-__all__ = ('Endpoints', 'Session', 'Client', 'batch_requests',
+__all__ = ('Endpoints', 'Session', 'Client',
            'create_session', 'BucketNotFound', 'KintoException')
 
 
@@ -84,7 +87,8 @@ class Session(object):
         self.server_url = server_url
         self.auth = auth
 
-    def request(self, method, endpoint, data=None, permissions=None, **kwargs):
+    def request(self, method, endpoint, data=None, permissions=None,
+                payload=None, **kwargs):
         parsed = urlparse.urlparse(endpoint)
         if not parsed.scheme:
             actual_url = utils.urljoin(self.server_url, endpoint)
@@ -94,7 +98,7 @@ class Session(object):
         if self.auth is not None:
             kwargs.setdefault('auth', self.auth)
 
-        payload = {}
+        payload = payload or {}
         # if data is not None:
         payload['data'] = data or {}
         if permissions is not None:
@@ -102,12 +106,10 @@ class Session(object):
                 permissions = permissions.as_dict()
             payload['permissions'] = permissions
         if payload:
-            kwargs.setdefault('headers', {})\
-                  .setdefault('Content-Type', 'application/json')
-            kwargs.setdefault('data', json.dumps(payload))
+            kwargs.setdefault('json', payload)
         resp = requests.request(method, actual_url, **kwargs)
         if not (200 <= resp.status_code < 400):
-            exception = KintoException(resp.status_code)
+            exception = KintoException(resp.status_code, resp.json())
             exception.request = resp.request
             exception.response = resp
             raise exception
@@ -124,6 +126,19 @@ class Client(object):
         self._bucket_name = bucket
         self._collection_name = collection
         self.endpoints = Endpoints()
+
+    def clone(self, **kwargs):
+        return Client(**{
+            'session': kwargs.get('session', self.session),
+            'bucket': kwargs.get('bucket', self._bucket_name),
+            'collection': kwargs.get('collection', self._collection_name),
+        })
+
+    @contextmanager
+    def batch(self, **kwargs):
+        batch = Batch(self)
+        yield self.clone(session=batch, **kwargs)
+        batch.send()
 
     def _get_endpoint(self, name, bucket=None, collection=None, id=None):
         kwargs = {

@@ -183,10 +183,10 @@ For instance to give access to "leplatrem" to a specific record, you would do:
 Overwriting existing objects
 ----------------------------
 
-Most of the methods take a `safe` argument, which defaults to `True`. If set
-to `True` and a `last_modified` field is present in the passed `data`, then a
+Most of the methods take a ``safe`` argument, which defaults to ``True``. If set
+to ``True`` and a ``last_modified`` field is present in the passed ``data``, then a
 check will be added to the requests to ensure the record wasn't modified on
-the server side.
+the server side in the meantime.
 
 Run tests
 =========

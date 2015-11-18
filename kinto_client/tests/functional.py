@@ -1,9 +1,9 @@
-import urlparse
 import os.path
+from six.moves.urllib.parse import urljoin
 
 import unittest2
 import requests
-import ConfigParser
+from six.moves import configparser
 
 from cliquet import utils as cliquet_utils
 
@@ -24,13 +24,13 @@ class FunctionalTest(unittest2.TestCase):
         self.auth = DEFAULT_AUTH
 
         # Read the configuration.
-        self.config = ConfigParser.RawConfigParser()
+        self.config = configparser.RawConfigParser()
         self.config.read(os.path.join(__HERE__, 'config/kinto.ini'))
         self.client = Client(server_url=self.server_url, auth=self.auth)
 
     def tearDown(self):
         # Delete all the created objects
-        flush_url = urlparse.urljoin(self.server_url, '/__flush__')
+        flush_url = urljoin(self.server_url, '/__flush__')
         resp = requests.post(flush_url)
         resp.raise_for_status()
 

@@ -1,7 +1,8 @@
 import collections
 import requests
 import uuid
-import urlparse
+from six import iteritems
+from six.moves.urllib.parse import urlparse
 
 from contextlib import contextmanager
 
@@ -69,7 +70,7 @@ class Endpoints(object):
     def get(self, endpoint, **kwargs):
         # Remove nullable values from the kwargs, and slugify the values.
         kwargs = dict((k, utils.slugify(v))
-                      for k, v in kwargs.iteritems() if v)
+                      for k, v in iteritems(kwargs) if v)
 
         try:
             pattern = self.endpoints[endpoint]
@@ -89,7 +90,7 @@ class Session(object):
 
     def request(self, method, endpoint, data=None, permissions=None,
                 payload=None, **kwargs):
-        parsed = urlparse.urlparse(endpoint)
+        parsed = urlparse(endpoint)
         if not parsed.scheme:
             actual_url = utils.urljoin(self.server_url, endpoint)
         else:

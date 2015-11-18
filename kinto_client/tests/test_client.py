@@ -1,4 +1,5 @@
 import mock
+from six import text_type
 from .support import unittest, mock_response, build_response
 
 from kinto_client import (KintoException, BucketNotFound, Client,
@@ -173,7 +174,7 @@ class CollectionTest(unittest.TestCase):
             ])
 
         collections = self.client.get_collections(bucket='default')
-        assert collections == [
+        assert list(collections) == [
             {'id': 'foo', 'last_modified': '12345'},
             {'id': 'bar', 'last_modified': '59874'},
         ]
@@ -327,7 +328,7 @@ class RecordTest(unittest.TestCase):
     def test_collection_can_retrieve_all_records(self):
         mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}])
         records = self.client.get_records()
-        assert records == [{'id': 'foo'}, {'id': 'bar'}]
+        assert list(records) == [{'id': 'foo'}, {'id': 'bar'}]
 
     def test_pagination_is_followed(self):
         # Mock the calls to request.
@@ -348,7 +349,7 @@ class RecordTest(unittest.TestCase):
         ]
         records = self.client.get_records('bucket', 'collection')
 
-        assert records == [
+        assert list(records) == [
             {'id': '1', 'value': 'item1'},
             {'id': '2', 'value': 'item2'},
             {'id': '3', 'value': 'item3'},
@@ -421,4 +422,5 @@ class RecordTest(unittest.TestCase):
                 bucket='mybucket',
                 collection='mycollection'
             )
-        assert cm.exception.message == 'Unable to update a record, need an id.'
+        assert text_type(cm.exception) == (
+            "'Unable to update a record, need an id.'")

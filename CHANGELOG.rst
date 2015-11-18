@@ -4,10 +4,15 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-1.0.1 (unreleased)
+2.0.0 (2015-11-18)
 ==================
 
-- Nothing changed yet.
+- Added support for pagination in records requests (#13)
+- Added support for If-Match / If-None-Match headers for not overwriting
+  existing records (#14)
+- Changed the API of the batch support. There is now a ``client.batch()`` context
+  manager (#17)
+- Added support of the PATCH methods to update records / collections (#19)
 
 
 1.0.0 (2015-11-09)

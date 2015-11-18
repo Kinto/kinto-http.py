@@ -172,8 +172,9 @@ class Client(object):
         return records.values()
 
     def _get_cache_headers(self, safe, data=None, last_modified=None):
-        if (last_modified is None
-                and data is not None and data.get('last_modified')):
+        has_data = data is not None and data.get('last_modified')
+
+        if (last_modified is None and has_data):
             last_modified = data['last_modified']
 
         if safe and last_modified is not None:
@@ -194,11 +195,10 @@ class Client(object):
     def update_bucket(self, bucket=None, data=None, permissions=None,
                       safe=True):
         endpoint = self._get_endpoint('bucket', bucket)
-        resp, _ = self.session.request(
-            'patch', endpoint,
-            data=data,
-            permissions=permissions,
-            headers=self._get_cache_headers(safe, data))
+        headers = self._get_cache_headers(safe, data)
+        resp, _ = self.session.request('patch', endpoint, data=data,
+                                       permissions=permissions,
+                                       headers=headers)
 
         return resp
 
@@ -225,24 +225,19 @@ class Client(object):
                           data=None, permissions=None, safe=True):
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('collection', bucket, collection)
-        resp, _ = self.session.request(
-            'put',
-            endpoint,
-            data=data,
-            permissions=permissions,
-            headers=headers)
+        resp, _ = self.session.request('put', endpoint, data=data,
+                                       permissions=permissions,
+                                       headers=headers)
         return resp
 
     def update_collection(self, collection=None, bucket=None,
                           data=None, permissions=None, method='put',
                           safe=True):
         endpoint = self._get_endpoint('collection', bucket, collection)
-        resp, _ = self.session.request(
-            method,
-            endpoint,
-            data=data,
-            permissions=permissions,
-            headers=self._get_cache_headers(safe, data))
+        headers = self._get_cache_headers(safe, data)
+        resp, _ = self.session.request(method, endpoint, data=data,
+                                       permissions=permissions,
+                                       headers=headers)
         return resp
 
     def patch_collection(self, *args, **kwargs):
@@ -257,10 +252,8 @@ class Client(object):
     def delete_collection(self, collection=None, bucket=None,
                           last_modified=None, safe=True):
         endpoint = self._get_endpoint('collection', bucket, collection)
-        resp, _ = self.session.request(
-            'delete',
-            endpoint,
-            headers=self._get_cache_headers(safe, last_modified=last_modified))
+        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     # Records
@@ -294,12 +287,10 @@ class Client(object):
         if id is None:
             raise KeyError('Unable to update a record, need an id.')
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        resp, _ = self.session.request(
-            method,
-            endpoint,
-            data=data,
-            headers=self._get_cache_headers(safe, data),
-            permissions=permissions)
+        headers = self._get_cache_headers(safe, data)
+        resp, _ = self.session.request(method, endpoint, data=data,
+                                       headers=headers,
+                                       permissions=permissions)
         return resp
 
     def patch_record(self, *args, **kwargs):

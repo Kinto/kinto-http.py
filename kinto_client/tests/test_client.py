@@ -1,8 +1,8 @@
 import mock
-
 from .support import unittest, mock_response, build_response
 
-from kinto_client import KintoException, BucketNotFound, Client
+from kinto_client import (KintoException, BucketNotFound, Client,
+                          DO_NOT_OVERWRITE)
 
 
 class ClientTest(unittest.TestCase):
@@ -28,8 +28,21 @@ class BucketTest(unittest.TestCase):
 
     def test_put_is_issued_on_creation(self):
         self.client.create_bucket('testbucket')
-        self.session.request.assert_called_with('put', '/buckets/testbucket',
-                                                permissions=None)
+        self.session.request.assert_called_with(
+            'put', '/buckets/testbucket', permissions=None,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_patch_is_issued_on_update(self):
+        self.client.update_bucket(
+            'testbucket',
+            data={'last_modified': '1234'},
+            permissions={'read': ['natim']})
+        self.session.request.assert_called_with(
+            'patch',
+            '/buckets/testbucket',
+            data={'last_modified': '1234'},
+            permissions={'read': ['natim']},
+            headers={'If-Match': '"1234"'})
 
     def test_get_is_issued_on_retrieval(self):
         self.client.get_bucket('testbucket')
@@ -101,16 +114,45 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, data=None, permissions=mock.sentinel.permissions)
+            'put', url, data=None, permissions=mock.sentinel.permissions,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_data_can_be_sent_on_creation(self):
+        self.client.create_collection(
+            'mycollection',
+            'testbucket',
+            data={'foo': 'bar'})
+
+        self.session.request.assert_called_with(
+            'put',
+            '/buckets/testbucket/collections/mycollection',
+            data={'foo': 'bar'},
+            permissions=None,
+            headers=DO_NOT_OVERWRITE)
 
     def test_collection_update_issues_an_http_put(self):
         self.client.update_collection(
             'mycollection',
+            data={'foo': 'bar'},
             permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, data=None, permissions=mock.sentinel.permissions)
+            'put', url, data={'foo': 'bar'},
+            permissions=mock.sentinel.permissions, headers=None)
+
+    def test_collection_update_use_an_if_match_header(self):
+        data = {'foo': 'bar', 'last_modified': '1234'}
+        self.client.update_collection(
+            'mycollection',
+            data=data,
+            permissions=mock.sentinel.permissions)
+
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with(
+            'put', url, data=data,
+            permissions=mock.sentinel.permissions,
+            headers={'If-Match': '"1234"'})
 
     def test_patch_collection_issues_an_http_patch(self):
         self.client.patch_collection(
@@ -119,7 +161,8 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'patch', url, data={'key': 'secret'}, permissions=None)
+            'patch', url, data={'key': 'secret'}, headers=None,
+            permissions=None)
 
     def test_get_collections_returns_the_list_of_collections(self):
         mock_response(
@@ -134,6 +177,41 @@ class CollectionTest(unittest.TestCase):
             {'id': 'foo', 'last_modified': '12345'},
             {'id': 'bar', 'last_modified': '59874'},
         ]
+
+    def test_collection_can_delete_a_list_of_records(self):
+        self.client.delete_records(['1234', '5678'])
+        # url = '/buckets/mybucket/collections/mycollection/records/9'
+        # XXX check that the delete is done in a BATCH.
+
+    def test_collection_can_be_deleted(self):
+        data = {}
+        mock_response(self.session, data=data)
+        deleted = self.client.delete_collection('mycollection')
+        assert deleted == data
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with('delete', url, headers=None)
+
+    def test_collection_delete_if_match(self):
+        data = {}
+        mock_response(self.session, data=data)
+        deleted = self.client.delete_collection(
+            'mycollection',
+            last_modified=1234)
+        assert deleted == data
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with(
+            'delete', url, headers={'If-Match': '"1234"'})
+
+    def test_collection_delete_if_match_not_included_if_not_safe(self):
+        data = {}
+        mock_response(self.session, data=data)
+        deleted = self.client.delete_collection(
+            'mycollection',
+            last_modified=1324,
+            safe=False)
+        assert deleted == data
+        url = '/buckets/mybucket/collections/mycollection'
+        self.session.request.assert_called_with('delete', url, headers=None)
 
 
 class RecordTest(unittest.TestCase):
@@ -165,9 +243,10 @@ class RecordTest(unittest.TestCase):
             'put',
             '/buckets/mybucket/collections/mycollection/records/1234',
             data={'foo': 'bar', 'id': '1234'},
-            permissions=mock.sentinel.permissions)
+            permissions=mock.sentinel.permissions,
+            headers=DO_NOT_OVERWRITE)
 
-    def test_collection_is_resolved_from_it_name(self):
+    def test_collection_argument_takes_precedence(self):
         mock_response(self.session)
         # Specify a different collection name for the client and the operation.
         client = Client(session=self.session, bucket='mybucket',
@@ -179,6 +258,7 @@ class RecordTest(unittest.TestCase):
             'put',
             '/buckets/mybucket/collections/good_collection/records/1234',
             data={'id': '1234'},
+            headers=None,
             permissions=mock.sentinel.permissions)
 
     def test_record_id_is_derived_from_data_if_present(self):
@@ -190,7 +270,8 @@ class RecordTest(unittest.TestCase):
             'put',
             '/buckets/mybucket/collections/mycollection/records/1234',
             data={'id': '1234', 'foo': 'bar'},
-            permissions=mock.sentinel.permissions)
+            permissions=mock.sentinel.permissions,
+            headers=DO_NOT_OVERWRITE)
 
     def test_data_and_permissions_are_added_on_create(self):
         mock_response(self.session)
@@ -200,17 +281,40 @@ class RecordTest(unittest.TestCase):
         self.client.create_record(
             id='1234',
             data=data,
-            permissions={'read': ['mle', ]})
+            permissions=permissions)
 
         url = '/buckets/mybucket/collections/mycollection/records/1234'
         self.session.request.assert_called_with(
-            'put', url, data=data, permissions=permissions)
+            'put', url, data=data, permissions=permissions,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_creation_sends_if_none_match_by_default(self):
+        mock_response(self.session)
+        data = {'foo': 'bar'}
+
+        self.client.create_record(
+            id='1234',
+            data=data)
+
+        url = '/buckets/mybucket/collections/mycollection/records/1234'
+        self.session.request.assert_called_with(
+            'put', url, data=data, permissions=None, headers=DO_NOT_OVERWRITE)
+
+    def test_creation_doesnt_add_if_none_match_when_overwrite(self):
+        mock_response(self.session)
+        data = {'foo': 'bar'}
+
+        self.client.create_record(id='1234', data=data, safe=False)
+
+        url = '/buckets/mybucket/collections/mycollection/records/1234'
+        self.session.request.assert_called_with(
+            'put', url, data=data, permissions=None, headers=None)
 
     def test_records_issues_a_request_on_delete(self):
         mock_response(self.session)
         self.client.delete_record('1234')
         url = '/buckets/mybucket/collections/mycollection/records/1234'
-        self.session.request.assert_called_with('delete', url)
+        self.session.request.assert_called_with('delete', url, headers=None)
 
     def test_record_issues_a_request_on_retrieval(self):
         mock_response(self.session, data={'foo': 'bar'})
@@ -256,20 +360,39 @@ class RecordTest(unittest.TestCase):
         resp = self.client.delete_record(id=1234)
         assert resp == {'id': 1234}
         url = '/buckets/mybucket/collections/mycollection/records/1234'
-        self.session.request.assert_called_with('delete', url)
+        self.session.request.assert_called_with('delete', url, headers=None)
 
     def test_collection_can_delete_a_list_of_records(self):
         self.client.delete_records(['1234', '5678'])
         # url = '/buckets/mybucket/collections/mycollection/records/9'
         # XXX check that the delete is done in a BATCH.
 
-    def test_collection_can_be_deleted(self):
+    def test_record_delete_if_match(self):
         data = {}
         mock_response(self.session, data=data)
-        deleted = self.client.delete_collection('mycollection')
+        deleted = self.client.delete_record(
+            collection='mycollection',
+            bucket='mybucket',
+            id='1',
+            last_modified=1234)
         assert deleted == data
-        url = '/buckets/mybucket/collections/mycollection'
-        self.session.request.assert_called_with('delete', url)
+        url = '/buckets/mybucket/collections/mycollection/records/1'
+        self.session.request.assert_called_with(
+            'delete', url, headers={'If-Match': '"1234"'})
+
+    def test_record_delete_if_match_not_included_if_not_safe(self):
+        data = {}
+        mock_response(self.session, data=data)
+        deleted = self.client.delete_record(
+            collection='mycollection',
+            bucket='mybucket',
+            id='1',
+            last_modified=1234,
+            safe=False)
+        assert deleted == data
+        url = '/buckets/mybucket/collections/mycollection/records/1'
+        self.session.request.assert_called_with(
+            'delete', url, headers=None)
 
     def test_update_record_gets_the_id_from_data_if_exists(self):
         mock_response(self.session)
@@ -279,7 +402,7 @@ class RecordTest(unittest.TestCase):
 
         self.session.request.assert_called_with(
             'put', '/buckets/mybucket/collections/mycollection/records/1',
-            data={'id': 1, 'foo': 'bar'}, permissions=None)
+            data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
 
     def test_patch_record_uses_the_patch_method(self):
         mock_response(self.session)
@@ -289,7 +412,7 @@ class RecordTest(unittest.TestCase):
 
         self.session.request.assert_called_with(
             'patch', '/buckets/mybucket/collections/mycollection/records/1',
-            data={'id': 1, 'foo': 'bar'}, permissions=None)
+            data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
 
     def test_update_record_raises_if_no_id_is_given(self):
         with self.assertRaises(KeyError) as cm:

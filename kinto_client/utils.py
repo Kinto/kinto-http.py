@@ -20,3 +20,7 @@ def slugify(value):
 def urljoin(server_url, path):
     """Return the url concatenation of server_url and path."""
     return server_url.rstrip('/') + '/' + path.lstrip('/')
+
+
+def quote(text):
+    return '"{0}"'.format(text)

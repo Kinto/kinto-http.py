@@ -7,7 +7,7 @@ import ConfigParser
 
 from cliquet import utils as cliquet_utils
 
-from kinto_client import Client, BucketNotFound
+from kinto_client import Client, BucketNotFound, KintoException
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 
@@ -142,6 +142,30 @@ class FunctionalTest(unittest2.TestCase):
         assert retrieved['data']['foo'] == u'bar'
         assert retrieved['data']['bar'] == u'baz'
         assert created['data']['id'] == retrieved['data']['id']
+
+    def test_single_record_doesnt_overwrite(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        created = client.create_record(data={'foo': 'bar'},
+                                       permissions={'read': ['alexis']})
+
+        with self.assertRaises(KintoException):
+            # Create a second record with the ID of the first one.
+            client.create_record(data={'id': created['data']['id'],
+                                       'bar': 'baz'})
+
+    def test_single_record_can_overwrite(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        created = client.create_record(data={'foo': 'bar'},
+                                       permissions={'read': ['alexis']})
+
+        client.create_record(data={'id': created['data']['id'],
+                                   'bar': 'baz'}, safe=False)
 
     def test_one_record_deletion(self):
         client = Client(server_url=self.server_url, auth=self.auth,

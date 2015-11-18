@@ -180,6 +180,13 @@ For instance to give access to "leplatrem" to a specific record, you would do:
   # During creation, it is possible to pass the permissions dict.
   client.create_record(data={'foo': 'bar'}, permissions={})
 
+Overwriting existing objects
+----------------------------
+
+Most of the methods take a `safe` argument, which defaults to `True`. If set
+to `True` and a `last_modified` field is present in the passed `data`, then a
+check will be added to the requests to ensure the record wasn't modified on
+the server side.
 
 Run tests
 =========
@@ -195,4 +202,3 @@ In another, run the tests against it:
 ::
 
     $ make tests
-

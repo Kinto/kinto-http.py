@@ -23,6 +23,7 @@ OBJECTS_PERMISSIONS = {
 }
 
 ID_FIELD = 'id'
+DO_NOT_OVERWRITE = {'If-None-Match': '*'}
 
 
 def create_session(server_url=None, auth=None, session=None):
@@ -108,7 +109,8 @@ class Session(object):
             kwargs.setdefault('json', payload)
         resp = requests.request(method, actual_url, **kwargs)
         if not (200 <= resp.status_code < 400):
-            exception = KintoException(resp.status_code, resp.json())
+            message = '{0} - {1}'.format(resp.status_code, resp.json())
+            exception = KintoException(message)
             exception.request = resp.request
             exception.response = resp
             raise exception
@@ -169,18 +171,36 @@ class Client(object):
 
         return records.values()
 
+    def _get_cache_headers(self, safe, data=None, last_modified=None):
+        has_data = data is not None and data.get('last_modified')
+
+        if (last_modified is None and has_data):
+            last_modified = data['last_modified']
+
+        if safe and last_modified is not None:
+            return {'If-Match': utils.quote(last_modified)}
+        # else return None
+
     # Buckets
 
-    def update_bucket(self, bucket=None, permissions=None):
+    def create_bucket(self, bucket=None, data=None, permissions=None,
+                      safe=True):
+        headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('bucket', bucket)
         resp, _ = self.session.request('put', endpoint,
-                                       permissions=permissions)
+                                       permissions=permissions,
+                                       headers=headers)
         return resp
 
-    def delete_bucket(self, bucket=None):
+    def update_bucket(self, bucket=None, data=None, permissions=None,
+                      safe=True):
         endpoint = self._get_endpoint('bucket', bucket)
-        resp, _ = self.session.request('delete', endpoint)
-        return resp['data']
+        headers = self._get_cache_headers(safe, data)
+        resp, _ = self.session.request('patch', endpoint, data=data,
+                                       permissions=permissions,
+                                       headers=headers)
+
+        return resp
 
     def get_bucket(self, bucket=None):
         endpoint = self._get_endpoint('bucket', bucket)
@@ -190,9 +210,10 @@ class Client(object):
             raise BucketNotFound(bucket or self._bucket_name, e)
         return resp
 
-    def create_bucket(self, *args, **kwargs):
-        # Alias to update bucket.
-        return self.update_bucket(*args, **kwargs)
+    def delete_bucket(self, bucket=None):
+        endpoint = self._get_endpoint('bucket', bucket)
+        resp, _ = self.session.request('delete', endpoint)
+        return resp['data']
 
     # Collections
 
@@ -200,19 +221,27 @@ class Client(object):
         endpoint = self._get_endpoint('collections', bucket)
         return self._paginated(endpoint)
 
-    def update_collection(self, collection=None, bucket=None,
-                          data=None, permissions=None, method='put'):
+    def create_collection(self, collection=None, bucket=None,
+                          data=None, permissions=None, safe=True):
+        headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('collection', bucket, collection)
+        resp, _ = self.session.request('put', endpoint, data=data,
+                                       permissions=permissions,
+                                       headers=headers)
+        return resp
+
+    def update_collection(self, collection=None, bucket=None,
+                          data=None, permissions=None, method='put',
+                          safe=True):
+        endpoint = self._get_endpoint('collection', bucket, collection)
+        headers = self._get_cache_headers(safe, data)
         resp, _ = self.session.request(method, endpoint, data=data,
-                                       permissions=permissions)
+                                       permissions=permissions,
+                                       headers=headers)
         return resp
 
     def patch_collection(self, *args, **kwargs):
         kwargs['method'] = 'patch'
-        return self.update_collection(*args, **kwargs)
-
-    def create_collection(self, *args, **kwargs):
-        # Alias to update collection.
         return self.update_collection(*args, **kwargs)
 
     def get_collection(self, collection=None, bucket=None):
@@ -220,9 +249,11 @@ class Client(object):
         resp, _ = self.session.request('get', endpoint)
         return resp
 
-    def delete_collection(self, collection=None, bucket=None):
+    def delete_collection(self, collection=None, bucket=None,
+                          last_modified=None, safe=True):
         endpoint = self._get_endpoint('collection', bucket, collection)
-        resp, _ = self.session.request('delete', endpoint)
+        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     # Records
@@ -239,21 +270,26 @@ class Client(object):
         return resp
 
     def create_record(self, data, id=None, collection=None, permissions=None,
-                      bucket=None):
+                      bucket=None, safe=True):
         id = id or data.get('id', None) or str(uuid.uuid4())
+        # Make sure that no record already exists with this id.
+        headers = DO_NOT_OVERWRITE if safe else None
 
         endpoint = self._get_endpoint('record', bucket, collection, id)
         resp, _ = self.session.request('put', endpoint, data=data,
-                                       permissions=permissions)
+                                       permissions=permissions,
+                                       headers=headers)
         return resp
 
     def update_record(self, data, id=None, collection=None, permissions=None,
-                      bucket=None, method='put'):
+                      bucket=None, safe=True, method='put'):
         id = id or data.get('id')
         if id is None:
             raise KeyError('Unable to update a record, need an id.')
         endpoint = self._get_endpoint('record', bucket, collection, id)
+        headers = self._get_cache_headers(safe, data)
         resp, _ = self.session.request(method, endpoint, data=data,
+                                       headers=headers,
                                        permissions=permissions)
         return resp
 
@@ -261,9 +297,12 @@ class Client(object):
         kwargs['method'] = 'patch'
         return self.update_record(*args, **kwargs)
 
-    def delete_record(self, id, collection=None, bucket=None):
+    def delete_record(self, id, collection=None, bucket=None,
+                      last_modified=None, safe=True):
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        resp, _ = self.session.request('delete', endpoint)
+        resp, _ = self.session.request(
+            'delete', endpoint,
+            headers=self._get_cache_headers(safe, last_modified=last_modified))
         return resp['data']
 
     def delete_records(self, records):

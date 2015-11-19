@@ -1,3 +1,4 @@
+from six import text_type
 from .support import unittest
 
 from kinto_client import Endpoints, KintoException
@@ -46,7 +47,7 @@ class EndpointsTest(unittest.TestCase):
         with self.assertRaises(KintoException) as context:
             self.endpoints.get('record', bucket='buck',  collection='coll')
         msg = "Cannot get record endpoint, id is missing"
-        assert context.exception.message == msg
+        assert text_type(context.exception) == msg
 
     def test_null_arguments_raise_an_error(self):
         # Include a null record id; it should raise an error.
@@ -54,7 +55,7 @@ class EndpointsTest(unittest.TestCase):
             self.endpoints.get('record', bucket='buck',  collection='coll',
                                id=None)
         msg = "Cannot get record endpoint, id is missing"
-        assert context.exception.message == msg
+        assert text_type(context.exception) == msg
 
     def test_arguments_are_slugified(self):
         assert self.endpoints.get('bucket', bucket='My Bucket') ==\

@@ -16,7 +16,7 @@ REQUIREMENTS = [
 ]
 
 setup(name='kinto-client',
-      version='1.0.1.dev0',
+      version='2.0.0',
       description='Kinto client',
       long_description=README,
       license='Apache License (2.0)',
@@ -24,6 +24,7 @@ setup(name='kinto-client',
           "Programming Language :: Python",
           "Programming Language :: Python :: 2",
           "Programming Language :: Python :: 2.7",
+          "Programming Language :: Python :: 3.4",
           "Programming Language :: Python :: Implementation :: CPython",
           "Topic :: Internet :: WWW/HTTP",
           "License :: OSI Approved :: Apache Software License"

@@ -12,7 +12,8 @@ OBJECTS = .venv .coverage
 all: install
 install: $(INSTALL_STAMP)
 $(INSTALL_STAMP): $(PYTHON) setup.py
-	$(PYTHON) setup.py develop
+	$(VENV)/bin/pip install -U pip
+	$(VENV)/bin/pip install -Ue .
 	touch $(INSTALL_STAMP)
 
 install-dev: $(INSTALL_STAMP) $(DEV_STAMP)
@@ -27,7 +28,7 @@ $(PYTHON):
 need-kinto-running:
 	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make runkinto' before starting tests." && exit 1)
 
-runkinto:
+runkinto: install-dev
 	$(VENV)/bin/cliquet --ini kinto_client/tests/config/kinto.ini migrate
 	$(VENV)/bin/pserve kinto_client/tests/config/kinto.ini --reload
 
@@ -42,7 +43,7 @@ tests: install-dev need-kinto-running
 
 clean:
 	find . -name '*.pyc' -delete
-	find . -name '__pycache__' -type d -exec rm -fr {} \;
+	find . -name '__pycache__' -type d | xargs rm -fr
 
 distclean: clean
 	rm -fr *.egg *.egg-info/ dist/ build/

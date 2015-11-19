@@ -10,7 +10,7 @@ def slugify(value):
     """
     value = unidecode(six.text_type(value))
     if isinstance(value, six.binary_type):
-        value = value.decode('ascii')
+        value = value.decode('ascii')  # pragma: nocover
     value = unicodedata.normalize('NFKD', value).lower()
     value = re.sub('[^\w\s-]', '', value.lower()).strip()
     value = re.sub('[-\s]+', '-', value)

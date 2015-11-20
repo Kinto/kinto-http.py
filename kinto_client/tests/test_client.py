@@ -36,13 +36,25 @@ class BucketTest(unittest.TestCase):
     def test_patch_is_issued_on_update(self):
         self.client.update_bucket(
             'testbucket',
-            data={'last_modified': '1234'},
+            data={'foo': 'bar', 'last_modified': '1234'},
             permissions={'read': ['natim']})
         self.session.request.assert_called_with(
             'patch',
             '/buckets/testbucket',
-            data={'last_modified': '1234'},
+            data={'foo': 'bar'},
             permissions={'read': ['natim']},
+            headers={'If-Match': '"1234"'})
+
+    def test_udpate_bucket_handles_last_modified(self):
+        self.client.update_bucket(
+            'testbucket',
+            data={'foo': 'bar'},
+            last_modified=1234)
+        self.session.request.assert_called_with(
+            'patch',
+            '/buckets/testbucket',
+            data={'foo': 'bar'},
+            permissions=None,
             headers={'If-Match': '"1234"'})
 
     def test_get_is_issued_on_retrieval(self):
@@ -95,6 +107,12 @@ class BucketTest(unittest.TestCase):
         mock_response(self.session, data={'deleted': True})
         assert self.client.delete_bucket('bucket') == {'deleted': True}
 
+    def test_delete_bucket_handles_last_modified(self):
+        self.client.delete_bucket('mybucket', last_modified=1234)
+        url = '/buckets/mybucket'
+        headers = {'If-Match': '"1234"'}
+        self.session.request.assert_called_with('delete', url, headers=headers)
+
 
 class CollectionTest(unittest.TestCase):
 
@@ -142,6 +160,18 @@ class CollectionTest(unittest.TestCase):
             'put', url, data={'foo': 'bar'},
             permissions=mock.sentinel.permissions, headers=None)
 
+    def test_update_handles_last_modified(self):
+        self.client.update_collection(
+            'mycollection',
+            data={'foo': 'bar'},
+            last_modified=1234)
+
+        url = '/buckets/mybucket/collections/mycollection'
+        headers = {'If-Match': '"1234"'}
+        self.session.request.assert_called_with(
+            'put', url, data={'foo': 'bar'},
+            headers=headers, permissions=None)
+
     def test_collection_update_use_an_if_match_header(self):
         data = {'foo': 'bar', 'last_modified': '1234'}
         self.client.update_collection(
@@ -151,7 +181,7 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, data=data,
+            'put', url, data={'foo': 'bar'},
             permissions=mock.sentinel.permissions,
             headers={'If-Match': '"1234"'})
 
@@ -163,6 +193,18 @@ class CollectionTest(unittest.TestCase):
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
             'patch', url, data={'key': 'secret'}, headers=None,
+            permissions=None)
+
+    def test_patch_collection_handles_last_modified(self):
+        self.client.patch_collection(
+            collection='mycollection',
+            data={'key': 'secret'},
+            last_modified=1234)
+
+        url = '/buckets/mybucket/collections/mycollection'
+        headers = {'If-Match': '"1234"'}
+        self.session.request.assert_called_with(
+            'patch', url, data={'key': 'secret'}, headers=headers,
             permissions=None)
 
     def test_get_collections_returns_the_list_of_collections(self):
@@ -404,6 +446,17 @@ class RecordTest(unittest.TestCase):
         self.session.request.assert_called_with(
             'put', '/buckets/mybucket/collections/mycollection/records/1',
             data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
+
+    def test_update_record_handles_last_modified(self):
+        mock_response(self.session)
+        self.client.update_record(
+            bucket='mybucket', collection='mycollection',
+            data={'id': 1, 'foo': 'bar'}, last_modified=1234)
+
+        headers = {'If-Match': '"1234"'}
+        self.session.request.assert_called_with(
+            'put', '/buckets/mybucket/collections/mycollection/records/1',
+            data={'id': 1, 'foo': 'bar'}, headers=headers, permissions=None)
 
     def test_patch_record_uses_the_patch_method(self):
         mock_response(self.session)

@@ -8,6 +8,7 @@ from six.moves import configparser
 from cliquet import utils as cliquet_utils
 
 from kinto_client import Client, BucketNotFound, KintoException
+from kinto_client import replication
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 
@@ -250,6 +251,32 @@ class FunctionalTest(unittest2.TestCase):
 
         records = self.client.get_records(bucket='mozilla', collection='fonts')
         assert len(records) == 2
+
+    def test_replication(self):
+        # First, create a few records on the first kinto collection.
+        with self.client.batch(bucket='origin', collection='coll') as batch:
+            batch.create_bucket()
+            batch.create_collection()
+
+            for n in range(10):
+                batch.create_record(data={'foo': 'bar', 'n': n})
+
+        origin = dict(
+            server_url=self.server_url,
+            auth=self.auth,
+            bucket='origin',
+            collection='coll'
+        )
+        destination = dict(
+            server_url=self.server_url,
+            auth=self.auth,
+            bucket='destination',
+            collection='coll')
+
+        replication.replicate(origin, destination)
+        records = self.client.get_records(bucket='destination',
+                                          collection='coll')
+        assert len(records) == 10
 
 
 if __name__ == '__main__':

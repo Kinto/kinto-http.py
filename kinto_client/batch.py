@@ -17,6 +17,10 @@ class Batch(object):
         # This is the signature of the session request.
         return None, None
 
+    def reset(self):
+        # Reinitialize the batch.
+        self.requests = []
+
     def _build_requests(self):
         requests = []
         for (method, url, data, permissions, headers) in self.requests:
@@ -35,13 +39,13 @@ class Batch(object):
         return requests
 
     def send(self):
+        result = []
         requests = self._build_requests()
         for chunk in utils.chunks(requests, self.batch_max_requests):
-            resp = self.session.request(
+            resp, headers = self.session.request(
                 'POST',
                 self.endpoints.get('batch'),
                 payload={'requests': chunk}
             )
-        # Reinitialize the batch.
-        self.requests = []
-        return resp
+            result.append((resp, headers))
+        return result

@@ -122,6 +122,7 @@ class FunctionalTest(unittest2.TestCase):
         for i in range(10):
             client.create_record(data={'foo': 'bar'},
                                  permissions={'read': ['alexis']})
+        # Kinto is running with kinto.paginate_by = 5
         records = client.get_records()
         assert len(records) == 10
 

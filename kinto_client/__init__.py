@@ -147,7 +147,16 @@ class Client(object):
         batch_max_requests = self._server_settings['batch_max_requests']
         batch = Batch(self, batch_max_requests=batch_max_requests)
         yield self.clone(session=batch, **kwargs)
-        batch.send()
+        for (resp, headers) in batch.send():
+            for i, response in enumerate(resp['responses']):
+                status_code = response['status']
+                if not (200 <= status_code < 400):
+                    message = '{0} - {1}'.format(status_code, response['body'])
+                    exception = KintoException(message)
+                    exception.request = batch.requests[i]
+                    exception.response = response
+                    raise exception
+        batch.reset()
 
     def _get_endpoint(self, name, bucket=None, collection=None, id=None):
         kwargs = {
@@ -158,7 +167,6 @@ class Client(object):
         return self.endpoints.get(name, **kwargs)
 
     def _paginated(self, endpoint, records=None, visited=None):
-        print("paginated")
         if records is None:
             records = collections.OrderedDict()
         if visited is None:

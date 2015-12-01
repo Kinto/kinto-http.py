@@ -68,6 +68,19 @@ class SessionTest(unittest.TestCase):
             'get', 'https://example.org/test',
             json={"data": {'foo': 'bar'}})
 
+    def test_passed_data_is_passed_as_is_when_files_are_posted(self):
+        response = mock.MagicMock()
+        response.status_code = 200
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        session.request('post', '/test',
+                        data='{"foo": "bar"}',
+                        files={"attachment": {"filename"}})
+        self.requests_mock.request.assert_called_with(
+            'post', 'https://example.org/test',
+            data={"data": '{"foo": "bar"}'},
+            files={"attachment": {"filename"}})
+
     def test_passed_permissions_is_added_in_the_payload(self):
         response = mock.MagicMock()
         response.status_code = 200

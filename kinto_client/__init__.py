@@ -107,7 +107,8 @@ class Session(object):
                 permissions = permissions.as_dict()
             payload['permissions'] = permissions
         if payload:
-            kwargs.setdefault('json', payload)
+            payload_kwarg = 'data' if 'files' in kwargs else 'json'
+            kwargs.setdefault(payload_kwarg, payload)
         resp = requests.request(method, actual_url, **kwargs)
         if not (200 <= resp.status_code < 400):
             message = '{0} - {1}'.format(resp.status_code, resp.json())

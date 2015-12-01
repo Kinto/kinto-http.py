@@ -7,7 +7,10 @@ This document describes changes between each past release.
 2.1.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Bug fixes**
+
+- Do not force the JSON content-type in requests if multipart-encoded files
+  are sent
 
 
 2.0.0 (2015-11-18)

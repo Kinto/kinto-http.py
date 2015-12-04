@@ -1,8 +1,12 @@
+from . import utils
+
+
 class Batch(object):
 
-    def __init__(self, client):
+    def __init__(self, client, batch_max_requests=0):
         self.session = client.session
         self.endpoints = client.endpoints
+        self.batch_max_requests = batch_max_requests
         self.requests = []
 
     def request(self, method, endpoint, data=None, permissions=None,
@@ -32,11 +36,12 @@ class Batch(object):
 
     def send(self):
         requests = self._build_requests()
-        resp = self.session.request(
-            'POST',
-            self.endpoints.get('batch'),
-            payload={'requests': requests}
-        )
+        for chunk in utils.chunks(requests, self.batch_max_requests):
+            resp = self.session.request(
+                'POST',
+                self.endpoints.get('batch'),
+                payload={'requests': chunk}
+            )
         # Reinitialize the batch.
         self.requests = []
         return resp

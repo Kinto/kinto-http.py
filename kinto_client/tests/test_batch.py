@@ -62,6 +62,19 @@ class BatchRequestsTest(unittest.TestCase):
             }]}
         )
 
+    def test_batch_send_multiple_requests_if_too_many_requests(self):
+        batch = Batch(self.client, batch_max_requests=3)
+        for i in range(5):
+            batch.request('GET', '/foobar/%s' % i)
+        batch.send()
+
+        calls = self.client.session.request.call_args_list
+        assert len(calls) == 2
+        _, kwargs1 = calls[0]
+        assert kwargs1['payload']['requests'][-1]['path'] == '/foobar/2'
+        _, kwargs2 = calls[1]
+        assert kwargs2['payload']['requests'][0]['path'] == '/foobar/3'
+
     def test_send_empties_the_requests_cache(self):
         batch = Batch(self.client)
         batch.request('GET', '/foobar/baz',

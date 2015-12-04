@@ -24,3 +24,14 @@ def urljoin(server_url, path):
 
 def quote(text):
     return '"{0}"'.format(text)
+
+
+def chunks(l, n):
+    """Yield successive n-sized chunks from l.
+    Source: http://stackoverflow.com/a/312464
+    """
+    if n > 0:
+        for i in xrange(0, len(l), n):
+            yield l[i:i+n]
+    else:
+        yield l

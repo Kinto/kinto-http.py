@@ -31,7 +31,7 @@ def chunks(l, n):
     Source: http://stackoverflow.com/a/312464
     """
     if n > 0:
-        for i in xrange(0, len(l), n):
+        for i in range(0, len(l), n):
             yield l[i:i+n]
     else:
         yield l

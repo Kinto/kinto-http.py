@@ -13,11 +13,25 @@ class ClientTest(unittest.TestCase):
         mock_response(self.session)
 
     def test_context_manager_works_as_expected(self):
+        settings = {"batch_max_requests": 25}
+        self.session.request.return_value = ({"settings": settings}, [])
+
         with self.client.batch(bucket='mozilla', collection='test') as batch:
             batch.create_record(id=1234, data={'foo': 'bar'})
             batch.create_record(id=5678, data={'bar': 'baz'})
 
-        assert self.client.session.request.called
+        self.session.request.assert_called_with(
+            'POST',
+            '/batch',
+            payload={'requests': [
+                {'body': {'data': {'foo': 'bar'}},
+                 'path': '/buckets/mozilla/collections/test/records/1234',
+                 'method': 'PUT',
+                 'headers': {'If-None-Match': '*'}},
+                {'body': {'data': {'bar': 'baz'}},
+                 'path': '/buckets/mozilla/collections/test/records/5678',
+                 'method': 'PUT',
+                 'headers': {'If-None-Match': '*'}}]})
 
 
 class BucketTest(unittest.TestCase):

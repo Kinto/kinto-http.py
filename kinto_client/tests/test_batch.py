@@ -7,6 +7,8 @@ from kinto_client.batch import Batch
 class BatchRequestsTest(unittest.TestCase):
     def setUp(self):
         self.client = mock.MagicMock()
+        self.client.session.request.return_value = (mock.sentinel.resp,
+                                                    mock.sentinel.headers)
 
     def test_requests_are_stacked(self):
         batch = Batch(self.client)
@@ -75,10 +77,10 @@ class BatchRequestsTest(unittest.TestCase):
         _, kwargs2 = calls[1]
         assert kwargs2['payload']['requests'][0]['path'] == '/foobar/3'
 
-    def test_send_empties_the_requests_cache(self):
+    def test_reset_empties_the_requests_cache(self):
         batch = Batch(self.client)
         batch.request('GET', '/foobar/baz',
                       permissions=mock.sentinel.permissions)
         assert len(batch.requests) == 1
-        batch.send()
+        batch.reset()
         assert len(batch.requests) == 0

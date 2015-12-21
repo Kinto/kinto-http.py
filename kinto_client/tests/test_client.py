@@ -14,7 +14,8 @@ class ClientTest(unittest.TestCase):
 
     def test_context_manager_works_as_expected(self):
         settings = {"batch_max_requests": 25}
-        self.session.request.return_value = ({"settings": settings}, [])
+        self.session.request.side_effect = [({"settings": settings}, []),
+                                            ({"responses": []}, [])]
 
         with self.client.batch(bucket='mozilla', collection='test') as batch:
             batch.create_record(id=1234, data={'foo': 'bar'})
@@ -32,6 +33,37 @@ class ClientTest(unittest.TestCase):
                  'path': '/buckets/mozilla/collections/test/records/5678',
                  'method': 'PUT',
                  'headers': {'If-None-Match': '*'}}]})
+
+    def test_batch_raises_exception(self):
+        # Make the next call to sess.request raise a 403.
+        exception = KintoException()
+        exception.response = mock.MagicMock()
+        exception.response.status_code = 403
+        exception.request = mock.sentinel.request
+        self.session.request.side_effect = exception
+
+        with self.assertRaises(KintoException):
+            with self.client.batch(bucket='moz', collection='test') as batch:
+                batch.create_record(id=1234, data={'foo': 'bar'})
+
+    def test_batch_raises_exception_if_subrequest_failed(self):
+        error = {
+            "errno": 121,
+            "message": "This user cannot access this resource.",
+            "code": 403,
+            "error": "Forbidden"
+        }
+        self.session.request.side_effect = [
+            ({"settings": {"batch_max_requests": 25}}, []),
+            ({"responses": [
+                {"status": 200, "path": "/url1", "body": {}, "headers": {}},
+                {"status": 404, "path": "/url2", "body": error, "headers": {}}
+            ]}, [])]
+
+        with self.assertRaises(KintoException):
+            with self.client.batch(bucket='moz', collection='test') as batch:
+                batch.create_record(id=1234, data={'foo': 'bar'})
+                batch.create_record(id=5678, data={'tutu': 'toto'})
 
 
 class BucketTest(unittest.TestCase):

@@ -1,5 +1,6 @@
 import codecs
 import os
+import sys
 from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -14,6 +15,14 @@ REQUIREMENTS = [
     'unidecode',
     'six'
 ]
+
+
+if sys.version_info < (2, 7, 9):
+    # For secure SSL connexion with Python 2.7 (InsecurePlatformWarning)
+    REQUIREMENTS.append('PyOpenSSL')
+    REQUIREMENTS.append('ndg-httpsclient')
+    REQUIREMENTS.append('pyasn1')
+
 
 setup(name='kinto-client',
       version='2.1.0.dev0',

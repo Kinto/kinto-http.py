@@ -6,6 +6,7 @@ env:
     - TOX_ENV=flake8
 before_install:
     - pip install kinto
+    - make install-dev
     - make runkinto &
 install:
     - pip install tox

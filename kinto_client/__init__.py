@@ -117,8 +117,12 @@ class Session(object):
             exception.response = resp
             raise exception
 
+        if resp.status_code == 304:
+            body = None
+        else:
+            body = resp.json()
         # XXX Add the status code.
-        return resp.json(), resp.headers
+        return body, resp.headers
 
 
 class Client(object):
@@ -166,25 +170,29 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
-    def _paginated(self, endpoint, records=None, visited=None):
+    def _paginated(self, endpoint, records=None, if_none_match=None,
+                   with_headers=False, **kwargs):
         if records is None:
             records = collections.OrderedDict()
-        if visited is None:
-            visited = set()
+        headers = {}
+        if if_none_match is not None:
+            headers['If-None-Match'] = utils.quote(if_none_match)
 
-        record_resp, headers = self.session.request('get', endpoint)
-        records.update(collections.OrderedDict(
-            [(r['id'], r) for r in record_resp['data']]))
+        record_resp, headers = self.session.request(
+            'get', endpoint, headers=headers, params=kwargs)
+        if record_resp:
+            records.update(collections.OrderedDict(
+                [(r['id'], r) for r in record_resp['data']]))
 
-        visited.add(endpoint)
-
-        if 'next-page' in map(str.lower, headers.keys()):
-            # Paginated wants a relative URL, but the returned one is absolute.
-            next_page = headers['Next-Page']
-            # Due to bug mozilla-services/cliquet#366, check for recursion:
-            if next_page not in visited:
-                return self._paginated(next_page, records, visited)
-
+            if 'next-page' in map(str.lower, headers.keys()):
+                # Paginated wants a relative URL, but the returned one is
+                # absolute.
+                next_page = headers['Next-Page']
+                return self._paginated(next_page, records,
+                                       with_headers=with_headers,
+                                       if_none_match=if_none_match)
+        if with_headers is True:
+            return records.values(), headers
         return records.values()
 
     def _get_cache_headers(self, safe, data=None, last_modified=None):
@@ -277,11 +285,11 @@ class Client(object):
 
     # Records
 
-    def get_records(self, collection=None, bucket=None):
+    def get_records(self, collection=None, bucket=None, **kwargs):
         """Returns all the records"""
         # XXX Add filter and sorting.
         endpoint = self._get_endpoint('records', bucket, collection)
-        return self._paginated(endpoint)
+        return self._paginated(endpoint, **kwargs)
 
     def get_record(self, id, collection=None, bucket=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)

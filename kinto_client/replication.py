@@ -12,8 +12,10 @@ def replicate(origin_settings, destination_settings):
     The passed settings should match the named parameters of the python client.
     """
     msg = 'Replication from {0} to {1}'.format(
-        '{server_url}/{bucket}/{collection}'.format(**origin_settings),
-        '{server_url}/{bucket}/{collection}'.format(**destination_settings)
+        '{server_url}/buckets/{bucket}/collections/{collection}'
+        .format(**origin_settings),
+        '{server_url}/buckets/{bucket}/collections/{collection}'
+        .format(**destination_settings)
     )
     logger.info(msg)
 
@@ -27,30 +29,26 @@ def replicate(origin_settings, destination_settings):
     try:
         destination.get_collection()
     except exceptions.KintoException:
-        destination.create_collection(safe=False)
+        collection_data = origin.get_collection()
+        destination.create_collection(
+            data=collection_data['data'],
+            permissions=collection_data['permissions'], safe=False)
+    # XXX Why safe=False?
 
     # XXX Since records list don't include metadata (permissions). Need to get
     # each individual record instead using read-batching.
     # For now, since we don't need to sync the permissions, retrieve everything
     # with get_records().
-    # with destination.batch() as batch:
-    batch = destination
-    # XXX Support batch limitations.
-    records = origin.get_records()
-    logger.info('replication of {0} records'.format(len(records)))
-    for record in records:
-        # XXX Add permissions.
-        batch.update_record(data=record, safe=False)
-
-    bucket_data = origin.get_bucket()
-    batch.update_bucket(
-        data=bucket_data['data'],
-        permissions=bucket_data['permissions'], safe=False)
-
-    collection_data = origin.get_collection()
-    batch.update_collection(
-        data=collection_data['data'],
-        permissions=collection_data['permissions'], safe=False)
+    with destination.batch() as batch:
+        # XXX Support batch limitations.
+        records = origin.get_records()
+        logger.info('replication of {0} records'.format(len(records)))
+        for record in records:
+            if record.get('deleted', False) is True:
+                batch.delete_record(record['id'],
+                                    last_modified=record['last_modified'])
+            else:
+                batch.update_record(data=record, safe=False)
 
 
 def get_arguments():

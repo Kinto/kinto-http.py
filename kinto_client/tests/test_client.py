@@ -85,7 +85,7 @@ class BucketTest(unittest.TestCase):
             data={'foo': 'bar', 'last_modified': '1234'},
             permissions={'read': ['natim']})
         self.session.request.assert_called_with(
-            'patch',
+            'put',
             '/buckets/testbucket',
             data={'foo': 'bar'},
             permissions={'read': ['natim']},
@@ -443,6 +443,54 @@ class RecordTest(unittest.TestCase):
             {'id': '3', 'value': 'item3'},
             {'id': '4', 'value': 'item4'},
         ]
+
+    def test_pagination_supports_if_none_match(self):
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        self.session.request.side_effect = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+            ),
+        ]
+        self.client.get_records('bucket', 'collection',
+                                if_none_match="1234")
+
+        # Check that the If-None-Match header is present in the requests.
+        self.session.request.assert_any_call(
+            'get', '/buckets/collection/collections/bucket/records',
+            headers={'If-None-Match': '"1234"'}, params={})
+        self.session.request.assert_any_call(
+            'get', link, headers={'If-None-Match': '"1234"'}, params={})
+
+    def test_pagination_can_return_headers(self):
+        # Mock the calls to request.
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        self.session.request.side_effect = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+            ),
+        ]
+        records, headers = self.client.get_records(
+            'bucket', 'collection', with_headers=True)
+
+        assert headers == {}
 
     def test_collection_can_delete_a_record(self):
         mock_response(self.session, data={'id': 1234})

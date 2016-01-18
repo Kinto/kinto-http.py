@@ -1,26 +1,33 @@
 #!/bin/bash
 # -*- coding: utf-8 -*-
-from kinto_client.argparse import get_parser, setup_parser, logging
+from kinto_client.importer import KintoImporter
 
 
-def synchronize(args):
-    kinto_options = {
-        'server': args['host'],
-        'bucket_name': args['bucket'],
-        'collection_name': args['collection'],
-        'auth': auth,
-        'permissions': COLLECTION_PERMISSIONS
-    }
+class DummyImporter(KintoImporter):
+    collection_permissions = {'read': ["system.Everyone"]}
+    fields = ('name', 'protocol')
+    set_all = True
 
+    def get_local_records(self):
+        return [
+            {'id': "f3a31016-274b-a558-6e21-d1a00f74090f",
+             'name': "websocket",
+             'protocol': "ws"},
+            {'id': "2e6e434b-eac6-f84f-0905-e9f9bb7ab5ab",
+             'name': "IRC",
+             'protocol': "irc"},
+            {'id': "ba87a851-fe45-5a57-f238-d4fbc832ea30",
+             'name': "HTTP",
+             'protocol': "http"},
+            {'id': "106b1b39-071f-dc61-e4e3-7e5b1063a5b2",
+             'name': "Mail",
+             'protocol': "mailto"},
+        ]
 
 
 def main(args=None):
-    parser = get_parser(
-        description="Show how to use Kinto.py utilities to build commands")
-    logger = logging.getLogger(__file__)
-
-    args = setup_parser(parser, logger)
-    synchronize(args)
+    importer = DummyImporter()
+    importer.sync(delete=False)
 
 
 if __name__ == '__main__':  # pragma: nocover

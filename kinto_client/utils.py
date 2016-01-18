@@ -3,7 +3,7 @@ import unicodedata
 from unidecode import unidecode
 import six
 
-REGEXP = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
+VALID_SLUG_REGEXP = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
 
 
 def slugify(value):
@@ -11,8 +11,8 @@ def slugify(value):
     and converts spaces to hyphens.
     """
     value = six.text_type(value)
-    # Do not lowercase already valid value.
-    if REGEXP.match(value):
+    # Do not slugify valid values.
+    if VALID_SLUG_REGEXP.match(value):
         return value
 
     value = unidecode(value)

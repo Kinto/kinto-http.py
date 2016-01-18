@@ -18,7 +18,7 @@ class UtilsTest(TestCase):
     def test_slugify_replaces_equivalent_chars(self):
         assert utils.slugify(u'chârs') == 'chars'
 
-    def test_slugify_do_no_touch_valid_ids(self):
+    def test_slugify_do_no_modify_valid_ids(self):
         for value in ['en-US', 'en_GB']:
             assert utils.slugify(value) == value
 

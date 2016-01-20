@@ -228,5 +228,3 @@ class KintoImporter(object):
             if create:
                 for record in to_create:
                     batch.create_record(record)
-
-        batch.send()

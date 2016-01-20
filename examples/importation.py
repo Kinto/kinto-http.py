@@ -6,7 +6,7 @@ from kinto_client.importer import KintoImporter
 class DummyImporter(KintoImporter):
     all_default_parameters = True
     collection_permissions = {'read': ["system.Everyone"]}
-    fields = ('name', 'protocol')
+    record_fields = ('name', 'protocol')
 
     def get_local_records(self):
         return [

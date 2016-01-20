@@ -26,7 +26,7 @@ def same_record(fields, one, two):
 
 
 class KintoImporter(object):
-    set_all = False
+    all_default_parameters = False
     bucket_permissions = None
     collection_permissions = None
 
@@ -43,7 +43,8 @@ class KintoImporter(object):
     def configure_parser(self, parser=None, *args, **kwargs):
         """Return an argparse.ArgumentParser pre-configured object."""
 
-        default = bool(kwargs.pop('set_all', self.set_all))
+        default = bool(kwargs.pop('all_default_parameters',
+                                  self.all_default_parameters))
         remote_server = bool(kwargs.pop('remote_server', default))
         authentication = bool(kwargs.pop('authentication', default))
         files = bool(kwargs.pop('files', default))

@@ -12,7 +12,7 @@ from kinto_client.exceptions import KintoException
 COMMAND_LOG_LEVEL = 25
 logging.addLevelName(COMMAND_LOG_LEVEL, 'COMMAND')
 logging.basicConfig(level=COMMAND_LOG_LEVEL, format="%(message)s")
-logger = logging.getLogger(__file__)
+global_logger = logging.getLogger(__file__)
 
 
 def is_same_record(fields, one, two):
@@ -41,17 +41,19 @@ class KintoImporter(object):
     default_auth = None
     default_files = None
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, logger=None, arguments=None, *args, **kwargs):
         if not hasattr(self, 'record_fields'):
             raise ValueError(
                 "%r: record_fields attribute is not defined." % self)
+
+        self.logger = logger or global_logger
 
         self._local_records = None
         self._remote_records = None
 
         parser = self.configure_parser(*args, **kwargs)
-        self.args = self.get_arguments(parser)
-        self.setup_logger(logger)
+        self.args = self.get_arguments(parser, args=arguments)
+        self.setup_logger()
         self.setup_local_client()
         self.setup_remote_client()
 
@@ -69,24 +71,28 @@ class KintoImporter(object):
                 remote_server = self.remote_server
             else:
                 remote_server = all_default_parameters
+        self.remote_server = remote_server
 
         if authentication is None:
             if self.authentication is not None:
                 authentication = self.authentication
             else:
                 authentication = all_default_parameters
+        self.authentication = authentication
 
         if files is None:
             if self.files is not None:
                 files = self.files
             else:
                 files = all_default_parameters
+        self.files = files
 
         if verbosity is None:
             if self.verbosity is not None:
                 verbosity = self.verbosity
             else:
                 verbosity = all_default_parameters
+        self.verbosity = verbosity
 
         if not parser:
             parser = argparse.ArgumentParser(*args, **kwargs)
@@ -127,14 +133,17 @@ class KintoImporter(object):
         args = vars(parser.parse_args(args=args))
 
         files = []
-        for f in args['files']:
-            if os.path.exists(f):
-                files.append(os.path.abspath(f))
-                logger.log(COMMAND_LOG_LEVEL, '%s: ✓' % os.path.abspath(f))
-            else:
-                logger.error('%s: ✗' % os.path.abspath(f))
 
-        args['files'] = files
+        if 'files' in args:
+            for f in args['files']:
+                if os.path.exists(f):
+                    files.append(os.path.abspath(f))
+                    self.logger.log(COMMAND_LOG_LEVEL,
+                                    '%s: ✓' % os.path.abspath(f))
+                else:
+                    self.logger.error('%s: ✗' % os.path.abspath(f))
+
+            args['files'] = files
 
         auth = args.get('auth')
 
@@ -154,19 +163,23 @@ class KintoImporter(object):
 
         return auth
 
-    def setup_logger(self, logger):
+    def setup_logger(self, logger=None):
         """Configure the logger with regards to the verbosity param."""
-        if self.args['verbose']:
+        logger = logger or self.logger
+        if 'verbose' in self.args and self.args['verbose']:
             logger.setLevel(logging.INFO)
 
     def get_local_records(self):
-        logger.debug('Reading data from files')
-        raise NotImplemented
+        self.logger.debug('Reading data from files')
+        raise NotImplementedError()
 
     def setup_local_client(self):
         pass
 
     def setup_remote_client(self):
+        if not self.remote_server:
+            return
+
         self.remote_client = Client(server_url=self.args['host'],
                                     auth=self.args['auth'],
                                     bucket=self.args['bucket'],
@@ -187,7 +200,7 @@ class KintoImporter(object):
                 raise e
 
     def get_remote_records(self):
-        logger.log(COMMAND_LOG_LEVEL, 'Working on %r' % self.args['host'])
+        self.logger.log(COMMAND_LOG_LEVEL, 'Working on %r' % self.args['host'])
         return list(self.remote_client.get_records())
 
     @property
@@ -210,11 +223,11 @@ class KintoImporter(object):
         Take the arguments as well as a local_klass constructor a sync the
         local and remote collection.
         """
-        logger.log(COMMAND_LOG_LEVEL,
-                   'Syncing to %s/buckets/%s/collections/%s/records' % (
-                       self.args['host'].rstrip('/'),
-                       self.args['bucket'],
-                       self.args['collection']))
+        self.logger.log(COMMAND_LOG_LEVEL,
+                        'Syncing to %s/buckets/%s/collections/%s/records' % (
+                            self.args['host'].rstrip('/'),
+                            self.args['bucket'],
+                            self.args['collection']))
 
         to_create = []
         to_update = []
@@ -239,25 +252,25 @@ class KintoImporter(object):
                 to_create.append(local_record)
 
         if create:
-            logger.log(COMMAND_LOG_LEVEL,
-                       '- %d records will be created.' % len(to_create))
+            self.logger.log(COMMAND_LOG_LEVEL,
+                            '- %d records will be created.' % len(to_create))
         else:
-            logger.log(COMMAND_LOG_LEVEL,
-                       '- %d records could be created.' % len(to_create))
+            self.logger.log(COMMAND_LOG_LEVEL,
+                            '- %d records could be created.' % len(to_create))
 
         if update:
-            logger.log(COMMAND_LOG_LEVEL,
-                       '- %d records will be updated.' % len(to_update))
+            self.logger.log(COMMAND_LOG_LEVEL,
+                            '- %d records will be updated.' % len(to_update))
         else:
-            logger.log(COMMAND_LOG_LEVEL,
-                       '- %d records could be updated.' % len(to_update))
+            self.logger.log(COMMAND_LOG_LEVEL,
+                            '- %d records could be updated.' % len(to_update))
 
         if delete:
-            logger.log(COMMAND_LOG_LEVEL,
-                       '- %d records will be deleted.' % len(to_delete))
+            self.logger.log(COMMAND_LOG_LEVEL,
+                            '- %d records will be deleted.' % len(to_delete))
         else:
-            logger.log(COMMAND_LOG_LEVEL,
-                       '- %d records could be deleted.' % len(to_delete))
+            self.logger.log(COMMAND_LOG_LEVEL,
+                            '- %d records could be deleted.' % len(to_delete))
 
         self.update_remote(to_create, create,
                            to_update, update,
@@ -268,8 +281,8 @@ class KintoImporter(object):
         with self.remote_client.batch() as batch:
             if delete:
                 for record in to_delete:
-                    logger.log(COMMAND_LOG_LEVEL,
-                               '- %s: %r' % (record['id'], record))
+                    self.logger.log(COMMAND_LOG_LEVEL,
+                                    '- %s: %r' % (record['id'], record))
                     batch.delete_record(record)
 
             if update:

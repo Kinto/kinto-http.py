@@ -1,13 +1,28 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import
+import argparse
+import getpass
 import logging
+import os
+from six import iteritems
 
 from kinto_client import Client
 from kinto_client.exceptions import KintoException
 
+DEFAULT_KINTO_SERVER = 'http://localhost:8888/v1'
+DEFAULT_USER_NAME = 'admin'
+
 COMMAND = 25
 logging.addLevelName(COMMAND, 'COMMAND')
 logging.basicConfig(level=COMMAND, format="%(message)s")
+logger = logging.getLogger(__file__)
+
+
+def same_record(fields, one, two):
+    for key in fields:
+        if one.get(key) != two.get(key):
+            return False
+    return True
 
 
 class KintoImporter(object):
@@ -25,7 +40,7 @@ class KintoImporter(object):
         self.setup_local_client()
         self.setup_remote_client()
 
-    def configure_parser(parser=None, *args, **kwargs):
+    def configure_parser(self, parser=None, *args, **kwargs):
         """Return an argparse.ArgumentParser pre-configured object."""
 
         default = bool(kwargs.pop('set_all', self.set_all))
@@ -36,17 +51,17 @@ class KintoImporter(object):
 
         if not parser:
             parser = argparse.ArgumentParser(*args, **kwargs)
-        
+
         if remote_server:
             parser.add_argument('-s', '--host', help='Kinto Server',
                                 type=str, default=DEFAULT_KINTO_SERVER)
-    
+
             parser.add_argument('-b', '--bucket',
                                 help='Bucket name, usually the app name',
                                 type=str)
 
             parser.add_argument('-c', '--collection',
-                                help='Collection name, usually the locale code',
+                                help='Collection name',
                                 type=str)
         if authentication:
             parser.add_argument('-u', '--auth', help='BasicAuth user:pass',
@@ -54,14 +69,14 @@ class KintoImporter(object):
 
         if files:
             parser.add_argument('files', metavar='N', type=str, nargs='+',
-                                help='A list of properties file for the locale.')
-    
+                                help='A list of files to import.')
+
         if verbosity:
             parser.add_argument('--verbose', '-v',
                                 help='Display status',
                                 dest='verbose',
                                 action='store_true')
-    
+
         return parser
 
     def get_arguments(self, parser, args=None):
@@ -74,11 +89,11 @@ class KintoImporter(object):
                 logger.log(COMMAND, '%s: ✓' % os.path.abspath(f))
             else:
                 logger.error('%s: ✗' % os.path.abspath(f))
-    
+
         args['files'] = files
-    
+
         auth = args.get('auth')
-    
+
         if auth:
             # Ask for the user password if needed
             auth = tuple(auth.split(':', 1))
@@ -87,12 +102,12 @@ class KintoImporter(object):
                 password = getpass.getpass('Please enter a password for %s: '
                                            % email)
                 auth = (email, password)
-    
+
             args['auth'] = auth
 
         return args
 
-    def setup_logger(self, args, logger):
+    def setup_logger(self, logger):
         """Configure the logger with regards to the verbosity param."""
         if self.args['verbose']:
             logger.setLevel(logging.INFO)
@@ -115,7 +130,7 @@ class KintoImporter(object):
             self.remote_client.create_bucket(
                 permissions=self.bucket_permissions)
         except KintoException as e:
-            if e.response.status_code != 412:
+            if not hasattr(e, 'response') or e.response.status_code != 412:
                 raise e
         try:
             self.remote_client.create_collection(
@@ -125,33 +140,33 @@ class KintoImporter(object):
                 raise e
 
     def get_remote_records(self):
-        logger.log(COMMAND, 'Working on %r' % kinto_options['host'])
-        return [self._kinto2rec(rec) for rec in
-                self.remote_client.get_records()]
-
+        logger.log(COMMAND, 'Working on %r' % self.args['host'])
+        return list(self.remote_client.get_records())
 
     @property
     def local_records(self):
-        if not self._local_records:
-            self._local_records = self.get_local_records()
-        return {r['id']: r for r in}
+        if self._local_records is None:
+            _local_records = self.get_local_records()
+            self._local_records = {r['id']: r for r in _local_records}
+        return self._local_records
 
     @property
-    def kinto_records(self):
-        if not self._remote_records:
-            self._remote_records = self.get_remote_records()
-        return {r['id']: r for r in self._remote_records}
+    def remote_records(self):
+        if self._remote_records is None:
+            _remote_records = self.get_remote_records()
+            self._remote_records = {r['id']: r for r in _remote_records}
+        return self._remote_records
 
     def sync(self, create=True, update=True, delete=True):
         """Sync local and remote collection using args.
-        
+
         Take the arguments as well as a local_klass constructor a sync the
         local and remote collection.
         """
-        logger.log(COMMAND, 'Syncing to %s/buckets/%s/collections/%s/records' % (
-            self.args['host'].rstrip('/'),
-            self.args['bucket'],
-            self.args['collection']))
+        logger.log(COMMAND, 'Syncing to %s/buckets/%s/collections/%s/records'
+                   % (self.args['host'].rstrip('/'),
+                      self.args['bucket'],
+                      self.args['collection']))
 
         to_create = []
         to_update = []
@@ -159,8 +174,8 @@ class KintoImporter(object):
 
         # looking at kinto to list records
         # to delete or to update
-        for remote_record in self.remote_records:
-            local_record = self.local_records.get(remote_record['id'])
+        for remote_rec_id, remote_record in iteritems(self.remote_records):
+            local_record = self.local_records.get(remote_rec_id)
             if local_record is None:
                 to_delete.append(remote_record)
             else:
@@ -168,11 +183,10 @@ class KintoImporter(object):
                     to_update.append(local_record)
 
         # new records ?
-        for record in self.local_records:
-            remote_record = kinto.find(local_record['id'])
+        for local_record_id, local_record in iteritems(self.local_records):
+            remote_record = self.remote_records.get(local_record_id)
             if not remote_record:
                 to_create.append(local_record)
-
 
         if create:
             logger.log(COMMAND,
@@ -187,8 +201,7 @@ class KintoImporter(object):
         else:
             logger.log(COMMAND,
                        '- %d records could be updated.' % len(to_update))
-            
-            
+
         if delete:
             logger.log(COMMAND,
                        '- %d records will be deleted.' % len(to_delete))
@@ -196,25 +209,24 @@ class KintoImporter(object):
             logger.log(COMMAND,
                        '- %d records could be deleted.' % len(to_delete))
 
-
         self.update_remote(to_create, create,
                            to_update, update,
                            to_delete, delete)
 
     def update_remote(self, to_create, create, to_update, update,
                       to_delete, delete):
-        with self.client.batch() as batch:
+        with self.remote_client.batch() as batch:
             if delete:
                 for record in to_delete:
                     logger.log(COMMAND, '- %s: %r' % (record['id'], record))
-                    batch.delete(record)
+                    batch.delete_record(record)
 
             if update:
                 for record in to_update:
-                    batch.create(record)
+                    batch.update_record(record)
 
             if create:
                 for record in to_create:
-                    batch.create(record)
+                    batch.create_record(record)
 
         batch.send()

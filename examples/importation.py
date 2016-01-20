@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 from kinto_client.importer import KintoImporter
 

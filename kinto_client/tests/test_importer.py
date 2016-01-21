@@ -4,16 +4,38 @@ import mock
 import os
 import pytest
 
-from kinto_client.importer import KintoImporter
+import kinto_client
 from kinto_client.exceptions import KintoException
+from kinto_client.importer import KintoImporter
 
-from .support import unittest
+from .support import unittest, mock_batch
 
 HERE = os.path.dirname(__file__)
 logger = logging.getLogger()
 
+ALL_PARAMETERS = [
+    ['-h', '--help'],
+    ['-s', '--host'],
+    ['-u', '--auth'],
+    ['-b', '--bucket'],
+    ['-c', '--collection'],
+    ['-v', '--verbose'],
+]
+
 
 class ImporterParserTest(unittest.TestCase):
+    def assert_option_strings(self, parser, *option_strings_list):
+        for option_strings in option_strings_list:
+            assert any([action.option_strings == option_strings
+                        for action in parser._actions]), \
+                "%s not found" % option_strings
+    
+    def assert_files_nargs(self, parser, nargs='+'):
+        for action in parser._actions:
+            assert any([action.dest == 'files' and
+                        action.nargs == nargs
+                        for action in parser._actions])
+
     # Parser configuration
     def test_all_default_parameters_is_False_by_default(self):
         class DummyImporter(KintoImporter):
@@ -22,11 +44,8 @@ class ImporterParserTest(unittest.TestCase):
 
         importer = DummyImporter()
         parser = importer.configure_parser(prog="importer")
-        assert parser.format_help() == '''usage: importer [-h]
-
-optional arguments:
-  -h, --help  show this help message and exit
-'''
+        self.assert_option_strings(parser, ['-h', '--help'])
+        assert len(parser._actions) == 1
 
     def test_can_change_all_default_parameters_at_the_class_level(self):
         class DummyImporter(KintoImporter):
@@ -37,24 +56,8 @@ optional arguments:
 
         importer = DummyImporter()
         parser = importer.configure_parser(prog="importer")
-        assert parser.format_help() == '''\
-usage: importer [-h] [-s HOST] [-b BUCKET] [-c COLLECTION] [-u AUTH]
-                [--verbose]
-                N [N ...]
-
-positional arguments:
-  N                     A list of files to import.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -s HOST, --host HOST  Kinto Server
-  -b BUCKET, --bucket BUCKET
-                        Bucket name, usually the app name
-  -c COLLECTION, --collection COLLECTION
-                        Collection name
-  -u AUTH, --auth AUTH  BasicAuth user:pass
-  --verbose, -v         Display status
-'''
+        self.assert_option_strings(parser, *ALL_PARAMETERS)
+        assert len(parser._actions) == 7
 
     def test_can_change_all_default_parameters_at_the_method_level(self):
         class DummyImporter(KintoImporter):
@@ -64,24 +67,8 @@ optional arguments:
         importer = DummyImporter()
         parser = importer.configure_parser(prog="importer",
                                            all_default_parameters=True)
-        assert parser.format_help() == '''\
-usage: importer [-h] [-s HOST] [-b BUCKET] [-c COLLECTION] [-u AUTH]
-                [--verbose]
-                N [N ...]
-
-positional arguments:
-  N                     A list of files to import.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -s HOST, --host HOST  Kinto Server
-  -b BUCKET, --bucket BUCKET
-                        Bucket name, usually the app name
-  -c COLLECTION, --collection COLLECTION
-                        Collection name
-  -u AUTH, --auth AUTH  BasicAuth user:pass
-  --verbose, -v         Display status
-'''
+        self.assert_option_strings(parser, *ALL_PARAMETERS)
+        assert len(parser._actions) == 7
 
     def test_can_change_parser_arguments_at_the_class_level(self):
         class DummyImporter(KintoImporter):
@@ -95,24 +82,8 @@ optional arguments:
 
         importer = DummyImporter()
         parser = importer.configure_parser(prog="importer")
-        assert parser.format_help() == '''\
-usage: importer [-h] [-s HOST] [-b BUCKET] [-c COLLECTION] [-u AUTH]
-                [--verbose]
-                N [N ...]
-
-positional arguments:
-  N                     A list of files to import.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -s HOST, --host HOST  Kinto Server
-  -b BUCKET, --bucket BUCKET
-                        Bucket name, usually the app name
-  -c COLLECTION, --collection COLLECTION
-                        Collection name
-  -u AUTH, --auth AUTH  BasicAuth user:pass
-  --verbose, -v         Display status
-'''
+        self.assert_option_strings(parser, *ALL_PARAMETERS)
+        assert len(parser._actions) == 7
 
     def test_can_change_parser_arguments_at_the_method_level(self):
         class DummyImporter(KintoImporter):
@@ -125,24 +96,8 @@ optional arguments:
                                            authentication=True,
                                            files=True,
                                            verbosity=True)
-        assert parser.format_help() == '''\
-usage: importer [-h] [-s HOST] [-b BUCKET] [-c COLLECTION] [-u AUTH]
-                [--verbose]
-                N [N ...]
-
-positional arguments:
-  N                     A list of files to import.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -s HOST, --host HOST  Kinto Server
-  -b BUCKET, --bucket BUCKET
-                        Bucket name, usually the app name
-  -c COLLECTION, --collection COLLECTION
-                        Collection name
-  -u AUTH, --auth AUTH  BasicAuth user:pass
-  --verbose, -v         Display status
-'''
+        self.assert_option_strings(parser, *ALL_PARAMETERS)
+        assert len(parser._actions) == 7
 
     def test_can_change_default_values(self):
         existing_file_path = os.path.join(HERE, 'samples', 'blocklists.xml')
@@ -188,25 +143,9 @@ optional arguments:
                             type=str, default='xml')
 
         parser = importer.configure_parser(parser)
-        assert parser.format_help() == '''\
-usage: importer [-h] [-t TYPE] [-s HOST] [-b BUCKET] [-c COLLECTION] [-u AUTH]
-                [--verbose]
-                N [N ...]
-
-positional arguments:
-  N                     A list of files to import.
-
-optional arguments:
-  -h, --help            show this help message and exit
-  -t TYPE, --type TYPE  File type
-  -s HOST, --host HOST  Kinto Server
-  -b BUCKET, --bucket BUCKET
-                        Bucket name, usually the app name
-  -c COLLECTION, --collection COLLECTION
-                        Collection name
-  -u AUTH, --auth AUTH  BasicAuth user:pass
-  --verbose, -v         Display status
-'''
+        self.assert_option_strings(parser, ['-t', '--type'],
+                                   *ALL_PARAMETERS)
+        assert len(parser._actions) == 8
 
     # Parser value management
     def test_get_arguments_validate_if_given_files_exists(self):
@@ -251,7 +190,7 @@ optional arguments:
             record_fields = ('info',)
             verbosity = True
 
-            def setup_remote_client(self):
+            def setup_remote_client(self, remote_client=None):
                 pass
 
         importer = DummyImporter(arguments=['-v'])
@@ -287,7 +226,7 @@ class ImporterTest(unittest.TestCase):
             verbosity = True
             setup_local_client_called = False
 
-            def setup_local_client(self):
+            def setup_local_client(self, local_client=None):
                 self.setup_local_client_called = True
 
         importer = DummyImporter(arguments=[])
@@ -299,7 +238,7 @@ class ImporterTest(unittest.TestCase):
             verbosity = True
             setup_remote_client_called = False
 
-            def setup_remote_client(self):
+            def setup_remote_client(self, remote_client=None):
                 self.setup_remote_client_called = True
 
         importer = DummyImporter(arguments=[])
@@ -351,9 +290,9 @@ class ImporterTest(unittest.TestCase):
         class DummyImporter(KintoImporter):
             record_fields = ('info',)
 
-            def setup_remote_client(self):
-                self.remote_client = mock.MagicMock()
+            def setup_remote_client(self, remote_client=None):
                 self.args['host'] = 'localhost'
+                return mock.MagicMock()
 
         importer = DummyImporter(arguments=[])
         importer.get_remote_records()
@@ -368,16 +307,17 @@ class ImporterTest(unittest.TestCase):
             authentication = True
             default_auth = 'user:pass'
 
-        importer = DummyImporter(arguments=['-b', 'blocklists',
-                                            '-c', 'certificates'])
+        mocked_client.return_value = mock.MagicMock()
+        DummyImporter(arguments=['-b', 'blocklists', '-c', 'certificates'])
         mocked_client.assert_called_with(
             server_url='http://localhost:8888/v1',
             auth=('user', 'pass'),
             bucket='blocklists',
             collection='certificates')
-        importer.remote_client.create_bucket.assert_called_with(
+
+        mocked_client().create_bucket.assert_called_with(
             permissions=None)
-        importer.remote_client.create_collection.assert_called_with(
+        mocked_client().create_collection.assert_called_with(
             permissions=None)
 
     @mock.patch('kinto_client.importer.Client')
@@ -447,21 +387,117 @@ class ImporterTest(unittest.TestCase):
                                      '-c', 'certificates'])
 
 
-class ImporterSync(unittest.TestCase):
+class DummySyncImporter(KintoImporter):
+    record_fields = ('name', 'protocol')
+
+    def get_local_records(self):
+        # Create websocket
+        # Update HTTP to HTTPS
+        # Delete Mail
+        return [
+            {'id': "f3a31016-274b-a558-6e21-d1a00f74090f",
+             'name': "websocket",
+             'protocol': "ws"},
+            {'id': "2e6e434b-eac6-f84f-0905-e9f9bb7ab5ab",
+             'name': "IRC",
+             'protocol': "irc"},
+            {'id': "ba87a851-fe45-5a57-f238-d4fbc832ea30",
+             'name': "HTTPS",
+             'protocol': "https"}
+        ]
+
+    def get_remote_records(self):
+        return [
+            {'id': "2e6e434b-eac6-f84f-0905-e9f9bb7ab5ab",
+             'name': "IRC",
+             'protocol': "irc"},
+            {'id': "ba87a851-fe45-5a57-f238-d4fbc832ea30",
+             'name': "HTTP",
+             'protocol': "http"},
+            {'id': "106b1b39-071f-dc61-e4e3-7e5b1063a5b2",
+             'name': "Mail",
+             'protocol': "mailto"}
+        ]
+
+
+class ImporterSyncTest(unittest.TestCase):
+    def setUp(self):
+        self.mocked_batch = mock.MagicMock()
+        remote_client = kinto_client.Client(
+            server_url="http://localhost:8888/v1",
+            bucket='blocklists',
+            collection='certificates')
+        remote_client.batch = self.mocked_batch
+        self.importer = DummySyncImporter(arguments=[],
+                                          remote_client=remote_client)
+
     def test_create_on_sync_can_be_deactivated_on_sync_at_method_level(self):
-        pass
+        self.importer.sync(create=False)
+
+        self.mocked_batch().__enter__().delete_record.assert_any_call(
+            "106b1b39-071f-dc61-e4e3-7e5b1063a5b2")
+        self.mocked_batch().__enter__().update_record.assert_any_call({
+            'id': "ba87a851-fe45-5a57-f238-d4fbc832ea30",
+            'name': "HTTPS",
+            'protocol': "https"
+        })
 
     def test_update_on_sync_can_be_deactivated_on_sync_at_method_level(self):
-        pass
+        self.importer.sync(update=False)
+
+        self.mocked_batch().__enter__().delete_record.assert_any_call(
+            "106b1b39-071f-dc61-e4e3-7e5b1063a5b2")
+        self.mocked_batch().__enter__().create_record.assert_any_call({
+            'id': "f3a31016-274b-a558-6e21-d1a00f74090f",
+            'name': "websocket",
+            'protocol': "ws"
+        })
 
     def test_delete_on_sync_can_be_deactivated_on_sync_at_method_level(self):
-        pass
+        self.importer.sync(delete=False)
+        self.mocked_batch().__enter__().update_record.assert_any_call({
+            'id': "ba87a851-fe45-5a57-f238-d4fbc832ea30",
+            'name': "HTTPS",
+            'protocol': "https"
+        })
+        self.mocked_batch().__enter__().create_record.assert_any_call({
+            'id': "f3a31016-274b-a558-6e21-d1a00f74090f",
+            'name': "websocket",
+            'protocol': "ws"
+        })
 
     def test_create_on_sync_can_be_deactivated_on_sync_at_class_level(self):
-        pass
+        self.importer.create = False
+        self.importer.sync()
+        self.mocked_batch().__enter__().delete_record.assert_any_call(
+            "106b1b39-071f-dc61-e4e3-7e5b1063a5b2")
+        self.mocked_batch().__enter__().update_record.assert_any_call({
+            'id': "ba87a851-fe45-5a57-f238-d4fbc832ea30",
+            'name': "HTTPS",
+            'protocol': "https"
+        })
 
     def test_update_on_sync_can_be_deactivated_on_sync_at_class_level(self):
-        pass
+        self.importer.update = False
+        self.importer.sync()
+        self.mocked_batch().__enter__().delete_record.assert_any_call(
+            "106b1b39-071f-dc61-e4e3-7e5b1063a5b2")
+        self.mocked_batch().__enter__().create_record.assert_any_call({
+            'id': "f3a31016-274b-a558-6e21-d1a00f74090f",
+            'name': "websocket",
+            'protocol': "ws"
+        })
 
     def test_delete_on_sync_can_be_deactivated_on_sync_at_class_level(self):
-        pass
+        self.importer.delete = False
+        self.importer.sync()
+        self.mocked_batch().__enter__().update_record.assert_any_call({
+            'id': "ba87a851-fe45-5a57-f238-d4fbc832ea30",
+            'name': "HTTPS",
+            'protocol': "https"
+        })
+        self.mocked_batch().__enter__().create_record.assert_any_call({
+            'id': "f3a31016-274b-a558-6e21-d1a00f74090f",
+            'name': "websocket",
+            'protocol': "ws"
+        })

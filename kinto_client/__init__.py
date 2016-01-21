@@ -8,7 +8,7 @@ from contextlib import contextmanager
 
 
 from kinto_client import utils
-from kinto_client.batch import Batch
+from kinto_client import batch
 from kinto_client.exceptions import BucketNotFound, KintoException
 
 
@@ -145,18 +145,19 @@ class Client(object):
             self._server_settings = resp['settings']
 
         batch_max_requests = self._server_settings['batch_max_requests']
-        batch = Batch(self, batch_max_requests=batch_max_requests)
-        yield self.clone(session=batch, **kwargs)
-        for (resp, headers) in batch.send():
+        batch_session = batch.Session(self,
+                                      batch_max_requests=batch_max_requests)
+        yield self.clone(session=batch_session, **kwargs)
+        for (resp, headers) in batch_session.send():
             for i, response in enumerate(resp['responses']):
                 status_code = response['status']
                 if not (200 <= status_code < 400):
                     message = '{0} - {1}'.format(status_code, response['body'])
                     exception = KintoException(message)
-                    exception.request = batch.requests[i]
+                    exception.request = batch_session.requests[i]
                     exception.response = response
                     raise exception
-        batch.reset()
+        batch_session.reset()
 
     def _get_endpoint(self, name, bucket=None, collection=None, id=None):
         kwargs = {
@@ -232,6 +233,8 @@ class Client(object):
         endpoint = self._get_endpoint('bucket', bucket)
         headers = self._get_cache_headers(safe, last_modified=last_modified)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
+        if resp == batch.RESPONSE_BODY:
+            return
         return resp['data']
 
     # Collections
@@ -273,6 +276,8 @@ class Client(object):
         endpoint = self._get_endpoint('collection', bucket, collection)
         headers = self._get_cache_headers(safe, last_modified=last_modified)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
+        if resp == batch.RESPONSE_BODY:
+            return
         return resp['data']
 
     # Records
@@ -323,6 +328,8 @@ class Client(object):
         resp, _ = self.session.request(
             'delete', endpoint,
             headers=self._get_cache_headers(safe, last_modified=last_modified))
+        if resp == batch.RESPONSE_BODY:
+            return
         return resp['data']
 
     def delete_records(self, records):

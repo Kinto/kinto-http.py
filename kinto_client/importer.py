@@ -41,7 +41,14 @@ class KintoImporter(object):
     default_auth = None
     default_files = None
 
-    def __init__(self, logger=None, arguments=None, *args, **kwargs):
+    # Sync flags
+    create = True
+    update = True
+    delete = True
+
+    def __init__(self, logger=None, arguments=None,
+                 local_client=None, remote_client=None,
+                 *args, **kwargs):
         if not hasattr(self, 'record_fields'):
             raise ValueError(
                 "%r: record_fields attribute is not defined." % self)
@@ -54,8 +61,8 @@ class KintoImporter(object):
         parser = self.configure_parser(*args, **kwargs)
         self.args = self.get_arguments(parser, args=arguments)
         self.setup_logger()
-        self.setup_local_client()
-        self.setup_remote_client()
+        self.local_client = self.setup_local_client(local_client)
+        self.remote_client = self.setup_remote_client(remote_client)
 
     def configure_parser(self, parser=None,
                          all_default_parameters=None, remote_server=None,
@@ -122,7 +129,7 @@ class KintoImporter(object):
                                 default=self.default_files)
 
         if verbosity:
-            parser.add_argument('--verbose', '-v',
+            parser.add_argument('-v', '--verbose',
                                 help='Display status',
                                 dest='verbose',
                                 action='store_true')
@@ -173,12 +180,25 @@ class KintoImporter(object):
         self.logger.debug('Reading data from files')
         raise NotImplementedError()
 
-    def setup_local_client(self):
-        pass
+    def setup_local_client(self, local_client=None):
+        return local_client
 
-    def setup_remote_client(self):
+    def setup_remote_client(self, remote_client=None):
+        # If the client is already created, just return it.
+        if remote_client:
+            return remote_client
+
+        # If the remote_server functionnality is not activated at the
+        # parser level do not create the remote_client.
         if not self.remote_server:
             return
+
+        # Log the endpoint where the new client will be configured.
+        self.logger.log(COMMAND_LOG_LEVEL,
+                        'Syncing to %s/buckets/%s/collections/%s/records' % (
+                            self.args['host'].rstrip('/'),
+                            self.args['bucket'],
+                            self.args['collection']))
 
         self.remote_client = Client(server_url=self.args['host'],
                                     auth=self.args['auth'],
@@ -186,6 +206,8 @@ class KintoImporter(object):
                                     collection=self.args['collection'])
 
         # Create bucket
+        # XXX: Move this to a configure
+        # XXX: Add a create if not exist functionality
         try:
             self.remote_client.create_bucket(
                 permissions=self.bucket_permissions)
@@ -217,17 +239,20 @@ class KintoImporter(object):
             self._remote_records = {r['id']: r for r in _remote_records}
         return self._remote_records
 
-    def sync(self, create=True, update=True, delete=True):
+    def sync(self, create=None, update=None, delete=None):
         """Sync local and remote collection using args.
 
         Take the arguments as well as a local_klass constructor a sync the
         local and remote collection.
         """
-        self.logger.log(COMMAND_LOG_LEVEL,
-                        'Syncing to %s/buckets/%s/collections/%s/records' % (
-                            self.args['host'].rstrip('/'),
-                            self.args['bucket'],
-                            self.args['collection']))
+        if create is None:
+            create = self.create
+
+        if update is None:
+            update = self.update
+
+        if delete is None:
+            delete = self.delete
 
         to_create = []
         to_update = []
@@ -251,21 +276,21 @@ class KintoImporter(object):
             if not remote_record:
                 to_create.append(local_record)
 
-        if create:
+        if create or self.create:
             self.logger.log(COMMAND_LOG_LEVEL,
                             '- %d records will be created.' % len(to_create))
         else:
             self.logger.log(COMMAND_LOG_LEVEL,
                             '- %d records could be created.' % len(to_create))
 
-        if update:
+        if update or self.update:
             self.logger.log(COMMAND_LOG_LEVEL,
                             '- %d records will be updated.' % len(to_update))
         else:
             self.logger.log(COMMAND_LOG_LEVEL,
                             '- %d records could be updated.' % len(to_update))
 
-        if delete:
+        if delete or self.delete:
             self.logger.log(COMMAND_LOG_LEVEL,
                             '- %d records will be deleted.' % len(to_delete))
         else:
@@ -283,7 +308,7 @@ class KintoImporter(object):
                 for record in to_delete:
                     self.logger.log(COMMAND_LOG_LEVEL,
                                     '- %s: %r' % (record['id'], record))
-                    batch.delete_record(record)
+                    batch.delete_record(record['id'])
 
             if update:
                 for record in to_update:

@@ -8,7 +8,7 @@ import kinto_client
 from kinto_client.exceptions import KintoException
 from kinto_client.importer import KintoImporter
 
-from .support import unittest, mock_batch
+from .support import unittest
 
 HERE = os.path.dirname(__file__)
 logger = logging.getLogger()
@@ -29,7 +29,7 @@ class ImporterParserTest(unittest.TestCase):
             assert any([action.option_strings == option_strings
                         for action in parser._actions]), \
                 "%s not found" % option_strings
-    
+
     def assert_files_nargs(self, parser, nargs='+'):
         for action in parser._actions:
             assert any([action.dest == 'files' and
@@ -164,7 +164,7 @@ class ImporterParserTest(unittest.TestCase):
 
             def __init__(self):
                 self.logger = logger
-            
+
             def get_auth(self, auth):
                 self.get_auth_called = True
                 return ('user', 'pass')

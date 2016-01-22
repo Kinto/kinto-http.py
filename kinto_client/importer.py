@@ -200,26 +200,28 @@ class KintoImporter(object):
                             self.args['bucket'],
                             self.args['collection']))
 
-        self.remote_client = Client(server_url=self.args['host'],
-                                    auth=self.args['auth'],
-                                    bucket=self.args['bucket'],
-                                    collection=self.args['collection'])
+        remote_client = Client(server_url=self.args['host'],
+                               auth=self.args['auth'],
+                               bucket=self.args['bucket'],
+                               collection=self.args['collection'])
 
         # Create bucket
         # XXX: Move this to a configure
         # XXX: Add a create if not exist functionality
         try:
-            self.remote_client.create_bucket(
+            remote_client.create_bucket(
                 permissions=self.bucket_permissions)
         except KintoException as e:
             if not hasattr(e, 'response') or e.response.status_code != 412:
                 raise e
         try:
-            self.remote_client.create_collection(
+            remote_client.create_collection(
                 permissions=self.collection_permissions)
         except KintoException as e:
             if e.response.status_code != 412:
                 raise e
+
+        return remote_client
 
     def get_remote_records(self):
         self.logger.log(COMMAND_LOG_LEVEL, 'Working on %r' % self.args['host'])

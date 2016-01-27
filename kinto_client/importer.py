@@ -2,17 +2,12 @@
 from __future__ import absolute_import
 import argparse
 import getpass
-import logging
 import os
 from six import iteritems
 
 from kinto_client import Client
 from kinto_client.exceptions import KintoException
-
-COMMAND_LOG_LEVEL = 25
-logging.addLevelName(COMMAND_LOG_LEVEL, 'COMMAND')
-logging.basicConfig(level=COMMAND_LOG_LEVEL, format="%(message)s")
-global_logger = logging.getLogger(__file__)
+from kinto_client.logging import logging, global_logger, command_log
 
 
 def is_same_record(fields, one, two):
@@ -24,11 +19,11 @@ def is_same_record(fields, one, two):
 
 class KintoImporter(object):
     # Default configure parser values
-    all_default_parameters = False
-    remote_server = None
-    authentication = None
-    files = None
-    verbosity = None
+    include_all_default_parameters = False
+    include_remote_server = None
+    include_authentication = None
+    include_files = None
+    include_verbosity = None
 
     # Remote Permissions
     bucket_permissions = None
@@ -65,46 +60,78 @@ class KintoImporter(object):
         self.remote_client = self.setup_remote_client(remote_client)
 
     def configure_parser(self, parser=None,
-                         all_default_parameters=None, remote_server=None,
-                         authentication=None, files=None, verbosity=None,
+                         include_all_default_parameters=None,
+                         include_remote_server=None,
+                         include_authentication=None,
+                         include_files=None,
+                         include_verbosity=None,
                          *args, **kwargs):
-        """Return an argparse.ArgumentParser pre-configured object."""
+        """Return an argparse.ArgumentParser pre-configured object.
+        :param argparse.ArgumentParser parser:
+            The parser to configure. Set to None it will create a new parser.
 
-        if all_default_parameters is None:
-            all_default_parameters = self.all_default_parameters
+        :param boolean include_all_default_parameters:
+            Configure the default for parameters defined below.
+            It is False by default. I can also be defined as a class attribute.
 
-        if remote_server is None:
-            if self.remote_server is not None:
-                remote_server = self.remote_server
+        :param boolean include_remote_server:
+            Allow remote server credentials:
+                --host:       The remote server host.
+                --bucket:     The bucket ID.
+                --collection: The collection ID.
+
+        :param boolean include_authentication: Allow authentication credentials
+            Allow authentication management:
+                --auth token:my-secret
+                --auth token  # Will ask for the password on STDIN
+
+        :param boolean include_files:
+            Allow input files configuration (a list of files)
+
+        :param boolean include_verbosity: Allow verbosity configuration
+            Configure the log level to logging.INFO
+
+        Extra args and kwargs are pass through to the ArgumentParser
+        object constructor, in case parser has to be created.
+
+        """
+
+        if include_all_default_parameters is None:
+            include_all_default_parameters = (
+                self.include_all_default_parameters)
+
+        if include_remote_server is None:
+            if self.include_remote_server is not None:
+                include_remote_server = self.include_remote_server
             else:
-                remote_server = all_default_parameters
-        self.remote_server = remote_server
+                include_remote_server = include_all_default_parameters
+        self.include_remote_server = include_remote_server
 
-        if authentication is None:
-            if self.authentication is not None:
-                authentication = self.authentication
+        if include_authentication is None:
+            if self.include_authentication is not None:
+                include_authentication = self.include_authentication
             else:
-                authentication = all_default_parameters
-        self.authentication = authentication
+                include_authentication = include_all_default_parameters
+        self.include_authentication = include_authentication
 
-        if files is None:
-            if self.files is not None:
-                files = self.files
+        if include_files is None:
+            if self.include_files is not None:
+                include_files = self.include_files
             else:
-                files = all_default_parameters
-        self.files = files
+                include_files = include_all_default_parameters
+        self.include_files = include_files
 
-        if verbosity is None:
-            if self.verbosity is not None:
-                verbosity = self.verbosity
+        if include_verbosity is None:
+            if self.include_verbosity is not None:
+                include_verbosity = self.include_verbosity
             else:
-                verbosity = all_default_parameters
-        self.verbosity = verbosity
+                include_verbosity = include_all_default_parameters
+        self.include_verbosity = include_verbosity
 
         if not parser:
             parser = argparse.ArgumentParser(*args, **kwargs)
 
-        if remote_server:
+        if include_remote_server:
             parser.add_argument('-s', '--host', help='Kinto Server',
                                 type=str, default=self.default_host)
 
@@ -115,11 +142,11 @@ class KintoImporter(object):
             parser.add_argument('-c', '--collection',
                                 help='Collection name',
                                 type=str, default=self.default_collection)
-        if authentication:
+        if include_authentication:
             parser.add_argument('-u', '--auth', help='BasicAuth user:pass',
                                 type=str, default=self.default_auth)
 
-        if files:
+        if include_files:
             nargs = '+'
             if self.default_files is not None:
                 nargs = '*'
@@ -128,7 +155,7 @@ class KintoImporter(object):
                                 help='A list of files to import.',
                                 default=self.default_files)
 
-        if verbosity:
+        if include_verbosity:
             parser.add_argument('-v', '--verbose',
                                 help='Display status',
                                 dest='verbose',
@@ -145,8 +172,7 @@ class KintoImporter(object):
             for f in args['files']:
                 if os.path.exists(f):
                     files.append(os.path.abspath(f))
-                    self.logger.log(COMMAND_LOG_LEVEL,
-                                    '%s: ✓' % os.path.abspath(f))
+                    command_log(self.logger, '%s: ✓' % os.path.abspath(f))
                 else:
                     self.logger.error('%s: ✗' % os.path.abspath(f))
 
@@ -188,17 +214,18 @@ class KintoImporter(object):
         if remote_client:
             return remote_client
 
-        # If the remote_server functionnality is not activated at the
+        # If the include_remote_server functionnality is not activated at the
         # parser level do not create the remote_client.
-        if not self.remote_server:
+        if not self.include_remote_server:
             return
 
         # Log the endpoint where the new client will be configured.
-        self.logger.log(COMMAND_LOG_LEVEL,
-                        'Syncing to %s/buckets/%s/collections/%s/records' % (
-                            self.args['host'].rstrip('/'),
-                            self.args['bucket'],
-                            self.args['collection']))
+        command_log(
+            self.logger,
+            'Syncing to %s/buckets/%s/collections/%s/records' % (
+                self.args['host'].rstrip('/'),
+                self.args['bucket'],
+                self.args['collection']))
 
         remote_client = Client(server_url=self.args['host'],
                                auth=self.args['auth'],
@@ -224,7 +251,7 @@ class KintoImporter(object):
         return remote_client
 
     def get_remote_records(self):
-        self.logger.log(COMMAND_LOG_LEVEL, 'Working on %r' % self.args['host'])
+        command_log(self.logger, 'Working on %r' % self.args['host'])
         return list(self.remote_client.get_records())
 
     @property
@@ -279,25 +306,25 @@ class KintoImporter(object):
                 to_create.append(local_record)
 
         if create or self.create:
-            self.logger.log(COMMAND_LOG_LEVEL,
-                            '- %d records will be created.' % len(to_create))
+            command_log(self.logger,
+                        '- %d records will be created.' % len(to_create))
         else:
-            self.logger.log(COMMAND_LOG_LEVEL,
-                            '- %d records could be created.' % len(to_create))
+            command_log(self.logger,
+                        '- %d records could be created.' % len(to_create))
 
         if update or self.update:
-            self.logger.log(COMMAND_LOG_LEVEL,
-                            '- %d records will be updated.' % len(to_update))
+            command_log(self.logger,
+                        '- %d records will be updated.' % len(to_update))
         else:
-            self.logger.log(COMMAND_LOG_LEVEL,
-                            '- %d records could be updated.' % len(to_update))
+            command_log(self.logger,
+                        '- %d records could be updated.' % len(to_update))
 
         if delete or self.delete:
-            self.logger.log(COMMAND_LOG_LEVEL,
-                            '- %d records will be deleted.' % len(to_delete))
+            command_log(self.logger,
+                        '- %d records will be deleted.' % len(to_delete))
         else:
-            self.logger.log(COMMAND_LOG_LEVEL,
-                            '- %d records could be deleted.' % len(to_delete))
+            command_log(self.logger,
+                        '- %d records could be deleted.' % len(to_delete))
 
         self.update_remote(to_create, create,
                            to_update, update,
@@ -308,8 +335,8 @@ class KintoImporter(object):
         with self.remote_client.batch() as batch:
             if delete:
                 for record in to_delete:
-                    self.logger.log(COMMAND_LOG_LEVEL,
-                                    '- %s: %r' % (record['id'], record))
+                    command_log(self.logger,
+                                '- %s: %r' % (record['id'], record))
                     batch.delete_record(record['id'])
 
             if update:

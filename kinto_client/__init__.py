@@ -145,8 +145,9 @@ class Client(object):
             self._server_settings = resp['settings']
 
         batch_max_requests = self._server_settings['batch_max_requests']
-        batch_session = batch.Session(self,
-                                      batch_max_requests=batch_max_requests)
+        batch_session = batch.Session(
+            self,
+            batch_max_requests=batch_max_requests)
         yield self.clone(session=batch_session, **kwargs)
         for (resp, headers) in batch_session.send():
             for i, response in enumerate(resp['responses']):

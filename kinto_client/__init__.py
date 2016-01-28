@@ -336,3 +336,12 @@ class Client(object):
     def delete_records(self, records):
         # XXX To be done with a BATCH operation
         pass
+
+    def __repr__(self):
+        endpoint = self._get_endpoint(
+            'collection',
+            self._bucket_name,
+            self._collection_name
+        )
+        absolute_endpoint = utils.urljoin(self.session.server_url, endpoint)
+        return "<KintoClient %s>" % absolute_endpoint

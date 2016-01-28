@@ -3,8 +3,9 @@ class KintoException(Exception):
 
 
 class BucketNotFound(KintoException):
-    def __init__(self, message, exception):
+    def __init__(self, message=None, exception=None):
         super(BucketNotFound, self).__init__(self, message)
         self.message = message
-        self.request = exception.request
-        self.response = exception.response
+        if exception is not None:
+            self.request = exception.request
+            self.response = exception.response

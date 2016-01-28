@@ -65,6 +65,16 @@ class ClientTest(unittest.TestCase):
                 batch.create_record(id=1234, data={'foo': 'bar'})
                 batch.create_record(id=5678, data={'tutu': 'toto'})
 
+    def test_client_is_represented_properly(self):
+        client = Client(
+            server_url="https://kinto.notmyidea.org/v1",
+            bucket="homebrewing",
+            collection="recipes"
+        )
+        expected_repr = ("<KintoClient https://kinto.notmyidea.org/v1/"
+                         "buckets/homebrewing/collections/recipes>")
+        assert str(client) == expected_repr
+
 
 class BucketTest(unittest.TestCase):
 

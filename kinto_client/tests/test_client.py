@@ -95,7 +95,7 @@ class BucketTest(unittest.TestCase):
             data={'foo': 'bar', 'last_modified': '1234'},
             permissions={'read': ['natim']})
         self.session.request.assert_called_with(
-            'put',
+            'patch',
             '/buckets/testbucket',
             data={'foo': 'bar'},
             permissions={'read': ['natim']},

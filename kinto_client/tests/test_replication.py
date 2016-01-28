@@ -82,6 +82,7 @@ class ReplicationTest(unittest.TestCase):
             bucket="buck",
             collection="coll"
         )
+        destination._server_settings = {'batch_max_requests': 15}
         replicate(origin, destination)
         msg = ("Replication from <KintoClient http://origin/v1/buckets/buck/"
                "collections/coll> to <KintoClient http://destination/v1/"

@@ -19,26 +19,41 @@ def is_same_record(fields, one, two):
 
 class KintoImporter(object):
     # Default configure parser values
+    """Configure the parser with all parameters."""
     include_all_default_parameters = False
+    """Configure the parser to allow remote_server configuration."""
     include_remote_server = None
+    """Configure the parser to allow authentication configuration."""
     include_authentication = None
+    """Configure the parser to allow files selection."""
     include_files = None
+    """Configure the parser to allow verbosity configuration."""
     include_verbosity = None
 
-    # Remote Permissions
-    bucket_permissions = None
-    collection_permissions = None
-
     # Default values
+    """Default value for the remote server host value."""
     default_host = "http://localhost:8888/v1"
+    """Default bucket name for the remote server."""
     default_bucket = None
+    """Default collection name for the remote server."""
     default_collection = None
+    """Default authentication credentials for the remote server."""
     default_auth = None
+    """Default files to load for the local records."""
     default_files = None
 
+    # Remote Permissions
+    """Remote bucket permissions on bucket creation."""
+    bucket_permissions = None
+    """Remote collection permission on collection creation."""
+    collection_permissions = None
+
     # Sync flags
+    """Create new records."""
     create = True
+    """Update out-of-date records."""
     update = True
+    """Delete records not present in local-files."""
     delete = True
 
     def __init__(self, logger=None, arguments=None,
@@ -86,7 +101,8 @@ class KintoImporter(object):
                 --auth token  # Will ask for the password on STDIN
 
         :param boolean include_files:
-            Allow input files configuration (a list of files)
+            Allow input files for local_records loading (can be a list
+            of files)
 
         :param boolean include_verbosity: Allow verbosity configuration
             Configure the log level to logging.INFO
@@ -143,7 +159,8 @@ class KintoImporter(object):
                                 help='Collection name',
                                 type=str, default=self.default_collection)
         if include_authentication:
-            parser.add_argument('-u', '--auth', help='BasicAuth user:pass',
+            parser.add_argument('-u', '--auth',
+                                help='BasicAuth token:my-secret',
                                 type=str, default=self.default_auth)
 
         if include_files:
@@ -210,7 +227,7 @@ class KintoImporter(object):
         return local_client
 
     def setup_remote_client(self, remote_client=None):
-        # If the client is already created, just return it.
+        # If the client is specified, just return it.
         if remote_client:
             return remote_client
 
@@ -233,8 +250,8 @@ class KintoImporter(object):
                                collection=self.args['collection'])
 
         # Create bucket
-        # XXX: Move this to a configure
-        # XXX: Add a create if not exist functionality
+        # XXX: Move this to a configure (Refs #41)
+        # XXX: Add a create if not exist functionality (Refs #42)
         try:
             remote_client.create_bucket(
                 permissions=self.bucket_permissions)
@@ -271,8 +288,9 @@ class KintoImporter(object):
     def sync(self, create=None, update=None, delete=None):
         """Sync local and remote collection using args.
 
-        Take the arguments as well as a local_klass constructor a sync the
-        local and remote collection.
+        Take the arguments as well as a ``local_klass`` constructor a
+        sync the local and remote collection.
+
         """
         if create is None:
             create = self.create

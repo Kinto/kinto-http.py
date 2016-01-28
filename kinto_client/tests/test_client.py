@@ -32,7 +32,7 @@ class ClientTest(unittest.TestCase):
                  'method': 'PUT',
                  'headers': {'If-None-Match': '*'}}]})
 
-    def test_context_manager_handle_delete(self):
+    def test_context_manager_handles_delete(self):
         mock_batch(self.session)
 
         with self.client.batch(bucket='mozilla', collection='test') as batch:

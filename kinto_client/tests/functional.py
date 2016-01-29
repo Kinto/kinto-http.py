@@ -261,13 +261,13 @@ class FunctionalTest(unittest2.TestCase):
             for n in range(10):
                 batch.create_record(data={'foo': 'bar', 'n': n})
 
-        origin = dict(
+        origin = Client(
             server_url=self.server_url,
             auth=self.auth,
             bucket='origin',
             collection='coll'
         )
-        destination = dict(
+        destination = Client(
             server_url=self.server_url,
             auth=self.auth,
             bucket='destination',

@@ -1,7 +1,10 @@
 from . import utils
 
+RESPONSE_HEADERS = 'BATCH_RESPONSE_HEADERS'
+RESPONSE_BODY = 'BATCH_RESPONSE_BODY'
 
-class Batch(object):
+
+class Session(object):
 
     def __init__(self, client, batch_max_requests=0):
         self.session = client.session
@@ -15,7 +18,7 @@ class Batch(object):
         # is called.
         self.requests.append((method, endpoint, data, permissions, headers))
         # This is the signature of the session request.
-        return None, None
+        return RESPONSE_BODY, RESPONSE_HEADERS
 
     def reset(self):
         # Reinitialize the batch.

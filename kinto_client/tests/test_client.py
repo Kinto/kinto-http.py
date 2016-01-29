@@ -1,6 +1,6 @@
 import mock
 from six import text_type
-from .support import unittest, mock_response, build_response
+from .support import unittest, mock_response, build_response, mock_batch
 
 from kinto_client import (KintoException, BucketNotFound, Client,
                           DO_NOT_OVERWRITE)
@@ -13,9 +13,7 @@ class ClientTest(unittest.TestCase):
         mock_response(self.session)
 
     def test_context_manager_works_as_expected(self):
-        settings = {"batch_max_requests": 25}
-        self.session.request.side_effect = [({"settings": settings}, []),
-                                            ({"responses": []}, [])]
+        mock_batch(self.session)
 
         with self.client.batch(bucket='mozilla', collection='test') as batch:
             batch.create_record(id=1234, data={'foo': 'bar'})
@@ -33,6 +31,35 @@ class ClientTest(unittest.TestCase):
                  'path': '/buckets/mozilla/collections/test/records/5678',
                  'method': 'PUT',
                  'headers': {'If-None-Match': '*'}}]})
+
+    def test_context_manager_handles_delete(self):
+        mock_batch(self.session)
+
+        with self.client.batch(bucket='mozilla', collection='test') as batch:
+            batch.delete_bucket()
+            batch.delete_collection()
+            batch.delete_record(5678)
+
+        self.session.request.assert_called_with(
+            'POST',
+            '/batch',
+            payload={'requests': [
+                {
+                    'body': {},
+                    'path': '/buckets/mozilla',
+                    'method': 'DELETE'
+                },
+                {
+                    'body': {},
+                    'path': '/buckets/mozilla/collections/test',
+                    'method': 'DELETE'
+                },
+                {
+                    'body': {},
+                    'path': '/buckets/mozilla/collections/test/records/5678',
+                    'method': 'DELETE'
+                }
+            ]})
 
     def test_batch_raises_exception(self):
         # Make the next call to sess.request raise a 403.

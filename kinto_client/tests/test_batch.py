@@ -84,3 +84,12 @@ class BatchRequestsTest(unittest.TestCase):
         assert len(batch.requests) == 1
         batch.reset()
         assert len(batch.requests) == 0
+
+    def test_prefix_is_removed_from_batch_requests(self):
+        batch = Batch(self.client)
+        batch.request('GET', '/v1/foobar')
+        batch.send()
+
+        calls = self.client.session.request.call_args_list
+        _, kwargs1 = calls[0]
+        assert kwargs1['payload']['requests'][0]['path'] == '/foobar'

@@ -480,28 +480,6 @@ class RecordTest(unittest.TestCase):
         self.session.request.assert_any_call(
             'get', link, headers={'If-None-Match': '"1234"'}, params={})
 
-    def test_pagination_can_return_headers(self):
-        # Mock the calls to request.
-        link = ('http://example.org/buckets/buck/collections/coll/records/'
-                '?token=1234')
-
-        self.session.request.side_effect = [
-            # First one returns a list of items with a pagination token.
-            build_response(
-                [{'id': '1', 'value': 'item1'},
-                 {'id': '2', 'value': 'item2'}, ],
-                {'Next-Page': link}),
-            # Second one returns a list of items without a pagination token.
-            build_response(
-                [{'id': '3', 'value': 'item3'},
-                 {'id': '4', 'value': 'item4'}, ],
-            ),
-        ]
-        records, headers = self.client.get_records(
-            'bucket', 'collection', with_headers=True)
-
-        assert headers == {}
-
     def test_collection_can_delete_a_record(self):
         mock_response(self.session, data={'id': 1234})
         resp = self.client.delete_record(id=1234)

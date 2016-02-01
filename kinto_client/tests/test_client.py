@@ -65,6 +65,16 @@ class ClientTest(unittest.TestCase):
                 batch.create_record(id=1234, data={'foo': 'bar'})
                 batch.create_record(id=5678, data={'tutu': 'toto'})
 
+    def test_client_is_represented_properly(self):
+        client = Client(
+            server_url="https://kinto.notmyidea.org/v1",
+            bucket="homebrewing",
+            collection="recipes"
+        )
+        expected_repr = ("<KintoClient https://kinto.notmyidea.org/v1/"
+                         "buckets/homebrewing/collections/recipes>")
+        assert str(client) == expected_repr
+
 
 class BucketTest(unittest.TestCase):
 
@@ -87,7 +97,7 @@ class BucketTest(unittest.TestCase):
         self.session.request.assert_called_with(
             'patch',
             '/buckets/testbucket',
-            data={'foo': 'bar'},
+            data={'foo': 'bar', 'last_modified': '1234'},
             permissions={'read': ['natim']},
             headers={'If-Match': '"1234"'})
 
@@ -227,7 +237,7 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, data={'foo': 'bar'},
+            'put', url, data={'foo': 'bar', 'last_modified': '1234'},
             permissions=mock.sentinel.permissions,
             headers={'If-Match': '"1234"'})
 
@@ -443,6 +453,32 @@ class RecordTest(unittest.TestCase):
             {'id': '3', 'value': 'item3'},
             {'id': '4', 'value': 'item4'},
         ]
+
+    def test_pagination_supports_if_none_match(self):
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        self.session.request.side_effect = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+            ),
+        ]
+        self.client.get_records('bucket', 'collection',
+                                if_none_match="1234")
+
+        # Check that the If-None-Match header is present in the requests.
+        self.session.request.assert_any_call(
+            'get', '/buckets/collection/collections/bucket/records',
+            headers={'If-None-Match': '"1234"'}, params={})
+        self.session.request.assert_any_call(
+            'get', link, headers={'If-None-Match': '"1234"'}, params={})
 
     def test_collection_can_delete_a_record(self):
         mock_response(self.session, data={'id': 1234})

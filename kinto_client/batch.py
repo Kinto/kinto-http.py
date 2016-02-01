@@ -1,4 +1,5 @@
 from . import utils
+from collections import defaultdict
 
 
 class Batch(object):
@@ -15,7 +16,7 @@ class Batch(object):
         # is called.
         self.requests.append((method, endpoint, data, permissions, headers))
         # This is the signature of the session request.
-        return None, None
+        return defaultdict(dict), defaultdict(dict)
 
     def reset(self):
         # Reinitialize the batch.
@@ -24,9 +25,10 @@ class Batch(object):
     def _build_requests(self):
         requests = []
         for (method, url, data, permissions, headers) in self.requests:
+            # Strip the prefix in batch requests.
             request = {
                 'method': method.upper(),
-                'path': url}
+                'path': url.replace('v1/', '')}
 
             request['body'] = {}
             if data is not None:

@@ -129,3 +129,11 @@ class SessionTest(unittest.TestCase):
     def test_use_given_session_if_provided(self):
         session = create_session(session=mock.sentinel.session)
         self.assertEquals(session, mock.sentinel.session)
+
+    def test_body_is_none_on_304(self):
+        response = mock.MagicMock()
+        response.status_code = 304
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        body, headers = session.request('get', 'https://example.org/test')
+        assert body is None

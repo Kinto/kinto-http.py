@@ -30,6 +30,8 @@ def urljoin(server_url, path):
 
 
 def quote(text):
+    if hasattr(text, 'strip'):
+        text = text.strip('"')
     return '"{0}"'.format(text)
 
 

@@ -180,8 +180,8 @@ class Client(object):
         record_resp, headers = self.session.request(
             'get', endpoint, headers=headers, params=kwargs)
         if record_resp:
-            records.update(collections.OrderedDict(
-                [(r['id'], r) for r in record_resp['data']]))
+            records_tuples = [(r['id'], r) for r in record_resp['data']]
+            records.update(collections.OrderedDict(records_tuples))
 
             if 'next-page' in map(str.lower, headers.keys()):
                 # Paginated wants a relative URL, but the returned one is

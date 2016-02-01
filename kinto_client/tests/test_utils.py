@@ -41,3 +41,9 @@ class UtilsTest(TestCase):
     def test_urljoin_can_join_without_trailing_nor_prepend_slash(self):
         url = utils.urljoin("http://localhost", "v1")
         self.assertEquals(url, "http://localhost/v1")
+
+    def test_quote_strips_extra_quotes(self):
+        assert utils.quote('"1234"') == '"1234"'
+
+    def test_quotes_can_take_integers(self):
+        assert utils.quote(1234) == '"1234"'

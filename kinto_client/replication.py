@@ -8,9 +8,9 @@ logger = logging.getLogger(__name__)
 
 
 def replicate(origin, destination):
-    """Replicates all the information from one server to another one.
+    """Replicates records from one collection to another one.
 
-    The passed settings should match the named parameters of the python client.
+    All records are replicated, not only the ones that changed.
     """
     msg = 'Replication from {0} to {1}'.format(origin, destination)
     logger.info(msg)
@@ -26,7 +26,6 @@ def replicate(origin, destination):
         destination.create_collection(
             data=collection_data['data'],
             permissions=collection_data['permissions'], safe=False)
-    # XXX Why safe=False?
 
     records = origin.get_records()
     logger.info('replication of {0} records'.format(len(records)))

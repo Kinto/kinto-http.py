@@ -9,3 +9,6 @@ class BucketNotFound(KintoException):
         if exception is not None:
             self.request = exception.request
             self.response = exception.response
+        else:
+            self.request = None
+            self.response = None

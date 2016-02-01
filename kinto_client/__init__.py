@@ -197,12 +197,8 @@ class Client(object):
 
     def _get_cache_headers(self, safe, data=None, last_modified=None):
         has_data = data is not None and data.get('last_modified')
-
         if (last_modified is None and has_data):
-            # Drop the last_modified field since it will be dropped on the
-            # server anyway.
-            last_modified = data.pop('last_modified')
-
+            last_modified = data['last_modified']
         if safe and last_modified is not None:
             return {'If-Match': utils.quote(last_modified)}
         # else return None

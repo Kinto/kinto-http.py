@@ -28,9 +28,9 @@ def replicate(origin, destination):
             permissions=collection_data['permissions'], safe=False)
     # XXX Why safe=False?
 
+    records = origin.get_records()
+    logger.info('replication of {0} records'.format(len(records)))
     with destination.batch() as batch:
-        records = origin.get_records()
-        logger.info('replication of {0} records'.format(len(records)))
         for record in records:
             if record.get('deleted', False) is True:
                 batch.delete_record(record['id'],

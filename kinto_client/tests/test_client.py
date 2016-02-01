@@ -97,7 +97,7 @@ class BucketTest(unittest.TestCase):
         self.session.request.assert_called_with(
             'patch',
             '/buckets/testbucket',
-            data={'foo': 'bar'},
+            data={'foo': 'bar', 'last_modified': '1234'},
             permissions={'read': ['natim']},
             headers={'If-Match': '"1234"'})
 
@@ -237,7 +237,7 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'put', url, data={'foo': 'bar'},
+            'put', url, data={'foo': 'bar', 'last_modified': '1234'},
             permissions=mock.sentinel.permissions,
             headers={'If-Match': '"1234"'})
 

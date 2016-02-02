@@ -188,6 +188,24 @@ to ``True`` and a ``last_modified`` field is present in the passed ``data``, the
 check will be added to the requests to ensure the record wasn't modified on
 the server side in the meantime.
 
+Batching operations
+-------------------
+
+Rather than issuing a request for each and every operation, it is possible to
+batch the requests. The client will then issue as little requests as possible.
+
+Currently, batching operations only support write operations, so it is not
+possible to do the retrieval of information inside a batch.
+
+It is possible to do batch requests using a python context manager:
+
+.. code-block:: python
+
+  with client.batch() as batch:
+      for idx in range(0,100): 
+          batch.update_record(data={'id': idx})
+
+
 Run tests
 =========
 

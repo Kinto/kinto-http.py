@@ -224,11 +224,10 @@ class Client(object):
                                            permissions=permissions,
                                            headers=headers)
         except KintoException as e:
-            if e.reponse.status_code == 403:
+            if e.response.status_code == 403:
                 msg = "Unauthorized. Please check that the bucket exists."
-                e.message = msg
+                e = KintoException(msg, e)
             raise e
-
         return resp
 
     def update_collection(self, data=None, collection=None, bucket=None,

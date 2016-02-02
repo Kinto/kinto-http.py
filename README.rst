@@ -194,16 +194,18 @@ Batching operations
 Rather than issuing a request for each and every operation, it is possible to
 batch the requests. The client will then issue as little requests as possible.
 
-Currently, batching operations only support write operations, so it is not
+Currently, batching operations only supports write operations, so it is not
 possible to do the retrieval of information inside a batch.
 
-It is possible to do batch requests using a python context manager:
+It is possible to do batch requests using a Python context manager (``with``):
 
 .. code-block:: python
 
   with client.batch() as batch:
       for idx in range(0,100): 
           batch.update_record(data={'id': idx})
+
+A batch object shares the same methods as another client.
 
 
 Run tests

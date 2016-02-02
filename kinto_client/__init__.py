@@ -219,9 +219,16 @@ class Client(object):
                                               safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('collection', bucket, collection)
-        resp, _ = self.session.request('put', endpoint, data=data,
-                                       permissions=permissions,
-                                       headers=headers)
+        try:
+            resp, _ = self.session.request('put', endpoint, data=data,
+                                           permissions=permissions,
+                                           headers=headers)
+        except KintoException as e:
+            if e.reponse.status_code == 403:
+                msg = "Unauthorized. Please check that the bucket exists."
+                e.message = msg
+            raise e
+
         return resp
 
     def update_collection(self, data=None, collection=None, bucket=None,

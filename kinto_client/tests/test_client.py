@@ -207,8 +207,8 @@ class CollectionTest(unittest.TestCase):
 
     def test_collection_update_issues_an_http_put(self):
         self.client.update_collection(
-            'mycollection',
-            data={'foo': 'bar'},
+            {'foo': 'bar'},
+            collection='mycollection',
             permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
@@ -218,8 +218,8 @@ class CollectionTest(unittest.TestCase):
 
     def test_update_handles_last_modified(self):
         self.client.update_collection(
-            'mycollection',
-            data={'foo': 'bar'},
+            {'foo': 'bar'},
+            collection='mycollection',
             last_modified=1234)
 
         url = '/buckets/mybucket/collections/mycollection'
@@ -231,8 +231,8 @@ class CollectionTest(unittest.TestCase):
     def test_collection_update_use_an_if_match_header(self):
         data = {'foo': 'bar', 'last_modified': '1234'}
         self.client.update_collection(
-            'mycollection',
-            data=data,
+            data,
+            collection='mycollection',
             permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'

@@ -249,8 +249,8 @@ class Client(object):
                                        headers=headers)
         return resp
 
-    def update_collection(self, collection=None, bucket=None,
-                          data=None, permissions=None, method='put',
+    def update_collection(self, data=None, collection=None, bucket=None,
+                          permissions=None, method='put',
                           safe=True, last_modified=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
         headers = self._get_cache_headers(safe, data, last_modified)

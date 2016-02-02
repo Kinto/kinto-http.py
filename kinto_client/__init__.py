@@ -199,10 +199,25 @@ class Client(object):
             return {'If-Match': utils.quote(last_modified)}
         # else return None
 
+    def _get_or_create(self, method_name, *args, **kwargs):
+        try:
+            method = getattr(self, method_name)
+            return method(*args, **kwargs)
+        except KintoException as e:
+            if not hasattr(e, 'response') or e.response.status_code != 412:
+                raise e
+
     # Buckets
 
     def create_bucket(self, bucket=None, data=None, permissions=None,
-                      safe=True):
+                      safe=True, if_not_exists=False):
+        if if_not_exists:
+            return self._get_or_create(
+                'create_bucket',
+                bucket=bucket,
+                data=data,
+                permissions=permissions,
+                safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('bucket', bucket)
         resp, _ = self.session.request('put', endpoint,
@@ -241,7 +256,16 @@ class Client(object):
         return self._paginated(endpoint)
 
     def create_collection(self, collection=None, bucket=None,
-                          data=None, permissions=None, safe=True):
+                          data=None, permissions=None, safe=True,
+                          if_not_exists=False):
+        if if_not_exists:
+            return self._get_or_create(
+                'create_collection',
+                collection=collection,
+                bucket=bucket,
+                data=data,
+                permissions=permissions,
+                safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('collection', bucket, collection)
         resp, _ = self.session.request('put', endpoint, data=data,
@@ -289,7 +313,16 @@ class Client(object):
         return resp
 
     def create_record(self, data, id=None, collection=None, permissions=None,
-                      bucket=None, safe=True):
+                      bucket=None, safe=True, if_not_exists=False):
+        if if_not_exists:
+            return self._get_or_create(
+                'create_record',
+                data=data,
+                id=id,
+                collection=collection,
+                permissions=permissions,
+                bucket=bucket,
+                safe=safe)
         id = id or data.get('id', None) or str(uuid.uuid4())
         # Make sure that no record already exists with this id.
         headers = DO_NOT_OVERWRITE if safe else None

@@ -2,6 +2,8 @@ import unittest2 as unittest  # NOQA
 
 import mock
 
+from kinto_client.exceptions import KintoException
+
 
 def mock_response(session, data=None, permissions=None, headers=None,
                   error=False):
@@ -30,3 +32,11 @@ def build_response(data, headers=None):
         'data': data
     }
     return resp, headers
+
+
+def install_http_error(session, status):
+    exception = KintoException()
+    exception.response = mock.MagicMock()
+    exception.response.status_code = status
+    exception.request = mock.sentinel.request
+    session.request.side_effect = exception

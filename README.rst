@@ -180,6 +180,15 @@ For instance to give access to "leplatrem" to a specific record, you would do:
   # During creation, it is possible to pass the permissions dict.
   client.create_record(data={'foo': 'bar'}, permissions={})
 
+Get or create
+-------------
+
+In some cases, you might want to create a bucket, collection or record only if
+it doesn't exist already. To do so, you can pass the ``if_not_exists=True``
+to the ``create_*`` methods::
+
+  client.create_bucket('bucket', if_not_exists=True)
+
 Overwriting existing objects
 ----------------------------
 

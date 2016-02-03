@@ -75,6 +75,18 @@ class ClientTest(unittest.TestCase):
                          "buckets/homebrewing/collections/recipes>")
         assert str(client) == expected_repr
 
+    def test_client_uses_default_bucket_if_not_specified(self):
+        mock_response(self.session)
+        client = Client(session=self.session)
+        client.get_bucket()
+        self.session.request.assert_called_with('get', '/buckets/default')
+
+    def test_client_uses_passed_bucket_if_specified(self):
+        client = Client(
+            server_url="https://kinto.notmyidea.org/v1",
+            bucket="buck")
+        assert client._bucket_name == "buck"
+
 
 class BucketTest(unittest.TestCase):
 

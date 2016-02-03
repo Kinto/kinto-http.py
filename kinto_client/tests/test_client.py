@@ -1,6 +1,6 @@
 import mock
 from six import text_type
-from .support import unittest, mock_response, build_response
+from .support import unittest, mock_response, build_response, get_http_error
 
 from kinto_client import (KintoException, BucketNotFound, Client,
                           DO_NOT_OVERWRITE)
@@ -169,6 +169,27 @@ class BucketTest(unittest.TestCase):
         headers = {'If-Match': '"1234"'}
         self.session.request.assert_called_with('delete', url, headers=headers)
 
+    def test_get_or_create_dont_raise_in_case_of_conflict(self):
+        bucket_data = {
+            'permissions': mock.sentinel.permissions,
+            'data': {'foo': 'bar'}
+        }
+        self.session.request.side_effect = [
+            get_http_error(status=412),
+            (bucket_data, None)
+        ]
+        returned_data = self.client.create_bucket(
+            "buck",
+            if_not_exists=True)  # Should not raise.
+        assert returned_data == bucket_data
+
+    def test_get_or_create_raise_in_other_cases(self):
+        self.session.request.side_effect = get_http_error(status=500)
+        with self.assertRaises(KintoException):
+            self.client.create_bucket(
+                bucket="buck",
+                if_not_exists=True)
+
 
 class CollectionTest(unittest.TestCase):
 
@@ -311,6 +332,29 @@ class CollectionTest(unittest.TestCase):
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with('delete', url, headers=None)
+
+    def test_get_or_create_doesnt_raise_in_case_of_conflict(self):
+        data = {
+            'permissions': mock.sentinel.permissions,
+            'data': {'foo': 'bar'}
+        }
+        self.session.request.side_effect = [
+            get_http_error(status=412),
+            (data, None)
+        ]
+        returned_data = self.client.create_collection(
+            bucket="buck",
+            collection="coll",
+            if_not_exists=True)  # Should not raise.
+        assert returned_data == data
+
+    def test_get_or_create_raise_in_other_cases(self):
+        self.session.request.side_effect = get_http_error(status=500)
+        with self.assertRaises(KintoException):
+            self.client.create_collection(
+                bucket="buck",
+                collection="coll",
+                if_not_exists=True)
 
 
 class RecordTest(unittest.TestCase):
@@ -559,3 +603,29 @@ class RecordTest(unittest.TestCase):
             )
         assert text_type(cm.exception) == (
             "'Unable to update a record, need an id.'")
+
+    def test_get_or_create_doesnt_raise_in_case_of_conflict(self):
+        data = {
+            'permissions': mock.sentinel.permissions,
+            'data': {'foo': 'bar'}
+        }
+        self.session.request.side_effect = [
+            get_http_error(status=412),
+            (data, None)
+        ]
+        returned_data = self.client.create_record(
+            bucket="buck",
+            collection="coll",
+            data={'id': 1234,
+                  'foo': 'bar'},
+            if_not_exists=True)  # Should not raise.
+        assert returned_data == data
+
+    def test_get_or_create_raise_in_other_cases(self):
+        self.session.request.side_effect = get_http_error(status=500)
+        with self.assertRaises(KintoException):
+            self.client.create_record(
+                bucket="buck",
+                collection="coll",
+                data={'foo': 'bar'},
+                if_not_exists=True)

@@ -46,6 +46,11 @@ class FunctionalTest(unittest2.TestCase):
         user_id = self.get_user_id(self.auth)
         assert user_id in bucket['permissions']['write']
 
+    def test_bucket_creation_if_not_exists(self):
+        self.client.create_bucket('mozilla')
+        # Should not raise.
+        self.client.create_bucket('mozilla', if_not_exists=True)
+
     def test_bucket_retrieval(self):
         self.client.create_bucket('mozilla')
         self.client.get_bucket('mozilla')
@@ -76,6 +81,13 @@ class FunctionalTest(unittest2.TestCase):
         # Test retrieval of a collection gets the permissions as well.
         collection = self.client.get_collection('payments', bucket='mozilla')
         assert 'alexis' in collection['permissions']['write']
+
+    def test_collection_creation_if_not_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.create_collection('payments', bucket='mozilla')
+        # Should not raise.
+        self.client.create_collection('payments', bucket='mozilla',
+                                      if_not_exists=True)
 
     def test_collection_list(self):
         self.client.create_bucket('mozilla')
@@ -157,6 +169,16 @@ class FunctionalTest(unittest2.TestCase):
             # Create a second record with the ID of the first one.
             client.create_record(data={'id': created['data']['id'],
                                        'bar': 'baz'})
+
+    def test_single_record_creation_if_not_exists(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        created = client.create_record(data={'foo': 'bar'})
+        client.create_record(data={'id': created['data']['id'],
+                                   'bar': 'baz'},
+                             if_not_exists=True)
 
     def test_single_record_can_overwrite(self):
         client = Client(server_url=self.server_url, auth=self.auth,

@@ -128,7 +128,7 @@ class Session(object):
 class Client(object):
 
     def __init__(self, server_url=None, session=None, auth=None,
-                 bucket=None, collection=None):
+                 bucket="default", collection=None):
         self.endpoints = Endpoints()
         self.session = create_session(server_url, auth, session)
         self._bucket_name = bucket

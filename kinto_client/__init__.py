@@ -206,6 +206,8 @@ class Client(object):
         except KintoException as e:
             if not hasattr(e, 'response') or e.response.status_code != 412:
                 raise e
+            # The exception contains the existing record in details.existing
+            # but it's not enough as we also need to return the permissions.
             get_kwargs = {}
             if resource in('bucket', 'collection', 'record'):
                 get_kwargs['bucket'] = kwargs['bucket']

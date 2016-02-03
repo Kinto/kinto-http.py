@@ -199,20 +199,31 @@ class Client(object):
             return {'If-Match': utils.quote(last_modified)}
         # else return None
 
-    def _create_if_not_exists(self, method_name, *args, **kwargs):
+    def _create_if_not_exists(self, resource, **kwargs):
         try:
-            method = getattr(self, method_name)
-            return method(*args, **kwargs)
+            create_method = getattr(self, 'create_%s' % resource)
+            return create_method(**kwargs)
         except KintoException as e:
             if not hasattr(e, 'response') or e.response.status_code != 412:
                 raise e
+            get_kwargs = {}
+            if resource in('bucket', 'collection', 'record'):
+                get_kwargs['bucket'] = kwargs['bucket']
+            if resource in ('collection', 'record'):
+                get_kwargs['collection'] = kwargs['collection']
+            if resource == 'record':
+                _id = kwargs.get('id') or kwargs['data']['id']
+                get_kwargs['id'] = _id
+
+            get_method = getattr(self, 'get_%s' % resource)
+            return get_method(**get_kwargs)
 
     # Buckets
 
     def create_bucket(self, bucket=None, data=None, permissions=None,
                       safe=True, if_not_exists=False):
         if if_not_exists:
-            return self._create_if_not_exists('create_bucket',
+            return self._create_if_not_exists('bucket',
                                               bucket=bucket,
                                               data=data,
                                               permissions=permissions,
@@ -258,7 +269,7 @@ class Client(object):
                           data=None, permissions=None, safe=True,
                           if_not_exists=False):
         if if_not_exists:
-            return self._create_if_not_exists('create_collection',
+            return self._create_if_not_exists('collection',
                                               collection=collection,
                                               bucket=bucket,
                                               data=data,
@@ -313,7 +324,7 @@ class Client(object):
     def create_record(self, data, id=None, collection=None, permissions=None,
                       bucket=None, safe=True, if_not_exists=False):
         if if_not_exists:
-            return self._create_if_not_exists('create_record',
+            return self._create_if_not_exists('record',
                                               data=data,
                                               id=id,
                                               collection=collection,

@@ -34,9 +34,9 @@ def build_response(data, headers=None):
     return resp, headers
 
 
-def install_http_error(session, status):
+def get_http_error(status):
     exception = KintoException()
     exception.response = mock.MagicMock()
     exception.response.status_code = status
     exception.request = mock.sentinel.request
-    session.request.side_effect = exception
+    return exception

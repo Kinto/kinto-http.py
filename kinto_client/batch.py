@@ -1,13 +1,16 @@
 from . import utils
 from collections import defaultdict
 
+from .exceptions import KintoException
+
 
 class Batch(object):
 
-    def __init__(self, client, batch_max_requests=0):
+    def __init__(self, client, batch_max_requests=0, retry=1):
         self.session = client.session
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
+        self.nb_retry = retry
         self.requests = []
 
     def request(self, method, endpoint, data=None, permissions=None,
@@ -44,10 +47,18 @@ class Batch(object):
         result = []
         requests = self._build_requests()
         for chunk in utils.chunks(requests, self.batch_max_requests):
-            resp, headers = self.session.request(
-                'POST',
-                self.endpoints.get('batch'),
-                payload={'requests': chunk}
-            )
+            args = ('POST', self.endpoints.get('batch'))
+            kwargs = dict(payload={'requests': chunk})
+
+            retry = self.nb_retry
+            while True:
+                try:
+                    resp, headers = self.session.request(*args, **kwargs)
+                    break
+                except KintoException as e:
+                    if retry <= 0:
+                        raise e
+                    retry = retry - 1
+
             result.append((resp, headers))
         return result

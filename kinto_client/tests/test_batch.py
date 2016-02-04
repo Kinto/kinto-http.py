@@ -1,6 +1,7 @@
 import unittest2 as unittest
 import mock
 
+from kinto_client import Client
 from kinto_client.batch import Batch
 
 
@@ -93,3 +94,64 @@ class BatchRequestsTest(unittest.TestCase):
         calls = self.client.session.request.call_args_list
         _, kwargs1 = calls[0]
         assert kwargs1['payload']['requests'][0]['path'] == '/foobar'
+
+
+class RetryBatchTest(unittest.TestCase):
+
+    def setUp(self):
+        self.client = Client('https://server.com')
+        patch = mock.patch('kinto_client.requests.request')
+        self.addCleanup(patch.stop)
+        self.request_mocked = patch.start()
+
+        self.response_200 = mock.MagicMock()
+        self.response_200.status_code = 200
+        self.response_200.json().return_value = mock.sentinel.resp,
+        self.response_200.headers = mock.sentinel.headers
+
+        body_503 = {
+            "message": "Service temporary unavailable due to overloading",
+            "code": 503,
+            "error": "Service Unavailable",
+            "errno": 201
+        }
+        headers_503 = {
+            "Retry-After": 30,
+            "Content-Type": "application/json; charset=UTF-8",
+            "Content-Length": 151
+        }
+        self.response_503 = mock.MagicMock()
+        self.response_503.status_code = 503
+        self.response_503.json.return_value = body_503
+        self.response_503.headers = headers_503
+
+        self.request_mocked.side_effect = [self.response_503]
+
+    def test_batch_does_not_retry_by_default(self):
+        batch = Batch(self.client)
+        batch.request('GET', '/v1/foobar')
+        with self.assertRaises(Exception):
+            batch.send()
+
+    def test_batch_can_retry_several_times(self):
+        self.request_mocked.side_effect = [self.response_503,
+                                           self.response_503,  # retry 1
+                                           self.response_200]  # retry 2
+
+        batch = Batch(self.client, retry=2)
+        batch.request('GET', '/v1/foobar')
+        batch.send()
+
+    def test_batch_fails_if_retry_exhausted(self):
+        self.request_mocked.side_effect = [self.response_503,
+                                           self.response_503,  # retry 1
+                                           self.response_503,  # retry 2
+                                           self.response_200]
+
+        batch = Batch(self.client, retry=2)
+        batch.request('GET', '/v1/foobar')
+        with self.assertRaises(Exception):
+            batch.send()
+
+    def test_waits_if_retry_after_header_is_present(self):
+        pass

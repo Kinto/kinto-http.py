@@ -22,8 +22,8 @@ class ClientTest(unittest.TestCase):
             batch.create_record(id=5678, data={'bar': 'baz'})
 
         self.session.request.assert_called_with(
-            'POST',
-            '/batch',
+            method='POST',
+            endpoint='/batch',
             payload={'requests': [
                 {'body': {'data': {'foo': 'bar'}},
                  'path': '/buckets/mozilla/collections/test/records/1234',

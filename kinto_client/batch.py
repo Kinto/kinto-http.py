@@ -51,14 +51,15 @@ class Batch(object):
         result = []
         requests = self._build_requests()
         for chunk in utils.chunks(requests, self.batch_max_requests):
-            args = ('POST', self.endpoints.get('batch'))
-            kwargs = dict(payload={'requests': chunk})
+            kwargs = dict(method='POST',
+                          endpoint=self.endpoints.get('batch'),
+                          payload={'requests': chunk})
 
             retry = self.nb_retry
             while retry >= 0:
                 headers = {}
                 try:
-                    resp, headers = self.session.request(*args, **kwargs)
+                    resp, headers = self.session.request(**kwargs)
                 except KintoException as e:
                     if retry <= 0:
                         raise e

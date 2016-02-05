@@ -24,8 +24,8 @@ class BatchRequestsTest(unittest.TestCase):
         batch.send()
 
         self.client.session.request.assert_called_with(
-            'POST',
-            self.client.endpoints.get('batch'),
+            method='POST',
+            endpoint=self.client.endpoints.get('batch'),
             payload={'requests': [{
                 'method': 'GET',
                 'path': '/foobar/baz',
@@ -40,8 +40,8 @@ class BatchRequestsTest(unittest.TestCase):
         batch.send()
 
         self.client.session.request.assert_called_with(
-            'POST',
-            self.client.endpoints.get('batch'),
+            method='POST',
+            endpoint=self.client.endpoints.get('batch'),
             payload={'requests': [{
                 'method': 'GET',
                 'path': '/foobar/baz',
@@ -55,8 +55,8 @@ class BatchRequestsTest(unittest.TestCase):
         batch.send()
 
         self.client.session.request.assert_called_with(
-            'POST',
-            self.client.endpoints.get('batch'),
+            method='POST',
+            endpoint=self.client.endpoints.get('batch'),
             payload={'requests': [{
                 'method': 'GET',
                 'path': '/foobar/baz',

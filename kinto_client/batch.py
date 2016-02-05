@@ -6,7 +6,7 @@ from .exceptions import KintoException
 
 class Batch(object):
 
-    def __init__(self, client, batch_max_requests=0, retry=1):
+    def __init__(self, client, batch_max_requests=0, retry=0):
         self.session = client.session
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
@@ -51,13 +51,13 @@ class Batch(object):
             kwargs = dict(payload={'requests': chunk})
 
             retry = self.nb_retry
-            while True:
+            while retry >= 0:
                 try:
                     resp, headers = self.session.request(*args, **kwargs)
-                    break
                 except KintoException as e:
                     if retry <= 0:
                         raise e
+                finally:
                     retry = retry - 1
 
             result.append((resp, headers))

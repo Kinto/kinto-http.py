@@ -127,13 +127,21 @@ class RetryBatchTest(unittest.TestCase):
 
         self.request_mocked.side_effect = [self.response_503]
 
-    def test_batch_does_not_retry_by_default(self):
+    def test_does_not_retry_by_default(self):
         batch = Batch(self.client)
         batch.request('GET', '/v1/foobar')
         with self.assertRaises(Exception):
             batch.send()
 
-    def test_batch_can_retry_several_times(self):
+    def test_succeeds_on_retry(self):
+        self.request_mocked.side_effect = [self.response_503,
+                                           self.response_200]  # retry 1
+
+        batch = Batch(self.client, retry=1)
+        batch.request('GET', '/v1/foobar')
+        batch.send()
+
+    def test_can_retry_several_times(self):
         self.request_mocked.side_effect = [self.response_503,
                                            self.response_503,  # retry 1
                                            self.response_200]  # retry 2
@@ -142,7 +150,7 @@ class RetryBatchTest(unittest.TestCase):
         batch.request('GET', '/v1/foobar')
         batch.send()
 
-    def test_batch_fails_if_retry_exhausted(self):
+    def test_fails_if_retry_exhausted(self):
         self.request_mocked.side_effect = [self.response_503,
                                            self.response_503,  # retry 1
                                            self.response_503,  # retry 2

@@ -68,12 +68,12 @@ class ClientTest(unittest.TestCase):
     def test_batch_options_are_transmitted(self):
         settings = {"batch_max_requests": 25}
         self.session.request.side_effect = [({"settings": settings}, [])]
-        with self.client.batch(bucket='moz',
-                               collection='test',
-                               retry=12,
-                               retry_after=20) as batch:
-            self.assertEqual(batch.session.nb_retry, 12)
-            self.assertEqual(batch.session.retry_after, 20)
+        with mock.patch('kinto_client.create_session') as create_session:
+            with self.client.batch(bucket='moz', collection='test', retry=12,
+                                   retry_after=20):
+                _, last_call_kwargs = create_session.call_args_list[-1]
+                self.assertEqual(last_call_kwargs['retry'], 12)
+                self.assertEqual(last_call_kwargs['retry_after'], 20)
 
     def test_client_is_represented_properly(self):
         client = Client(

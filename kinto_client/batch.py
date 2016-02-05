@@ -1,20 +1,13 @@
-import time
-
 from . import utils
 from collections import defaultdict
-
-from .exceptions import KintoException
 
 
 class Batch(object):
 
-    def __init__(self, client, batch_max_requests=0, retry=0,
-                 retry_after=None):
+    def __init__(self, client, batch_max_requests=0):
         self.session = client.session
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
-        self.nb_retry = retry
-        self.retry_after = retry_after
         self.requests = []
 
     def request(self, method, endpoint, data=None, permissions=None,
@@ -54,23 +47,6 @@ class Batch(object):
             kwargs = dict(method='POST',
                           endpoint=self.endpoints.get('batch'),
                           payload={'requests': chunk})
-
-            retry = self.nb_retry
-            while retry >= 0:
-                headers = {}
-                try:
-                    resp, headers = self.session.request(**kwargs)
-                except KintoException as e:
-                    if retry <= 0:
-                        raise e
-                    # If not forced, use retry-after header and wait.
-                    if self.retry_after is None:
-                        retry_after = headers.get("Retry-After", 0)
-                    else:
-                        retry_after = self.retry_after
-                    time.sleep(retry_after)
-
-                retry = retry - 1
-
+            resp, headers = self.session.request(**kwargs)
             result.append((resp, headers))
         return result

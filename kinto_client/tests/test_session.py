@@ -170,6 +170,9 @@ class RetryRequestTest(unittest.TestCase):
         self.response_503.json.return_value = body_503
         self.response_503.headers = headers_503
 
+        self.response_403 = mock.MagicMock()
+        self.response_403.status_code = 403
+
         self.requests_mock.request.side_effect = [self.response_503]
 
     def test_does_not_retry_by_default(self):
@@ -196,6 +199,12 @@ class RetryRequestTest(unittest.TestCase):
                                                   self.response_503,  # retry 2
                                                   self.response_200]
         session = Session('https://example.org', retry=2)
+        with self.assertRaises(KintoException):
+            session.request('GET', '/v1/foobar')
+
+    def test_does_not_retry_on_400_errors(self):
+        self.requests_mock.request.side_effect = [self.response_403]
+        session = Session('https://example.org', retry=1)
         with self.assertRaises(KintoException):
             session.request('GET', '/v1/foobar')
 

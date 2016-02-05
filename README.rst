@@ -227,7 +227,6 @@ The client can hence retry to send the same request until it succeeds.
 To enable this, specify the number of retries on the client:
 
 .. code-block:: python
-  :emphasize-lines: 3
 
   client = Client(server_url='http://localhost:8888/v1',
                   auth=credentials,
@@ -238,7 +237,6 @@ In the Kinto protocol, it is specified that the server `tells the duration in se
 It is possible to force this value:
 
 .. code-block:: python
-  :emphasize-lines: 4
 
   client = Client(server_url='http://localhost:8888/v1',
                   auth=credentials,

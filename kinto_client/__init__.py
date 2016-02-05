@@ -143,13 +143,16 @@ class Client(object):
         })
 
     @contextmanager
-    def batch(self, **kwargs):
+    def batch(self, retry=0, retry_after=None, **kwargs):
         if self._server_settings is None:
             resp, _ = self.session.request("GET", self._get_endpoint('root'))
             self._server_settings = resp['settings']
 
         batch_max_requests = self._server_settings['batch_max_requests']
-        batch = Batch(self, batch_max_requests=batch_max_requests)
+        batch = Batch(self,
+                      batch_max_requests=batch_max_requests,
+                      retry=retry,
+                      retry_after=retry_after)
         yield self.clone(session=batch, **kwargs)
         for (resp, headers) in batch.send():
             for i, response in enumerate(resp['responses']):

@@ -116,7 +116,6 @@ class RetryBatchTest(unittest.TestCase):
             "errno": 201
         }
         headers_503 = {
-            "Retry-After": 30,
             "Content-Type": "application/json; charset=UTF-8",
             "Content-Length": 151
         }
@@ -161,5 +160,40 @@ class RetryBatchTest(unittest.TestCase):
         with self.assertRaises(Exception):
             batch.send()
 
+    def test_does_not_wait_if_retry_after_header_is_not_present(self):
+        self.request_mocked.side_effect = [self.response_503,
+                                           self.response_200]
+        with mock.patch('kinto_client.batch.time.sleep') as sleep_mocked:
+            batch = Batch(self.client, retry=1)
+            batch.request('GET', '/v1/foobar')
+            batch.send()
+            sleep_mocked.assert_called_with(0)
+
     def test_waits_if_retry_after_header_is_present(self):
-        pass
+        self.response_503.headers["Retry-After"] = 27
+        self.request_mocked.side_effect = [self.response_503,
+                                           self.response_200]
+        with mock.patch('kinto_client.batch.time.sleep') as sleep_mocked:
+            batch = Batch(self.client, retry=1)
+            batch.request('GET', '/v1/foobar')
+            batch.send()
+            self.assertTrue(sleep_mocked.called)
+
+    def test_waits_if_retry_after_is_forced(self):
+        self.request_mocked.side_effect = [self.response_503,
+                                           self.response_200]
+        with mock.patch('kinto_client.batch.time.sleep') as sleep_mocked:
+            batch = Batch(self.client, retry=1, retry_after=10)
+            batch.request('GET', '/v1/foobar')
+            batch.send()
+            sleep_mocked.assert_called_with(10)
+
+    def test_forced_retry_after_overrides_value_of_header(self):
+        self.response_503.headers["Retry-After"] = 27
+        self.request_mocked.side_effect = [self.response_503,
+                                           self.response_200]
+        with mock.patch('kinto_client.batch.time.sleep') as sleep_mocked:
+            batch = Batch(self.client, retry=1, retry_after=10)
+            batch.request('GET', '/v1/foobar')
+            batch.send()
+            sleep_mocked.assert_called_with(10)

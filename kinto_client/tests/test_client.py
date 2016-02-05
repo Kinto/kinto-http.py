@@ -65,6 +65,16 @@ class ClientTest(unittest.TestCase):
                 batch.create_record(id=1234, data={'foo': 'bar'})
                 batch.create_record(id=5678, data={'tutu': 'toto'})
 
+    def test_batch_options_are_transmitted(self):
+        settings = {"batch_max_requests": 25}
+        self.session.request.side_effect = [({"settings": settings}, [])]
+        with self.client.batch(bucket='moz',
+                               collection='test',
+                               retry=12,
+                               retry_after=20) as batch:
+            self.assertEqual(batch.session.nb_retry, 12)
+            self.assertEqual(batch.session.retry_after, 20)
+
     def test_client_is_represented_properly(self):
         client = Client(
             server_url="https://kinto.notmyidea.org/v1",

@@ -108,32 +108,50 @@ class BucketTest(unittest.TestCase):
     def test_put_is_issued_on_creation(self):
         self.client.create_bucket('testbucket')
         self.session.request.assert_called_with(
-            'put', '/buckets/testbucket', permissions=None,
+            'put', '/buckets/testbucket', data=None, permissions=None,
             headers=DO_NOT_OVERWRITE)
 
-    def test_patch_is_issued_on_update(self):
+    def test_put_is_issued_on_update(self):
         self.client.update_bucket(
             'testbucket',
             data={'foo': 'bar', 'last_modified': '1234'},
             permissions={'read': ['natim']})
         self.session.request.assert_called_with(
-            'patch',
+            'put',
             '/buckets/testbucket',
             data={'foo': 'bar', 'last_modified': '1234'},
             permissions={'read': ['natim']},
             headers={'If-Match': '"1234"'})
 
-    def test_udpate_bucket_handles_last_modified(self):
+    def test_patch_is_issued_on_patch(self):
+        self.client.create_bucket('testbucket')
+        self.client.patch_bucket(
+            'testbucket',
+            data={'foo': 'bar'},
+            permissions={'read': ['natim']})
+        self.session.request.assert_called_with(
+            'patch',
+            '/buckets/testbucket',
+            data={'foo': 'bar'},
+            permissions={'read': ['natim']},
+            headers=None)
+
+    def test_update_bucket_handles_last_modified(self):
         self.client.update_bucket(
             'testbucket',
             data={'foo': 'bar'},
             last_modified=1234)
         self.session.request.assert_called_with(
-            'patch',
+            'put',
             '/buckets/testbucket',
             data={'foo': 'bar'},
             permissions=None,
             headers={'If-Match': '"1234"'})
+
+    def test_get_is_issued_on_list_retrieval(self):
+        self.client.get_buckets()
+        self.session.request.assert_called_with('get', '/buckets',
+                                                headers={}, params={})
 
     def test_get_is_issued_on_retrieval(self):
         self.client.get_bucket('testbucket')
@@ -190,6 +208,11 @@ class BucketTest(unittest.TestCase):
         url = '/buckets/mybucket'
         headers = {'If-Match': '"1234"'}
         self.session.request.assert_called_with('delete', url, headers=headers)
+
+    def test_delete_is_issued_on_list_deletion(self):
+        self.client.delete_buckets()
+        self.session.request.assert_called_with('delete', '/buckets',
+                                                headers=None)
 
     def test_get_or_create_dont_raise_in_case_of_conflict(self):
         bucket_data = {
@@ -320,10 +343,15 @@ class CollectionTest(unittest.TestCase):
             {'id': 'bar', 'last_modified': '59874'},
         ]
 
-    def test_collection_can_delete_a_list_of_records(self):
-        self.client.delete_records(['1234', '5678'])
-        # url = '/buckets/mybucket/collections/mycollection/records/9'
-        # XXX check that the delete is done in a BATCH.
+    def test_collection_can_delete_all_its_records(self):
+        self.client.delete_records(bucket='abucket', collection='acollection')
+        url = '/buckets/abucket/collections/acollection/records'
+        self.session.request.assert_called_with('delete', url, headers=None)
+
+    def test_delete_is_issued_on_list_deletion(self):
+        self.client.delete_collections(bucket='mybucket')
+        url = '/buckets/mybucket/collections'
+        self.session.request.assert_called_with('delete', url, headers=None)
 
     def test_collection_can_be_deleted(self):
         data = {}
@@ -552,11 +580,6 @@ class RecordTest(unittest.TestCase):
         assert resp == {'id': 1234}
         url = '/buckets/mybucket/collections/mycollection/records/1234'
         self.session.request.assert_called_with('delete', url, headers=None)
-
-    def test_collection_can_delete_a_list_of_records(self):
-        self.client.delete_records(['1234', '5678'])
-        # url = '/buckets/mybucket/collections/mycollection/records/9'
-        # XXX check that the delete is done in a BATCH.
 
     def test_record_delete_if_match(self):
         data = {}

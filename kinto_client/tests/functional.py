@@ -36,7 +36,7 @@ class FunctionalTest(unittest2.TestCase):
         resp.raise_for_status()
 
     def get_user_id(self, credentials):
-        hmac_secret = self.config.get('app:main', 'cliquet.userid_hmac_secret')
+        hmac_secret = self.config.get('app:main', 'kinto.userid_hmac_secret')
         credentials = '%s:%s' % credentials
         digest = cliquet_utils.hmac_digest(hmac_secret, credentials)
         return 'basicauth:%s' % digest
@@ -51,11 +51,26 @@ class FunctionalTest(unittest2.TestCase):
         # Should not raise.
         self.client.create_bucket('mozilla', if_not_exists=True)
 
+    def test_buckets_retrieval(self):
+        self.client.create_bucket('mozilla')
+        buckets = self.client.get_buckets()
+        assert len(buckets) == 1
+
     def test_bucket_retrieval(self):
         self.client.create_bucket('mozilla')
         self.client.get_bucket('mozilla')
         # XXX Add permissions handling during creation and check they are
         # present during retrieval.
+
+    def test_bucket_modification(self):
+        bucket = self.client.create_bucket('mozilla', data={'version': 1})
+        assert bucket['data']['version'] == 1
+        bucket = self.client.patch_bucket('mozilla', data={'author': 'you'})
+        assert bucket['data']['version'] == 1
+        assert bucket['data']['author'] == 'you'
+        bucket = self.client.update_bucket('mozilla', data={'date': 'today'})
+        assert bucket['data']['date'] == 'today'
+        assert 'version' not in bucket['data']
 
     def test_bucket_retrieval_fails_when_not_created(self):
         self.assertRaises(BucketNotFound, self.client.get_bucket,
@@ -64,6 +79,12 @@ class FunctionalTest(unittest2.TestCase):
     def test_bucket_deletion(self):
         self.client.create_bucket('mozilla')
         self.client.delete_bucket('mozilla')
+        self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
+
+    def test_buckets_deletion(self):
+        self.client.create_bucket('mozilla')
+        buckets = self.client.delete_buckets()
+        assert buckets[0]['id'] == 'mozilla'
         self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
 
     def test_bucket_save(self):
@@ -105,6 +126,13 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('mozilla')
         self.client.create_collection('payments', bucket='mozilla')
         self.client.delete_collection('payments', bucket='mozilla')
+        assert len(self.client.get_collections(bucket='mozilla')) == 0
+
+    def test_collections_deletion(self):
+        self.client.create_bucket('mozilla')
+        self.client.create_collection('amo', bucket='mozilla')
+        self.client.create_collection('blocklist', bucket='mozilla')
+        self.client.delete_collections(bucket='mozilla')
         assert len(self.client.get_collections(bucket='mozilla')) == 0
 
     def test_record_creation_and_retrieval(self):
@@ -199,6 +227,15 @@ class FunctionalTest(unittest2.TestCase):
         record = client.create_record({'foo': 'bar'})
         deleted = client.delete_record(record['data']['id'])
         assert deleted['deleted'] is True
+        assert len(client.get_records()) == 0
+
+    def test_multiple_record_deletion(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        client.create_record({'foo': 'bar'})
+        client.delete_records()
         assert len(client.get_records()) == 0
 
     def test_bucket_sharing(self):

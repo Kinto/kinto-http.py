@@ -2,11 +2,13 @@ import unittest2 as unittest
 import mock
 
 from kinto_client.batch import Batch
+from kinto_client.exceptions import KintoException
 
 
 class BatchRequestsTest(unittest.TestCase):
     def setUp(self):
         self.client = mock.MagicMock()
+        mock.sentinel.resp = {"responses": []}
         self.client.session.request.return_value = (mock.sentinel.resp,
                                                     mock.sentinel.headers)
 
@@ -93,3 +95,20 @@ class BatchRequestsTest(unittest.TestCase):
         calls = self.client.session.request.call_args_list
         _, kwargs1 = calls[0]
         assert kwargs1['payload']['requests'][0]['path'] == '/foobar'
+
+    def test_batch_raises_exception_as_soon_as_subrequest_fails(self):
+        self.client.session.request.side_effect = [
+            ({"responses": [
+                {"status": 404, "path": "/url2", "body": {}, "headers": {}}
+            ]}, mock.sentinel.headers),
+            ({"responses": [
+                {"status": 200, "path": "/url1", "body": {}, "headers": {}},
+            ]}, mock.sentinel.headers)]
+
+        batch = Batch(self.client, batch_max_requests=1)
+        batch.request('GET', '/v1/foobar')
+        batch.request('GET', '/v1/foobar')
+
+        with self.assertRaises(KintoException):
+            batch.send()
+        assert self.client.session.request.call_count == 1

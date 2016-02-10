@@ -211,10 +211,37 @@ It is possible to do batch requests using a Python context manager (``with``):
 .. code-block:: python
 
   with client.batch() as batch:
-      for idx in range(0,100): 
+      for idx in range(0,100):
           batch.update_record(data={'id': idx})
 
 A batch object shares the same methods as another client.
+
+
+Retry on error
+--------------
+
+When the server is throttled (under heavy load or maintenance) it can
+return error responses.
+
+The client can hence retry to send the same request until it succeeds.
+To enable this, specify the number of retries on the client:
+
+.. code-block:: python
+
+  client = Client(server_url='http://localhost:8888/v1',
+                  auth=credentials,
+                  retry=10)
+
+The Kinto protocol lets the server `define the duration in seconds between retries
+<http://kinto.readthedocs.org/en/latest/api/1.x/cliquet/backoff.html#retry-after-indicators>`_.
+It is possible (but not recommended) to force this value in the clients:
+
+.. code-block:: python
+
+  client = Client(server_url='http://localhost:8888/v1',
+                  auth=credentials,
+                  retry=10,
+                  retry_after=5)
 
 
 Run tests

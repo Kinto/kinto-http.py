@@ -46,11 +46,10 @@ class Batch(object):
         result = []
         requests = self._build_requests()
         for chunk in utils.chunks(requests, self.batch_max_requests):
-            resp, headers = self.session.request(
-                'POST',
-                self.endpoints.get('batch'),
-                payload={'requests': chunk}
-            )
+            kwargs = dict(method='POST',
+                          endpoint=self.endpoints.get('batch'),
+                          payload={'requests': chunk})
+            resp, headers = self.session.request(**kwargs)
             for i, response in enumerate(resp['responses']):
                 status_code = response['status']
                 if not (200 <= status_code < 400):

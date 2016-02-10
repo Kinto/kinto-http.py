@@ -41,12 +41,14 @@ def get_http_error(status):
     exception.request = mock.sentinel.request
     return exception
 
+
 def get_200():
     response_200 = mock.MagicMock()
     response_200.status_code = 200
     response_200.json().return_value = mock.sentinel.resp,
     response_200.headers = mock.sentinel.headers
     return response_200
+
 
 def get_503():
     body_503 = {
@@ -64,6 +66,7 @@ def get_503():
     response_503.json.return_value = body_503
     response_503.headers = headers_503
     return response_503
+
 
 def get_403():
     response_403 = mock.MagicMock()

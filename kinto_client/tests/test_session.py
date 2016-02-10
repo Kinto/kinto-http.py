@@ -3,7 +3,7 @@ import mock
 from kinto_client.session import Session, create_session
 from kinto_client.exceptions import KintoException
 
-from .support import unittest
+from .support import unittest, get_200, get_503, get_403
 
 
 class SessionTest(unittest.TestCase):
@@ -150,28 +150,9 @@ class RetryRequestTest(unittest.TestCase):
         self.requests_mock = p.start()
         self.addCleanup(p.stop)
 
-        self.response_200 = mock.MagicMock()
-        self.response_200.status_code = 200
-        self.response_200.json().return_value = mock.sentinel.resp,
-        self.response_200.headers = mock.sentinel.headers
-
-        body_503 = {
-            "message": "Service temporary unavailable due to overloading",
-            "code": 503,
-            "error": "Service Unavailable",
-            "errno": 201
-        }
-        headers_503 = {
-            "Content-Type": "application/json; charset=UTF-8",
-            "Content-Length": 151
-        }
-        self.response_503 = mock.MagicMock()
-        self.response_503.status_code = 503
-        self.response_503.json.return_value = body_503
-        self.response_503.headers = headers_503
-
-        self.response_403 = mock.MagicMock()
-        self.response_403.status_code = 403
+        self.response_200 = get_200()
+        self.response_503 = get_503()
+        self.response_403 = get_403()
 
         self.requests_mock.request.side_effect = [self.response_503]
 

@@ -220,7 +220,7 @@ A batch object shares the same methods as another client.
 Retry on error
 --------------
 
-When the server is throttled, under heavy load, or maintenance, it can
+When the server is throttled (under heavy load or maintenance) it can
 return error responses.
 
 The client can hence retry to send the same request until it succeeds.
@@ -232,9 +232,9 @@ To enable this, specify the number of retries on the client:
                   auth=credentials,
                   retry=10)
 
-In the Kinto protocol, it is specified that the server `tells the duration in seconds between retries
+the Kinto protocol lets the the server `define the duration in seconds between retries
 <http://kinto.readthedocs.org/en/latest/api/1.x/cliquet/backoff.html#retry-after-indicators>`_.
-It is possible to force this value:
+It is possible (but not recommended) to force this value in the clients:
 
 .. code-block:: python
 

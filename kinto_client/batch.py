@@ -1,6 +1,8 @@
 from . import utils
 from collections import defaultdict
 
+from kinto_client.exceptions import KintoException
+
 
 class Batch(object):
 
@@ -48,5 +50,13 @@ class Batch(object):
                           endpoint=self.endpoints.get('batch'),
                           payload={'requests': chunk})
             resp, headers = self.session.request(**kwargs)
+            for i, response in enumerate(resp['responses']):
+                status_code = response['status']
+                if not (200 <= status_code < 400):
+                    message = '{0} - {1}'.format(status_code, response['body'])
+                    exception = KintoException(message)
+                    exception.request = chunk[i]
+                    exception.response = response
+                    raise exception
             result.append((resp, headers))
         return result

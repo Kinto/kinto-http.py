@@ -232,7 +232,7 @@ To enable this, specify the number of retries on the client:
                   auth=credentials,
                   retry=10)
 
-the Kinto protocol lets the the server `define the duration in seconds between retries
+The Kinto protocol lets the server `define the duration in seconds between retries
 <http://kinto.readthedocs.org/en/latest/api/1.x/cliquet/backoff.html#retry-after-indicators>`_.
 It is possible (but not recommended) to force this value in the clients:
 

@@ -23,7 +23,7 @@ if sys.version_info < (2, 7, 9):
 
 
 setup(name='kinto-client',
-      version='2.1.0.dev0',
+      version='3.0.0',
       description='Kinto client',
       long_description=README,
       license='Apache License (2.0)',

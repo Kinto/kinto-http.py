@@ -4,13 +4,36 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-2.1.0 (unreleased)
+3.0.0 (2016-02-10)
 ==================
+
+**New features**
+
+- Added a retry option for batch requests (#51)
+- Use the "default" bucket if nothing is specified (#50)
+- Added a `if_not_exists` argument to the creation methods (#42)
+- Added a replication mechanism in `kinto_client.replication` (#26)
+- Handle the `last_modified` argument on update or create operations (#24)
 
 **Bug fixes**
 
-- Do not force the JSON content-type in requests if multipart-encoded files
-  are sent
+- Do not force the JSON content-type in requests if multipart-encoded files are
+  sent (#27)
+- Fail the batch operations early (#47)
+- Remove un-needed requirements (FxA) (#43)
+- Use `max_batch_request` from the server to issue more than one batch request
+  (#30)
+- Make sure batch raises an error when needed (#28)
+- Fix an invalid platform error for some versions of python (#31)
+- Do not lowercase valid IDs (#33)
+
+**Backward incompatible changes**
+
+- Updated the collection `signature`: data is now the first argument (#47)
+
+**Documentation**
+
+- Add documentation about client.batch (#44)
 
 
 2.0.0 (2015-11-18)

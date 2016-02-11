@@ -1,5 +1,6 @@
 import argparse
 import getpass
+import logging
 
 from . import Client
 
@@ -34,7 +35,8 @@ def set_parser_server_options(parser=None,
     if parser is None:
         parser = argparse.ArgumentParser(**kwargs)
 
-    parser.add_argument('-s', '--server', help='Kinto Server',
+    parser.add_argument('-s', '--server',
+                        help='The location of the remote server (with prefix)',
                         type=str, default=default_server)
 
     parser.add_argument('-a', '--auth',
@@ -42,11 +44,30 @@ def set_parser_server_options(parser=None,
                         type=str, default=default_auth)
 
     parser.add_argument('-b', '--bucket',
-                        help='Bucket name, usually the app name',
+                        help='Bucket name.',
                         type=str, default=default_bucket)
 
     parser.add_argument('-c', '--collection',
-                        help='Collection name',
+                        help='Collection name.',
                         type=str, default=default_collection)
 
+    # Defaults
+    parser.add_argument('-v', '--verbose', action='store_const',
+                        const=logging.INFO, dest='verbosity',
+                        help='Show all messages.')
+
+    parser.add_argument('-q', '--quiet', action='store_const',
+                        const=logging.CRITICAL, dest='verbosity',
+                        help='Show only critical errors.')
+
+    parser.add_argument('-D', '--debug', action='store_const',
+                        const=logging.DEBUG, dest='verbosity',
+                        help='Show all messages, including debug messages.')
+
     return parser
+
+
+def setup_logger(logger, args):  # pragma: nocover
+    logger.addHandler(logging.StreamHandler())
+    if args.verbosity:
+        logger.setLevel(args.verbosity)

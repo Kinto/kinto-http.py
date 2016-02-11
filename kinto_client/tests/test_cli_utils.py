@@ -10,7 +10,9 @@ ALL_PARAMETERS = [
     ['-a', '--auth'],
     ['-b', '--bucket'],
     ['-c', '--collection'],
-    # ['-v', '--verbose'],
+    ['-v', '--verbose'],
+    ['-q', '--quiet'],
+    ['-D', '--debug'],
 ]
 
 
@@ -24,7 +26,7 @@ class ParserServerOptionsTest(unittest.TestCase):
     def test_set_parser_server_options_create_a_parser_if_needed(self):
         parser = cli_utils.set_parser_server_options()
         self.assert_option_strings(parser, *ALL_PARAMETERS)
-        assert len(parser._actions) == 5
+        assert len(parser._actions) == 8
 
     def test_set_parser_server_options_adds_arguments_on_existing_parser(self):
         parser = argparse.ArgumentParser(prog="importer")
@@ -34,7 +36,7 @@ class ParserServerOptionsTest(unittest.TestCase):
         parser = cli_utils.set_parser_server_options(parser)
         self.assert_option_strings(parser, ['-t', '--type'],
                                    *ALL_PARAMETERS)
-        assert len(parser._actions) == 6
+        assert len(parser._actions) == 9
 
     def test_can_change_default_values(self):
         parser = cli_utils.set_parser_server_options(
@@ -51,6 +53,7 @@ class ParserServerOptionsTest(unittest.TestCase):
             'auth': 'user:password',
             'bucket': 'blocklists',
             'collection': 'certificates',
+            'verbosity': None
         }
 
 

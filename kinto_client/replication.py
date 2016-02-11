@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from kinto_client import Client
+from kinto_client import Client, cli_utils
 
 logger = logging.getLogger(__name__)
 
@@ -35,67 +35,41 @@ def replicate(origin, destination):
 def get_arguments():  # pragma: nocover
     description = 'Migrate data from one kinto instance to another one.'
     parser = argparse.ArgumentParser(description=description)
-    parser.add_argument('origin_server',
+
+    # Optional arguments. They will be derivated from the remote ones.
+    parser.add_argument('-o', '--origin',
                         help='The location of the origin server (with prefix)')
-    parser.add_argument('destination_server',
-                        help=('The location of the destination server '
-                              '(with prefix)'))
-    parser.add_argument('bucket', help='The name of the bucket')
-    parser.add_argument('collection', help='The name of the collection')
 
-    # Auth: XXX improve later. For now only support Basic Auth.
-    parser.add_argument('-a', '--auth', dest='auth',
-                        help='Authentication, in the form "username:password"')
-
-    # Optional arguments. They will be derivated from the "bucket"
-    # and "collection" ones.
-    parser.add_argument('--destination-bucket', dest='destination_bucket',
-                        help='The name of the destination bucket',
-                        default=None)
-    parser.add_argument('--destination-collection',
-                        dest='destination_collection',
-                        help='The name of the destination bucket',
+    parser.add_argument('--origin-auth',
+                        help='The origin authentication credentials. '
+                        'Will use the same as the remote if omitted',
                         default=None)
 
-    # Defaults
-    parser.add_argument('-v', '--verbose', action='store_const',
-                        const=logging.INFO, dest='verbosity',
-                        help='Show all messages.')
+    parser.add_argument('--origin-bucket', dest='origin_bucket',
+                        help='The name of the origin bucket. '
+                        'Will use the same as the remote if omitted',
+                        default=None)
 
-    parser.add_argument('-q', '--quiet', action='store_const',
-                        const=logging.CRITICAL, dest='verbosity',
-                        help='Show only critical errors.')
-
-    parser.add_argument('-D', '--debug', action='store_const',
-                        const=logging.DEBUG, dest='verbosity',
-                        help='Show all messages, including debug messages.')
+    parser.add_argument('--origin-collection',
+                        dest='origin_collection',
+                        help='The name of the origin collection. '
+                        'Will use the same as the remote if omitted',
+                        default=None)
+    cli_utils.set_parser_server_options(parser)
     return parser.parse_args()
-
-
-def setup_logger(args):  # pragma: nocover
-    logger.addHandler(logging.StreamHandler())
-    if args.verbosity:
-        logger.setLevel(args.verbosity)
 
 
 def main():  # pragma: nocover
     args = get_arguments()
-    setup_logger(args)
-
-    auth = tuple(args.auth.split(':')) if args.auth else None
+    cli_utils.setup_logger(logger, args)
 
     origin = Client(
         server_url=args.origin_server,
-        auth=auth,
-        bucket=args.bucket,
-        collection=args.collection
+        auth=cli_utils.get_auth(args.origin_auth or args.auth),
+        bucket=args.origin_bucket or args.bucket,
+        collection=args.origin_collection or args.collection
     )
-    destination = Client(
-        server_url=args.destination_server,
-        auth=auth,
-        bucket=args.destination_bucket or args.bucket,
-        collection=args.destination_collection or args.collection
-    )
+    destination = cli_utils.client_from_args(args)
 
     replicate(origin, destination)
 

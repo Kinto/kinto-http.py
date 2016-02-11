@@ -70,6 +70,14 @@ class GetAuthTest(unittest.TestCase):
         assert user == "user"
         assert password == "password"
 
+    def test_get_auth_is_called_by_argparse(self):
+        parser = cli_utils.set_parser_server_options(
+            default_server="https://firefox.settings.services.mozilla.com/",
+            default_bucket="blocklists",
+            default_collection="certificates")
+        args = parser.parse_args(['-a', 'user:password'])
+        assert args.auth == ('user', 'password')
+
 
 class ClientFromArgsTest(unittest.TestCase):
 
@@ -78,19 +86,14 @@ class ClientFromArgsTest(unittest.TestCase):
             default_server="https://firefox.settings.services.mozilla.com/",
             default_bucket="blocklists",
             default_collection="certificates",
-            default_auth='user:password'
+            default_auth=('user', 'password')
         )
 
         self.args = parser.parse_args([])
 
-    @mock.patch('kinto_client.cli_utils.get_auth')
-    def test_client_from_args_calls_get_auth(self, mocked_get_auth):
-        cli_utils.client_from_args(self.args)
-        mocked_get_auth.assert_called_with('user:password')
-
     @mock.patch('kinto_client.cli_utils.Client')
-    def test_client_from_args_build_a_client(self, mocked_client):
-        cli_utils.client_from_args(self.args)
+    def test_create_client_from_args_build_a_client(self, mocked_client):
+        cli_utils.create_client_from_args(self.args)
         mocked_client.assert_called_with(
             server_url='https://firefox.settings.services.mozilla.com/',
             auth=('user', 'password'),

@@ -17,12 +17,19 @@ def get_auth(auth):
     return auth
 
 
-def client_from_args(args):
+def create_client_from_args(args):
     """Return a client from parser args."""
     return Client(server_url=args.server,
-                  auth=get_auth(args.auth),
+                  auth=args.auth,
                   bucket=args.bucket,
                   collection=args.collection)
+
+
+class AuthAction(argparse.Action):
+
+    def __call__(self, parser, namespace, values, option_string=None):
+        if values is not None:
+            setattr(namespace, self.dest, get_auth(values))
 
 
 def set_parser_server_options(parser=None,
@@ -41,7 +48,7 @@ def set_parser_server_options(parser=None,
 
     parser.add_argument('-a', '--auth',
                         help='BasicAuth token:my-secret',
-                        type=str, default=default_auth)
+                        type=str, default=default_auth, action=AuthAction)
 
     parser.add_argument('-b', '--bucket',
                         help='Bucket name.',

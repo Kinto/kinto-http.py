@@ -43,6 +43,7 @@ def get_arguments():  # pragma: nocover
     parser.add_argument('--origin-auth',
                         help='The origin authentication credentials. '
                         'Will use the same as the remote if omitted',
+                        action=cli_utils.AuthAction,
                         default=None)
 
     parser.add_argument('--origin-bucket', dest='origin_bucket',
@@ -69,7 +70,7 @@ def main():  # pragma: nocover
         bucket=args.origin_bucket or args.bucket,
         collection=args.origin_collection or args.collection
     )
-    destination = cli_utils.client_from_args(args)
+    destination = cli_utils.create_client_from_args(args)
 
     replicate(origin, destination)
 

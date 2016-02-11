@@ -1,3 +1,4 @@
+import argparse
 import getpass
 
 from . import Client
@@ -23,11 +24,15 @@ def client_from_args(args):
                   collection=args.collection)
 
 
-def add_importer_server_options(parser,
-                                default_server=None,
-                                default_auth=None,
-                                default_bucket=None,
-                                default_collection=None):
+def set_parser_server_options(parser=None,
+                              default_server=None,
+                              default_auth=None,
+                              default_bucket=None,
+                              default_collection=None,
+                              **kwargs):
+
+    if parser is None:
+        parser = argparse.ArgumentParser(**kwargs)
 
     parser.add_argument('-s', '--server', help='Kinto Server',
                         type=str, default=default_server)
@@ -43,3 +48,5 @@ def add_importer_server_options(parser,
     parser.add_argument('-c', '--collection',
                         help='Collection name',
                         type=str, default=default_collection)
+
+    return parser

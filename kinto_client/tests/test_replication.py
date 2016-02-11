@@ -16,7 +16,7 @@ class ReplicationTest(unittest.TestCase):
     def test_destination_bucket_is_created_if_not_exist(self):
         self.destination.get_bucket.side_effect = exceptions.BucketNotFound
         replicate(self.origin, self.destination)
-        self.destination.create_bucket.assert_called_with()
+        self.destination.create_bucket.assert_called_with(if_not_exists=True)
 
     def test_destination_collection_is_created_if_not_exist(self):
         self.destination.get_collection.side_effect = exceptions.KintoException
@@ -28,7 +28,7 @@ class ReplicationTest(unittest.TestCase):
         self.destination.create_collection.assert_called_with(
             data=mock.sentinel.data,
             permissions=mock.sentinel.permissions,
-            safe=False
+            if_not_exists=True
         )
 
     def test_new_records_are_sent_to_the_destination(self):

@@ -2,7 +2,6 @@ import argparse
 import logging
 
 from kinto_client import Client
-from kinto_client import exceptions
 
 logger = logging.getLogger(__name__)
 
@@ -15,17 +14,12 @@ def replicate(origin, destination):
     msg = 'Replication from {0} to {1}'.format(origin, destination)
     logger.info(msg)
 
-    try:
-        destination.get_bucket()
-    except exceptions.BucketNotFound:
-        destination.create_bucket()
-    try:
-        destination.get_collection()
-    except exceptions.KintoException:
-        collection_data = origin.get_collection()
-        destination.create_collection(
-            data=collection_data['data'],
-            permissions=collection_data['permissions'], safe=False)
+    destination.create_bucket(if_not_exists=True)
+    collection_data = origin.get_collection()
+    destination.create_collection(
+        data=collection_data['data'],
+        permissions=collection_data['permissions'],
+        if_not_exists=True)
 
     records = origin.get_records()
     logger.info('replication of {0} records'.format(len(records)))

@@ -66,7 +66,7 @@ def main():  # pragma: nocover
 
     origin = Client(
         server_url=args.origin_server,
-        auth=cli_utils.get_auth(args.origin_auth or args.auth),
+        auth=args.origin_auth or args.auth,
         bucket=args.origin_bucket or args.bucket,
         collection=args.origin_collection or args.collection
     )

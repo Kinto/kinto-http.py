@@ -4,10 +4,13 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-3.0.1 (unreleased)
+3.1.0 (2016-02-16)
 ==================
 
-- Nothing changed yet.
+**New features**
+
+- Add CLI helpers to configure and instantiate a Client from command-line arguments
+  (#59)
 
 
 3.0.0 (2016-02-10)

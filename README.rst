@@ -216,7 +216,6 @@ It is possible to do batch requests using a Python context manager (``with``):
 
 A batch object shares the same methods as another client.
 
-
 Retry on error
 --------------
 
@@ -242,6 +241,60 @@ It is possible (but not recommended) to force this value in the clients:
                   auth=credentials,
                   retry=10,
                   retry_after=5)
+
+Command-line scripts
+--------------------
+
+In order to have common arguments and options for scripts, some utilities are provided
+to ease configuration and initialization of client from command-line arguments.
+
+.. code-block:: python
+
+  import argparse
+  import logging
+
+  from kinto_client import cli_utils
+
+  logger = logging.getLogger(__name__)
+
+  if __name__ == "__main__":
+      parser = argparse.ArgumentParser(description="Download records")
+      cli_utils.set_parser_server_options(parser)
+
+      args = parser.parse_args()
+
+      cli_utils.setup_logger(logger, args)
+
+      logger.debug("Instantiate Kinto client.")
+      client = cli_utils.create_client_from_args(args)
+
+      logger.info("Fetch records.")
+      records = client.get_records()
+      logger.warn("%s records." % len(records))
+
+The script now accepts basic options:
+
+::
+
+  $ python example.py --help
+
+  usage: example.py [-h] [-s SERVER] [-a AUTH] [-b BUCKET] [-c COLLECTION] [-v]
+                    [-q] [-D]
+
+  Download records
+
+  optional arguments:
+    -h, --help            show this help message and exit
+    -s SERVER, --server SERVER
+                          The location of the remote server (with prefix)
+    -a AUTH, --auth AUTH  BasicAuth token:my-secret
+    -b BUCKET, --bucket BUCKET
+                          Bucket name.
+    -c COLLECTION, --collection COLLECTION
+                          Collection name.
+    -v, --verbose         Show all messages.
+    -q, --quiet           Show only critical errors.
+    -D, --debug           Show all messages, including debug messages.
 
 
 Run tests

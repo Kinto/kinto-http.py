@@ -61,7 +61,7 @@ class Session(object):
             if hasattr(permissions, 'as_dict'):
                 permissions = permissions.as_dict()
             payload['permissions'] = permissions
-        if payload:
+        if payload and method not in ('get', 'head'):
             payload_kwarg = 'data' if 'files' in kwargs else 'json'
             kwargs.setdefault(payload_kwarg, payload)
 

@@ -154,9 +154,8 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         session.request('put', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-                'put', 'https://example.org/anothertest',
-                json={'data': {}})
-
+            'put', 'https://example.org/anothertest',
+            json={'data': {}})
 
 
 class RetryRequestTest(unittest.TestCase):

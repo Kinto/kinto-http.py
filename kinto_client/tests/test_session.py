@@ -24,8 +24,7 @@ class SessionTest(unittest.TestCase):
         self.assertEquals(session.auth, None)
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/test',
-            json={'data': {}})
+            'get', 'https://example.org/test')
 
     def test_bad_http_status_raises_exception(self):
         response = mock.MagicMock()
@@ -44,8 +43,7 @@ class SessionTest(unittest.TestCase):
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            auth=mock.sentinel.auth,
-            json={"data": {}})
+            auth=mock.sentinel.auth)
 
     def test_requests_arguments_are_forwarded(self):
         response = mock.MagicMock()
@@ -56,18 +54,17 @@ class SessionTest(unittest.TestCase):
                         foo=mock.sentinel.bar)
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            foo=mock.sentinel.bar,
-            json={"data": {}})
+            foo=mock.sentinel.bar)
 
     def test_passed_data_is_encoded_to_json(self):
         response = mock.MagicMock()
         response.status_code = 200
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
-        session.request('get', '/test',
+        session.request('post', '/test',
                         data={'foo': 'bar'})
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/test',
+            'post', 'https://example.org/test',
             json={"data": {'foo': 'bar'}})
 
     def test_passed_data_is_passed_as_is_when_files_are_posted(self):
@@ -90,10 +87,10 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         permissions = mock.MagicMock()
         permissions.as_dict.return_value = {'foo': 'bar'}
-        session.request('get', '/test',
+        session.request('post', '/test',
                         permissions=permissions)
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/test',
+            'post', 'https://example.org/test',
             json={'data': {}, 'permissions': {'foo': 'bar'}})
 
     def test_url_is_used_if_schema_is_present(self):
@@ -105,8 +102,7 @@ class SessionTest(unittest.TestCase):
         permissions.as_dict.return_value = {'foo': 'bar'}
         session.request('get', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/anothertest',
-            json={"data": {}})
+            'get', 'https://example.org/anothertest')
 
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(
@@ -141,6 +137,26 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         body, headers = session.request('get', 'https://example.org/test')
         assert body is None
+
+    def test_no_payload_is_sent_on_get_requests(self):
+        response = mock.MagicMock()
+        response.status_code = 200
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        session.request('get', 'https://example.org/anothertest')
+        self.requests_mock.request.assert_called_with(
+            'get', 'https://example.org/anothertest')
+
+    def test_payload_is_sent_on_put_requests(self):
+        response = mock.MagicMock()
+        response.status_code = 200
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        session.request('put', 'https://example.org/anothertest')
+        self.requests_mock.request.assert_called_with(
+                'put', 'https://example.org/anothertest',
+                json={'data': {}})
+
 
 
 class RetryRequestTest(unittest.TestCase):

@@ -1,0 +1,13 @@
+cffi==1.5.2
+cryptography==1.2.3
+enum34==1.1.2
+idna==2.0
+ipaddress==1.0.16
+-e git+git@github.com:Kinto/kinto.py.git@12a76561fba75ebd884040f3a31d6d88d5c1fdc8#egg=kinto_client
+ndg-httpsclient==0.4.0
+pyasn1==0.1.9
+pycparser==2.14
+pyOpenSSL==0.15.1
+requests==2.9.1
+six==1.10.0
+Unidecode==0.4.19

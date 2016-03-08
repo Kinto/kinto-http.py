@@ -3,6 +3,7 @@ VENV := $(shell echo $${VIRTUAL_ENV-.venv})
 PYTHON = $(VENV)/bin/python
 DEV_STAMP = $(VENV)/.dev_env_installed.stamp
 INSTALL_STAMP = $(VENV)/.install.stamp
+TEMPDIR := $(shell mktemp -d)
 
 .IGNORE: clean distclean maintainer-clean
 .PHONY: all install virtualenv tests
@@ -50,3 +51,9 @@ distclean: clean
 
 maintainer-clean: distclean
 	rm -fr .venv/ .tox/
+
+build-requirements:
+	$(VIRTUALENV) $(TEMPDIR)
+	$(TEMPDIR)/bin/pip install -U pip
+	$(TEMPDIR)/bin/pip install -Ue .
+	$(TEMPDIR)/bin/pip freeze > requirements.txt

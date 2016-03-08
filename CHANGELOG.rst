@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-3.2.0 (unreleased)
+4.0.0 (2016-03-08)
 ==================
 
 **Breaking changes**
@@ -12,10 +12,16 @@ This document describes changes between each past release.
 - The ``cli_utils.set_parser_server_options()`` was renamed
   ``cli_utils.add_parser_options()`` (#63)
 
+
 **New features**
 
 - The ``cli_utils`` can now handle option bucket and collection
   parameters. (#63)
+
+
+**Bug fixes**
+
+- Do not sent body in GET requests. (#62)
 
 
 3.1.0 (2016-02-16)

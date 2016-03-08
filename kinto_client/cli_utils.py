@@ -37,6 +37,8 @@ def set_parser_server_options(parser=None,
                               default_auth=None,
                               default_bucket=None,
                               default_collection=None,
+                              bucket=True,
+                              collection=True,
                               **kwargs):
 
     if parser is None:
@@ -50,13 +52,15 @@ def set_parser_server_options(parser=None,
                         help='BasicAuth token:my-secret',
                         type=str, default=default_auth, action=AuthAction)
 
-    parser.add_argument('-b', '--bucket',
-                        help='Bucket name.',
-                        type=str, default=default_bucket)
+    if bucket:
+        parser.add_argument('-b', '--bucket',
+                            help='Bucket name.',
+                            type=str, default=default_bucket)
 
-    parser.add_argument('-c', '--collection',
-                        help='Collection name.',
-                        type=str, default=default_collection)
+    if collection:
+        parser.add_argument('-c', '--collection',
+                            help='Collection name.',
+                            type=str, default=default_collection)
 
     # Defaults
     parser.add_argument('-v', '--verbose', action='store_const',

@@ -38,6 +38,20 @@ class ParserServerOptionsTest(unittest.TestCase):
                                    *ALL_PARAMETERS)
         assert len(parser._actions) == 9
 
+    def test_set_parser_server_options_can_ignore_bucket_and_collection(self):
+        parser = cli_utils.set_parser_server_options(
+            bucket=None, collection=None)
+        parameters = [
+            ['-h', '--help'],
+            ['-s', '--server'],
+            ['-a', '--auth'],
+            ['-v', '--verbose'],
+            ['-q', '--quiet'],
+            ['-D', '--debug'],
+        ]
+        self.assert_option_strings(parser, *parameters)
+        assert len(parser._actions) == 6
+
     def test_can_change_default_values(self):
         parser = cli_utils.set_parser_server_options(
             default_server="https://firefox.settings.services.mozilla.com/",

@@ -40,7 +40,7 @@ class ParserServerOptionsTest(unittest.TestCase):
 
     def test_set_parser_server_options_can_ignore_bucket_and_collection(self):
         parser = cli_utils.set_parser_server_options(
-            with_bucket=None, with_collection=None)
+            with_bucket=False, with_collection=False)
         parameters = [
             ['-h', '--help'],
             ['-s', '--server'],

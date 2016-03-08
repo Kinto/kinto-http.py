@@ -40,7 +40,7 @@ class ParserServerOptionsTest(unittest.TestCase):
 
     def test_set_parser_server_options_can_ignore_bucket_and_collection(self):
         parser = cli_utils.set_parser_server_options(
-            bucket=None, collection=None)
+            with_bucket=None, with_collection=None)
         parameters = [
             ['-h', '--help'],
             ['-s', '--server'],
@@ -95,7 +95,8 @@ class GetAuthTest(unittest.TestCase):
 
 class ClientFromArgsTest(unittest.TestCase):
 
-    def setUp(self):
+    @mock.patch('kinto_client.cli_utils.Client')
+    def test_create_client_from_args_build_a_client(self, mocked_client):
         parser = cli_utils.set_parser_server_options(
             default_server="https://firefox.settings.services.mozilla.com/",
             default_bucket="blocklists",
@@ -103,13 +104,29 @@ class ClientFromArgsTest(unittest.TestCase):
             default_auth=('user', 'password')
         )
 
-        self.args = parser.parse_args([])
+        args = parser.parse_args([])
 
-    @mock.patch('kinto_client.cli_utils.Client')
-    def test_create_client_from_args_build_a_client(self, mocked_client):
-        cli_utils.create_client_from_args(self.args)
+        cli_utils.create_client_from_args(args)
         mocked_client.assert_called_with(
             server_url='https://firefox.settings.services.mozilla.com/',
             auth=('user', 'password'),
             bucket='blocklists',
             collection='certificates')
+
+    @mock.patch('kinto_client.cli_utils.Client')
+    def test_create_client_from_args_default_bucket_and_collection_to_none(
+            self, mocked_client):
+        parser = cli_utils.set_parser_server_options(
+            default_server="https://firefox.settings.services.mozilla.com/",
+            default_auth=('user', 'password'),
+            with_bucket=False, with_collection=False
+        )
+
+        args = parser.parse_args([])
+
+        cli_utils.create_client_from_args(args)
+        mocked_client.assert_called_with(
+            server_url='https://firefox.settings.services.mozilla.com/',
+            auth=('user', 'password'),
+            bucket=None,
+            collection=None)

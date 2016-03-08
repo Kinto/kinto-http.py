@@ -32,14 +32,14 @@ class AuthAction(argparse.Action):
             setattr(namespace, self.dest, get_auth(values))
 
 
-def set_parser_server_options(parser=None,
-                              default_server=None,
-                              default_auth=None,
-                              default_bucket=None,
-                              default_collection=None,
-                              with_bucket=True,
-                              with_collection=True,
-                              **kwargs):
+def add_parser_options(parser=None,
+                       default_server=None,
+                       default_auth=None,
+                       default_bucket=None,
+                       default_collection=None,
+                       include_bucket=True,
+                       include_collection=True,
+                       **kwargs):
 
     if parser is None:
         parser = argparse.ArgumentParser(**kwargs)
@@ -52,12 +52,12 @@ def set_parser_server_options(parser=None,
                         help='BasicAuth token:my-secret',
                         type=str, default=default_auth, action=AuthAction)
 
-    if with_bucket:
+    if include_bucket:
         parser.add_argument('-b', '--bucket',
                             help='Bucket name.',
                             type=str, default=default_bucket)
 
-    if with_collection:
+    if include_collection:
         parser.add_argument('-c', '--collection',
                             help='Collection name.',
                             type=str, default=default_collection)

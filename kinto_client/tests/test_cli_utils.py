@@ -23,24 +23,24 @@ class ParserServerOptionsTest(unittest.TestCase):
                         for action in parser._actions]), \
                 "%s not found" % option_strings
 
-    def test_set_parser_server_options_create_a_parser_if_needed(self):
-        parser = cli_utils.set_parser_server_options()
+    def test_add_parser_options_create_a_parser_if_needed(self):
+        parser = cli_utils.add_parser_options()
         self.assert_option_strings(parser, *ALL_PARAMETERS)
         assert len(parser._actions) == 8
 
-    def test_set_parser_server_options_adds_arguments_on_existing_parser(self):
+    def test_add_parser_options_adds_arguments_on_existing_parser(self):
         parser = argparse.ArgumentParser(prog="importer")
         parser.add_argument('-t', '--type', help='File type',
                             type=str, default='xml')
 
-        parser = cli_utils.set_parser_server_options(parser)
+        parser = cli_utils.add_parser_options(parser)
         self.assert_option_strings(parser, ['-t', '--type'],
                                    *ALL_PARAMETERS)
         assert len(parser._actions) == 9
 
-    def test_set_parser_server_options_can_ignore_bucket_and_collection(self):
-        parser = cli_utils.set_parser_server_options(
-            with_bucket=False, with_collection=False)
+    def test_add_parser_options_can_ignore_bucket_and_collection(self):
+        parser = cli_utils.add_parser_options(
+            include_bucket=False, include_collection=False)
         parameters = [
             ['-h', '--help'],
             ['-s', '--server'],
@@ -53,7 +53,7 @@ class ParserServerOptionsTest(unittest.TestCase):
         assert len(parser._actions) == 6
 
     def test_can_change_default_values(self):
-        parser = cli_utils.set_parser_server_options(
+        parser = cli_utils.add_parser_options(
             default_server="https://firefox.settings.services.mozilla.com/",
             default_bucket="blocklists",
             default_collection="certificates",
@@ -85,7 +85,7 @@ class GetAuthTest(unittest.TestCase):
         assert password == "password"
 
     def test_get_auth_is_called_by_argparse(self):
-        parser = cli_utils.set_parser_server_options(
+        parser = cli_utils.add_parser_options(
             default_server="https://firefox.settings.services.mozilla.com/",
             default_bucket="blocklists",
             default_collection="certificates")
@@ -97,7 +97,7 @@ class ClientFromArgsTest(unittest.TestCase):
 
     @mock.patch('kinto_client.cli_utils.Client')
     def test_create_client_from_args_build_a_client(self, mocked_client):
-        parser = cli_utils.set_parser_server_options(
+        parser = cli_utils.add_parser_options(
             default_server="https://firefox.settings.services.mozilla.com/",
             default_bucket="blocklists",
             default_collection="certificates",
@@ -116,10 +116,10 @@ class ClientFromArgsTest(unittest.TestCase):
     @mock.patch('kinto_client.cli_utils.Client')
     def test_create_client_from_args_default_bucket_and_collection_to_none(
             self, mocked_client):
-        parser = cli_utils.set_parser_server_options(
+        parser = cli_utils.add_parser_options(
             default_server="https://firefox.settings.services.mozilla.com/",
             default_auth=('user', 'password'),
-            with_bucket=False, with_collection=False
+            include_bucket=False, include_collection=False
         )
 
         args = parser.parse_args([])

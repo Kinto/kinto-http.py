@@ -15,7 +15,7 @@ This document describes changes between each past release.
 
 **New features**
 
-- The ``cli_utils`` can now handle option bucket and collection
+- The ``cli_utils`` can now exclude bucket and collection
   parameters. (#63)
 
 

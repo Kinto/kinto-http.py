@@ -9,14 +9,16 @@ This document describes changes between each past release.
 
 **Breaking changes**
 
-- The ``cli_utils.set_parser_server_options()`` was renamed
+- The function ``cli_utils.set_parser_server_options()`` was renamed
   ``cli_utils.add_parser_options()`` (#63)
 
 
 **New features**
 
-- The ``cli_utils`` can now exclude bucket and collection
+- ``add_parser_options`` can now exclude bucket and collection
   parameters. (#63)
+- ``create_client_from_args`` can now works even with no bucket or
+  collection arguments (#63)
 
 
 **Bug fixes**

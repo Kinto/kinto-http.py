@@ -7,7 +7,15 @@ This document describes changes between each past release.
 3.2.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Breaking changes**
+
+- The ``cli_utils.set_parser_server_options()`` was renamed
+  ``cli_utils.add_parser_options()`` (#63)
+
+**New features**
+
+- The ``cli_utils`` can now handle option bucket and collection
+  parameters. (#63)
 
 
 3.1.0 (2016-02-16)

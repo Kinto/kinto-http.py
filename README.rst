@@ -102,6 +102,12 @@ If no specific bucket name is provided, the "default" bucket is used.
     # It is also possible to manipulate bucket permissions (see later)
     client.update_bucket('payments', permissions={})
 
+    # Or delete a bucket and everything under.
+    client.delete_bucket('payment')
+
+    # Or even every writable buckets.
+    client.delete_buckets()
+
 
 Collections
 -----------
@@ -118,6 +124,8 @@ A collection is where records are stored.
     # To delete an existing collection.
     client.delete_collection('receipts', bucket='payments')
 
+    # Or every collections in a bucket.
+    client.delete_collections(bucket='payments')
 
 Records
 -------
@@ -145,9 +153,12 @@ A record is a dict with the "permissions" and "data" keys.
     # Update multiple records at once.
     client.update_records(records, collection='todos')
 
-    # It is also possible to delete records.
+    # It is also possible to delete a record.
     client.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352',
                          collection='todos')
+
+    # Or every records of a collection.
+    client.delete_records(collection='todos')
 
 Permissions
 -----------

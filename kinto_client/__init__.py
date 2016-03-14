@@ -159,20 +159,27 @@ class Client(object):
                                               safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('bucket', bucket)
-        resp, _ = self.session.request('put', endpoint,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
 
     def update_bucket(self, bucket=None, data=None, permissions=None,
-                      safe=True, last_modified=None):
+                      safe=True, last_modified=None, method='put'):
         endpoint = self._get_endpoint('bucket', bucket)
         headers = self._get_cache_headers(safe, data, last_modified)
-        resp, _ = self.session.request('patch', endpoint, data=data,
+        resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
-
         return resp
+
+    def patch_bucket(self, *args, **kwargs):
+        kwargs['method'] = 'patch'
+        return self.update_bucket(*args, **kwargs)
+
+    def get_buckets(self):
+        endpoint = self._get_endpoint('buckets')
+        return self._paginated(endpoint)
 
     def get_bucket(self, bucket=None):
         endpoint = self._get_endpoint('bucket', bucket)
@@ -184,6 +191,12 @@ class Client(object):
 
     def delete_bucket(self, bucket=None, safe=True, last_modified=None):
         endpoint = self._get_endpoint('bucket', bucket)
+        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        resp, _ = self.session.request('delete', endpoint, headers=headers)
+        return resp['data']
+
+    def delete_buckets(self, safe=True, last_modified=None):
+        endpoint = self._get_endpoint('buckets')
         headers = self._get_cache_headers(safe, last_modified=last_modified)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
@@ -233,6 +246,12 @@ class Client(object):
     def delete_collection(self, collection=None, bucket=None,
                           safe=True, last_modified=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
+        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        resp, _ = self.session.request('delete', endpoint, headers=headers)
+        return resp['data']
+
+    def delete_collections(self, bucket=None, safe=True, last_modified=None):
+        endpoint = self._get_endpoint('collections', bucket)
         headers = self._get_cache_headers(safe, last_modified=last_modified)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
@@ -290,14 +309,16 @@ class Client(object):
     def delete_record(self, id, collection=None, bucket=None,
                       safe=True, last_modified=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        resp, _ = self.session.request(
-            'delete', endpoint,
-            headers=self._get_cache_headers(safe, last_modified=last_modified))
+        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_records(self, records):
-        # XXX To be done with a BATCH operation
-        pass
+    def delete_records(self, collection=None, bucket=None,
+                       safe=True, last_modified=None):
+        endpoint = self._get_endpoint('records', bucket, collection)
+        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        resp, _ = self.session.request('delete', endpoint, headers=headers)
+        return resp['data']
 
     def __repr__(self):
         endpoint = self._get_endpoint(

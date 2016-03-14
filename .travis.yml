@@ -3,9 +3,11 @@ python: 2.7
 env:
     - TOX_ENV=py27
     - TOX_ENV=py34
+    - SERVER=development
     - TOX_ENV=flake8
 before_install:
-    - pip install kinto
+    - if [[ $SERVER != development ]]; then pip install kinto; fi
+    - if [[ $SERVER == development ]]; then pip install https://github.com/Kinto/kinto/zipball/master; fi
     - make install-dev
     - make runkinto &
 install:

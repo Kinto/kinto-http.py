@@ -1,6 +1,7 @@
 import mock
 from six import text_type
-from .support import unittest, mock_response, build_response, get_http_error
+from .support import (unittest, mock_response, build_response, get_http_error,
+                      patch)
 
 from kinto_client import (KintoException, BucketNotFound, Client,
                           DO_NOT_OVERWRITE)
@@ -212,6 +213,21 @@ class BucketTest(unittest.TestCase):
                 bucket="buck",
                 if_not_exists=True)
 
+    def test_create_if_not_exist_try_again_on_404_without_safe(self):
+        bucket_data = {
+            'permissions': mock.sentinel.permissions,
+            'data': {'foo': 'bar'}
+        }
+        self.session.request.side_effect = [
+            get_http_error(status=412),  # Creation
+            bucket_data
+        ]
+        patch(self, self.client, 'get_bucket',
+              side_effect=get_http_error(status=404))
+        self.client.create_bucket(bucket="buck", if_not_exists=True)
+        self.session.request.assert_any_call('put', '/buckets/buck',
+                                             headers=None, permissions=None)
+
 
 class CollectionTest(unittest.TestCase):
 
@@ -377,6 +393,23 @@ class CollectionTest(unittest.TestCase):
                 bucket="buck",
                 collection="coll",
                 if_not_exists=True)
+
+    def test_create_if_not_exist_try_again_on_404_without_safe(self):
+        bucket_data = {
+            'permissions': mock.sentinel.permissions,
+            'data': {'foo': 'bar'}
+        }
+        self.session.request.side_effect = [
+            get_http_error(status=412),  # Creation
+            bucket_data
+        ]
+        patch(self, self.client, 'get_collection',
+              side_effect=get_http_error(status=404))
+        self.client.create_collection(bucket="buck", collection="coll",
+                                      if_not_exists=True)
+        self.session.request.assert_any_call(
+            'put', '/buckets/buck/collections/coll',
+            data=None, headers=None, permissions=None)
 
 
 class RecordTest(unittest.TestCase):
@@ -651,3 +684,27 @@ class RecordTest(unittest.TestCase):
                 collection="coll",
                 data={'foo': 'bar'},
                 if_not_exists=True)
+
+    def test_create_if_not_exist_try_again_on_404_without_safe(self):
+        bucket_data = {
+            'permissions': mock.sentinel.permissions,
+            'data': {'foo': 'bar'}
+        }
+        self.session.request.side_effect = [
+            get_http_error(status=412),  # Creation
+            bucket_data
+        ]
+        patch(self, self.client, 'get_record',
+              side_effect=get_http_error(status=404))
+
+        self.client.create_record(
+            bucket="buck",
+            collection="coll",
+            data={'id': 1234, 'foo': 'bar'},
+            if_not_exists=True)
+
+        self.session.request.assert_any_call(
+            'put', '/buckets/buck/collections/coll/records/1234',
+            data={'foo': 'bar', 'id': 1234},
+            headers=None,
+            permissions=None)

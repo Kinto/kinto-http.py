@@ -72,3 +72,9 @@ def get_403():
     response_403 = mock.MagicMock()
     response_403.status_code = 403
     return response_403
+
+
+def patch(self, obj, *args, **kwargs):
+    patcher = mock.patch.object(obj, *args, **kwargs)
+    self.addCleanup(patcher.stop)
+    return patcher.start()

@@ -118,12 +118,12 @@ class Client(object):
                                        if_none_match=if_none_match)
         return records.values()
 
-    def _get_cache_headers(self, safe, data=None, last_modified=None):
+    def _get_cache_headers(self, safe, data=None, if_match=None):
         has_data = data is not None and data.get('last_modified')
-        if (last_modified is None and has_data):
-            last_modified = data['last_modified']
-        if safe and last_modified is not None:
-            return {'If-Match': utils.quote(last_modified)}
+        if (if_match is None and has_data):
+            if_match = data['last_modified']
+        if safe and if_match is not None:
+            return {'If-Match': utils.quote(if_match)}
         # else return None
 
     def _create_if_not_exists(self, resource, **kwargs):
@@ -165,9 +165,9 @@ class Client(object):
         return resp
 
     def update_bucket(self, bucket=None, data=None, permissions=None,
-                      safe=True, last_modified=None, method='put'):
+                      safe=True, if_match=None, method='put'):
         endpoint = self._get_endpoint('bucket', bucket)
-        headers = self._get_cache_headers(safe, data, last_modified)
+        headers = self._get_cache_headers(safe, data, if_match)
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -189,15 +189,15 @@ class Client(object):
             raise BucketNotFound(bucket or self._bucket_name, e)
         return resp
 
-    def delete_bucket(self, bucket=None, safe=True, last_modified=None):
+    def delete_bucket(self, bucket=None, safe=True, if_match=None):
         endpoint = self._get_endpoint('bucket', bucket)
-        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_buckets(self, safe=True, last_modified=None):
+    def delete_buckets(self, safe=True, if_match=None):
         endpoint = self._get_endpoint('buckets')
-        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
@@ -226,9 +226,9 @@ class Client(object):
 
     def update_collection(self, data=None, collection=None, bucket=None,
                           permissions=None, method='put',
-                          safe=True, last_modified=None):
+                          safe=True, if_match=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
-        headers = self._get_cache_headers(safe, data, last_modified)
+        headers = self._get_cache_headers(safe, data, if_match)
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -244,15 +244,15 @@ class Client(object):
         return resp
 
     def delete_collection(self, collection=None, bucket=None,
-                          safe=True, last_modified=None):
+                          safe=True, if_match=None):
         endpoint = self._get_endpoint('collection', bucket, collection)
-        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_collections(self, bucket=None, safe=True, last_modified=None):
+    def delete_collections(self, bucket=None, safe=True, if_match=None):
         endpoint = self._get_endpoint('collections', bucket)
-        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
@@ -291,12 +291,12 @@ class Client(object):
 
     def update_record(self, data, id=None, collection=None, permissions=None,
                       bucket=None, safe=True, method='put',
-                      last_modified=None):
+                      if_match=None):
         id = id or data.get('id')
         if id is None:
             raise KeyError('Unable to update a record, need an id.')
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        headers = self._get_cache_headers(safe, data, last_modified)
+        headers = self._get_cache_headers(safe, data, if_match)
         resp, _ = self.session.request(method, endpoint, data=data,
                                        headers=headers,
                                        permissions=permissions)
@@ -307,16 +307,16 @@ class Client(object):
         return self.update_record(*args, **kwargs)
 
     def delete_record(self, id, collection=None, bucket=None,
-                      safe=True, last_modified=None):
+                      safe=True, if_match=None):
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def delete_records(self, collection=None, bucket=None,
-                       safe=True, last_modified=None):
+                       safe=True, if_match=None):
         endpoint = self._get_endpoint('records', bucket, collection)
-        headers = self._get_cache_headers(safe, last_modified=last_modified)
+        headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 

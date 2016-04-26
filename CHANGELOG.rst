@@ -7,7 +7,14 @@ This document describes changes between each past release.
 4.1.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**New features**
+
+- Add new methods ``get_buckets()``, ``delete_buckets()``, ``delete_bucket()``,
+  ``delete_collections()``, ``delete_records()``, ``patch_record()`` (#55)
+
+**Internal changes**
+
+- Functional tests are now tested on Kinto master version (#65)
 
 
 4.0.0 (2016-03-08)

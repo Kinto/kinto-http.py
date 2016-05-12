@@ -31,7 +31,7 @@ need-kinto-running:
 
 runkinto: install-dev
 	$(VENV)/bin/cliquet --ini kinto_client/tests/config/kinto.ini migrate
-	$(VENV)/bin/pserve kinto_client/tests/config/kinto.ini --reload
+	$(VENV)/bin/kinto --ini kinto_client/tests/config/kinto.ini start
 
 tests-once: install-dev
 	$(VENV)/bin/py.test --cov-report term-missing --cov-fail-under 100 --cov kinto_client

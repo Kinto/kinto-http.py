@@ -332,8 +332,8 @@ class Client(object):
         except KintoException as e:
             if e.response.status_code == 403:
                 msg = ("Unauthorized. Please check that the collection exists "
-                       "and that you have the permission to create or write on "
-                       "this collection record.")
+                       "and that you have the permission to create or write on"
+                       " this collection record.")
                 e = KintoException(msg, e)
             raise e
 

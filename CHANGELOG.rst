@@ -4,12 +4,24 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-5.0.0 (unreleased)
+5.0.0 (2016-05-12)
 ==================
 
 **Breaking changes**
 
 - Rename the last_modified client parameter into if_match (#68)
+
+**New features**
+
+- Display a better message when having 403 on create_collection and
+  create_record methods (#49)
+- Add get_endpoints as a feature of the public_api (#60)
+- Add a server_info methods to ease capability checking (#70)
+
+**Internal changes**
+
+- Rename the Batch class into BatchSession (#52)
+- Change readthedocs.org urls in readthedocs.io (#71)
 
 
 4.1.0 (2016-04-26)

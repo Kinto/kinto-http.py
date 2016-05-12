@@ -412,8 +412,10 @@ class CollectionTest(unittest.TestCase):
             self.client.create_collection(
                 bucket="buck",
                 collection="coll")
-        expected_msg = "Unauthorized. Please check that the bucket exists."
-        e.exception.message = expected_msg
+        expected_msg = ("Unauthorized. Please check that the bucket exists "
+                        "and that you have the permission to create or write "
+                        "this collection.")
+        assert e.exception.message == expected_msg
 
 
 class RecordTest(unittest.TestCase):
@@ -683,3 +685,15 @@ class RecordTest(unittest.TestCase):
                 collection="coll",
                 data={'foo': 'bar'},
                 if_not_exists=True)
+
+    def test_create_record_raises_a_special_error_on_403(self):
+        self.session.request.side_effect = get_http_error(status=403)
+        with self.assertRaises(KintoException) as e:
+            self.client.create_record(
+                bucket="buck",
+                collection="coll",
+                data={'foo': 'bar'})
+        expected_msg = ("Unauthorized. Please check that the collection exists"
+                        " and that you have the permission to create or write "
+                        "this record.")
+        assert e.exception.message == expected_msg

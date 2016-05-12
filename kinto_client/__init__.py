@@ -79,7 +79,7 @@ class Client(object):
     @contextmanager
     def batch(self, **kwargs):
         if self._server_settings is None:
-            resp, _ = self.session.request("GET", self._get_endpoint('root'))
+            resp, _ = self.session.request("GET", self.get_endpoint('root'))
             self._server_settings = resp['settings']
 
         batch_max_requests = self._server_settings['batch_max_requests']
@@ -90,7 +90,18 @@ class Client(object):
         batch_session.send()
         batch_session.reset()
 
-    def _get_endpoint(self, name, bucket=None, collection=None, id=None):
+    def get_endpoint(self, name, bucket=None, collection=None, id=None):
+        """Return the endpoint with named parameters.
+
+           Please always use the method as if it was defined like that:
+
+               get_endpoint(self, name, *,
+                            bucket=None, collection=None, id=None)
+
+           Meaning that bucket, collection and id should always be
+           named parameters.
+
+        """
         kwargs = {
             'bucket': bucket or self._bucket_name,
             'collection': collection or self._collection_name,
@@ -166,7 +177,7 @@ class Client(object):
                                               permissions=permissions,
                                               safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
-        endpoint = self._get_endpoint('bucket', bucket)
+        endpoint = self.get_endpoint('bucket', bucket=bucket)
         resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -174,7 +185,7 @@ class Client(object):
 
     def update_bucket(self, bucket=None, data=None, permissions=None,
                       safe=True, if_match=None, method='put'):
-        endpoint = self._get_endpoint('bucket', bucket)
+        endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, data, if_match)
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
@@ -186,11 +197,11 @@ class Client(object):
         return self.update_bucket(*args, **kwargs)
 
     def get_buckets(self):
-        endpoint = self._get_endpoint('buckets')
+        endpoint = self.get_endpoint('buckets')
         return self._paginated(endpoint)
 
     def get_bucket(self, bucket=None):
-        endpoint = self._get_endpoint('bucket', bucket)
+        endpoint = self.get_endpoint('bucket', bucket=bucket)
         try:
             resp, _ = self.session.request('get', endpoint)
         except KintoException as e:
@@ -198,13 +209,13 @@ class Client(object):
         return resp
 
     def delete_bucket(self, bucket=None, safe=True, if_match=None):
-        endpoint = self._get_endpoint('bucket', bucket)
+        endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def delete_buckets(self, safe=True, if_match=None):
-        endpoint = self._get_endpoint('buckets')
+        endpoint = self.get_endpoint('buckets')
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
@@ -212,7 +223,7 @@ class Client(object):
     # Collections
 
     def get_collections(self, bucket=None):
-        endpoint = self._get_endpoint('collections', bucket)
+        endpoint = self.get_endpoint('collections', bucket=bucket)
         return self._paginated(endpoint)
 
     def create_collection(self, collection=None, bucket=None,
@@ -226,7 +237,9 @@ class Client(object):
                                               permissions=permissions,
                                               safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
-        endpoint = self._get_endpoint('collection', bucket, collection)
+        endpoint = self.get_endpoint('collection',
+                                     bucket=bucket,
+                                     collection=collection)
         try:
             resp, _ = self.session.request('put', endpoint, data=data,
                                            permissions=permissions,
@@ -238,12 +251,15 @@ class Client(object):
                        "this collection.")
                 e = KintoException(msg, e)
             raise e
+
         return resp
 
     def update_collection(self, data=None, collection=None, bucket=None,
                           permissions=None, method='put',
                           safe=True, if_match=None):
-        endpoint = self._get_endpoint('collection', bucket, collection)
+        endpoint = self.get_endpoint('collection',
+                                     bucket=bucket,
+                                     collection=collection)
         headers = self._get_cache_headers(safe, data, if_match)
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
@@ -255,19 +271,23 @@ class Client(object):
         return self.update_collection(*args, **kwargs)
 
     def get_collection(self, collection=None, bucket=None):
-        endpoint = self._get_endpoint('collection', bucket, collection)
+        endpoint = self.get_endpoint('collection',
+                                     bucket=bucket,
+                                     collection=collection)
         resp, _ = self.session.request('get', endpoint)
         return resp
 
     def delete_collection(self, collection=None, bucket=None,
                           safe=True, if_match=None):
-        endpoint = self._get_endpoint('collection', bucket, collection)
+        endpoint = self.get_endpoint('collection',
+                                     bucket=bucket,
+                                     collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def delete_collections(self, bucket=None, safe=True, if_match=None):
-        endpoint = self._get_endpoint('collections', bucket)
+        endpoint = self.get_endpoint('collections', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
@@ -276,12 +296,15 @@ class Client(object):
 
     def get_records(self, collection=None, bucket=None, **kwargs):
         """Returns all the records"""
-        # XXX Add filter and sorting.
-        endpoint = self._get_endpoint('records', bucket, collection)
+        endpoint = self.get_endpoint('records',
+                                     bucket=bucket,
+                                     collection=collection)
         return self._paginated(endpoint, **kwargs)
 
     def get_record(self, id, collection=None, bucket=None):
-        endpoint = self._get_endpoint('record', bucket, collection, id)
+        endpoint = self.get_endpoint('record', id=id,
+                                     bucket=bucket,
+                                     collection=collection)
         resp, _ = self.session.request('get', endpoint)
         return resp
 
@@ -299,7 +322,9 @@ class Client(object):
         # Make sure that no record already exists with this id.
         headers = DO_NOT_OVERWRITE if safe else None
 
-        endpoint = self._get_endpoint('record', bucket, collection, id)
+        endpoint = self.get_endpoint('record', id=id,
+                                     bucket=bucket,
+                                     collection=collection)
         try:
             resp, _ = self.session.request('put', endpoint, data=data,
                                            permissions=permissions,
@@ -320,7 +345,9 @@ class Client(object):
         id = id or data.get('id')
         if id is None:
             raise KeyError('Unable to update a record, need an id.')
-        endpoint = self._get_endpoint('record', bucket, collection, id)
+        endpoint = self.get_endpoint('record', id=id,
+                                     bucket=bucket,
+                                     collection=collection)
         headers = self._get_cache_headers(safe, data, if_match)
         resp, _ = self.session.request(method, endpoint, data=data,
                                        headers=headers,
@@ -333,23 +360,27 @@ class Client(object):
 
     def delete_record(self, id, collection=None, bucket=None,
                       safe=True, if_match=None):
-        endpoint = self._get_endpoint('record', bucket, collection, id)
+        endpoint = self.get_endpoint('record', id=id,
+                                     bucket=bucket,
+                                     collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def delete_records(self, collection=None, bucket=None,
                        safe=True, if_match=None):
-        endpoint = self._get_endpoint('records', bucket, collection)
+        endpoint = self.get_endpoint('records',
+                                     bucket=bucket,
+                                     collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def __repr__(self):
-        endpoint = self._get_endpoint(
+        endpoint = self.get_endpoint(
             'collection',
-            self._bucket_name,
-            self._collection_name
+            bucket=self._bucket_name,
+            collection=self._collection_name
         )
         absolute_endpoint = utils.urljoin(self.session.server_url, endpoint)
         return "<KintoClient %s>" % absolute_endpoint

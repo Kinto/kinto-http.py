@@ -93,7 +93,7 @@ class Client(object):
     def get_endpoint(self, name, bucket=None, collection=None, id=None):
         """Return the endpoint with named parameters.
 
-           Please always use the method as if it was defined like that:
+           Please always use the method as if it was defined like this:
 
                get_endpoint(self, name, *,
                             bucket=None, collection=None, id=None)

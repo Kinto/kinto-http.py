@@ -7,7 +7,7 @@ from contextlib import contextmanager
 
 from kinto_client import utils
 from kinto_client.session import create_session, Session
-from kinto_client.batch import Batch
+from kinto_client.batch import BatchSession
 from kinto_client.exceptions import BucketNotFound, KintoException
 
 
@@ -83,7 +83,8 @@ class Client(object):
             self._server_settings = resp['settings']
 
         batch_max_requests = self._server_settings['batch_max_requests']
-        batch_session = Batch(self, batch_max_requests=batch_max_requests)
+        batch_session = BatchSession(self,
+                                     batch_max_requests=batch_max_requests)
         batch_client = self.clone(session=batch_session, **kwargs)
         yield batch_client
         batch_session.send()

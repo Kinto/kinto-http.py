@@ -1,7 +1,7 @@
 import unittest2 as unittest
 import mock
 
-from kinto_client.batch import Batch
+from kinto_client.batch import BatchSession
 from kinto_client.exceptions import KintoException
 
 
@@ -13,14 +13,14 @@ class BatchRequestsTest(unittest.TestCase):
                                                     mock.sentinel.headers)
 
     def test_requests_are_stacked(self):
-        batch = Batch(self.client)
+        batch = BatchSession(self.client)
         batch.request('GET', '/foobar/baz',
                       mock.sentinel.data,
                       mock.sentinel.permissions)
         assert len(batch.requests) == 1
 
     def test_send_adds_data_attribute(self):
-        batch = Batch(self.client)
+        batch = BatchSession(self.client)
         batch.request('GET', '/foobar/baz', data={'foo': 'bar'})
         batch.send()
 
@@ -35,7 +35,7 @@ class BatchRequestsTest(unittest.TestCase):
         )
 
     def test_send_adds_permissions_attribute(self):
-        batch = Batch(self.client)
+        batch = BatchSession(self.client)
         batch.request('GET', '/foobar/baz',
                       permissions=mock.sentinel.permissions)
         batch.send()
@@ -51,7 +51,7 @@ class BatchRequestsTest(unittest.TestCase):
         )
 
     def test_send_adds_headers_if_specified(self):
-        batch = Batch(self.client)
+        batch = BatchSession(self.client)
         batch.request('GET', '/foobar/baz', headers={'Foo': 'Bar'})
         batch.send()
 
@@ -67,7 +67,7 @@ class BatchRequestsTest(unittest.TestCase):
         )
 
     def test_batch_send_multiple_requests_if_too_many_requests(self):
-        batch = Batch(self.client, batch_max_requests=3)
+        batch = BatchSession(self.client, batch_max_requests=3)
         for i in range(5):
             batch.request('GET', '/foobar/%s' % i)
         batch.send()
@@ -80,7 +80,7 @@ class BatchRequestsTest(unittest.TestCase):
         assert kwargs2['payload']['requests'][0]['path'] == '/foobar/3'
 
     def test_reset_empties_the_requests_cache(self):
-        batch = Batch(self.client)
+        batch = BatchSession(self.client)
         batch.request('GET', '/foobar/baz',
                       permissions=mock.sentinel.permissions)
         assert len(batch.requests) == 1
@@ -88,7 +88,7 @@ class BatchRequestsTest(unittest.TestCase):
         assert len(batch.requests) == 0
 
     def test_prefix_is_removed_from_batch_requests(self):
-        batch = Batch(self.client)
+        batch = BatchSession(self.client)
         batch.request('GET', '/v1/foobar')
         batch.send()
 
@@ -105,7 +105,7 @@ class BatchRequestsTest(unittest.TestCase):
                 {"status": 200, "path": "/url1", "body": {}, "headers": {}},
             ]}, mock.sentinel.headers)]
 
-        batch = Batch(self.client, batch_max_requests=1)
+        batch = BatchSession(self.client, batch_max_requests=1)
         batch.request('GET', '/v1/foobar')
         batch.request('GET', '/v1/foobar')
 

@@ -4,7 +4,7 @@ from collections import defaultdict
 from kinto_client.exceptions import KintoException
 
 
-class Batch(object):
+class BatchSession(object):
 
     def __init__(self, client, batch_max_requests=0):
         self.session = client.session

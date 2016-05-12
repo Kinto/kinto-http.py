@@ -162,7 +162,7 @@ class Client(object):
     # Server Info
 
     def server_info(self):
-        endpoint = self._get_endpoint('root')
+        endpoint = self.get_endpoint('root')
         resp, _ = self.session.request('get', endpoint)
         return resp
 

@@ -267,6 +267,25 @@ It is possible (but not recommended) to force this value in the clients:
                   retry=10,
                   retry_after=5)
 
+
+Generating endpoint paths
+-------------------------
+
+You may want to generate some endpoint paths, you can use the
+get_endpoint utility to do so:
+
+.. code-block:: python
+
+    client = Client(server_url='http://localhost:8888/v1',
+                    auth=('token', 'your-token'),
+                    bucket="payments",
+                    collection="receipts")
+    print(client.get_endpoint("record",
+                              id="c6894b2c-1856-11e6-9415-3c970ede22b0"))
+
+    # '/buckets/payments/collections/receipts/records/c6894b2c-1856-11e6-9415-3c970ede22b0'
+
+
 Command-line scripts
 --------------------
 

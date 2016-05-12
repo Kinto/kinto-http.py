@@ -12,6 +12,10 @@ class ClientTest(unittest.TestCase):
         self.client = Client(session=self.session)
         mock_response(self.session)
 
+    def test_server_info(self):
+        self.client.server_info()
+        self.session.request.assert_called_with('get', '/')
+
     def test_context_manager_works_as_expected(self):
         settings = {"batch_max_requests": 25}
         self.session.request.side_effect = [({"settings": settings}, []),

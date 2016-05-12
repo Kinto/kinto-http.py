@@ -145,7 +145,13 @@ class Client(object):
                 get_kwargs['id'] = _id
 
             get_method = getattr(self, 'get_%s' % resource)
-            return get_method(**get_kwargs)
+            try:
+                return get_method(**get_kwargs)
+            except KintoException as e:
+                # XXX: It's probably a server bug: kinto#512
+                if not hasattr(e, 'response') or e.response.status_code == 404:
+                    kwargs['safe'] = False
+                    return create_method(**kwargs)
 
     # Buckets
 

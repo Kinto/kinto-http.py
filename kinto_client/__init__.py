@@ -147,6 +147,13 @@ class Client(object):
             get_method = getattr(self, 'get_%s' % resource)
             return get_method(**get_kwargs)
 
+    # Server Info
+
+    def server_info(self):
+        endpoint = self._get_endpoint('root')
+        resp, _ = self.session.request('get', endpoint)
+        return resp
+
     # Buckets
 
     def create_bucket(self, bucket=None, data=None, permissions=None,

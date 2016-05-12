@@ -204,7 +204,7 @@ Overwriting existing objects
 ----------------------------
 
 Most of the methods take a ``safe`` argument, which defaults to ``True``. If set
-to ``True`` and a ``last_modified`` field is present in the passed ``data``, then a
+to ``True`` and a ``if_match`` field is present in the passed ``data``, then a
 check will be added to the requests to ensure the record wasn't modified on
 the server side in the meantime.
 

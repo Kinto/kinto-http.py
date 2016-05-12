@@ -136,11 +136,11 @@ class BucketTest(unittest.TestCase):
             permissions={'read': ['natim']},
             headers=None)
 
-    def test_update_bucket_handles_last_modified(self):
+    def test_update_bucket_handles_if_match(self):
         self.client.update_bucket(
             'testbucket',
             data={'foo': 'bar'},
-            last_modified=1234)
+            if_match=1234)
         self.session.request.assert_called_with(
             'put',
             '/buckets/testbucket',
@@ -203,8 +203,8 @@ class BucketTest(unittest.TestCase):
         mock_response(self.session, data={'deleted': True})
         assert self.client.delete_bucket('bucket') == {'deleted': True}
 
-    def test_delete_bucket_handles_last_modified(self):
-        self.client.delete_bucket('mybucket', last_modified=1234)
+    def test_delete_bucket_handles_if_match(self):
+        self.client.delete_bucket('mybucket', if_match=1234)
         url = '/buckets/mybucket'
         headers = {'If-Match': '"1234"'}
         self.session.request.assert_called_with('delete', url, headers=headers)
@@ -282,11 +282,11 @@ class CollectionTest(unittest.TestCase):
             'put', url, data={'foo': 'bar'},
             permissions=mock.sentinel.permissions, headers=None)
 
-    def test_update_handles_last_modified(self):
+    def test_update_handles_if_match(self):
         self.client.update_collection(
             {'foo': 'bar'},
             collection='mycollection',
-            last_modified=1234)
+            if_match=1234)
 
         url = '/buckets/mybucket/collections/mycollection'
         headers = {'If-Match': '"1234"'}
@@ -317,11 +317,11 @@ class CollectionTest(unittest.TestCase):
             'patch', url, data={'key': 'secret'}, headers=None,
             permissions=None)
 
-    def test_patch_collection_handles_last_modified(self):
+    def test_patch_collection_handles_if_match(self):
         self.client.patch_collection(
             collection='mycollection',
             data={'key': 'secret'},
-            last_modified=1234)
+            if_match=1234)
 
         url = '/buckets/mybucket/collections/mycollection'
         headers = {'If-Match': '"1234"'}
@@ -366,7 +366,7 @@ class CollectionTest(unittest.TestCase):
         mock_response(self.session, data=data)
         deleted = self.client.delete_collection(
             'mycollection',
-            last_modified=1234)
+            if_match=1234)
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
@@ -377,7 +377,7 @@ class CollectionTest(unittest.TestCase):
         mock_response(self.session, data=data)
         deleted = self.client.delete_collection(
             'mycollection',
-            last_modified=1324,
+            if_match=1324,
             safe=False)
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection'
@@ -588,7 +588,7 @@ class RecordTest(unittest.TestCase):
             collection='mycollection',
             bucket='mybucket',
             id='1',
-            last_modified=1234)
+            if_match=1234)
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection/records/1'
         self.session.request.assert_called_with(
@@ -601,7 +601,7 @@ class RecordTest(unittest.TestCase):
             collection='mycollection',
             bucket='mybucket',
             id='1',
-            last_modified=1234,
+            if_match=1234,
             safe=False)
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection/records/1'
@@ -618,11 +618,11 @@ class RecordTest(unittest.TestCase):
             'put', '/buckets/mybucket/collections/mycollection/records/1',
             data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
 
-    def test_update_record_handles_last_modified(self):
+    def test_update_record_handles_if_match(self):
         mock_response(self.session)
         self.client.update_record(
             bucket='mybucket', collection='mycollection',
-            data={'id': 1, 'foo': 'bar'}, last_modified=1234)
+            data={'id': 1, 'foo': 'bar'}, if_match=1234)
 
         headers = {'If-Match': '"1234"'}
         self.session.request.assert_called_with(

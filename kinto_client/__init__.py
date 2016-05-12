@@ -226,8 +226,8 @@ class Client(object):
         except KintoException as e:
             if e.response.status_code == 403:
                 msg = ("Unauthorized. Please check that the bucket exists and "
-                       "that you have the permission to create or write this "
-                       "collection.")
+                       "that you have the permission to create or write on "
+                       "this collection.")
                 e = KintoException(msg, e)
             raise e
         return resp
@@ -299,8 +299,8 @@ class Client(object):
         except KintoException as e:
             if e.response.status_code == 403:
                 msg = ("Unauthorized. Please check that the collection exists "
-                       "and that you have the permission to create or write "
-                       "this record.")
+                       "and that you have the permission to create or write on "
+                       "this collection record.")
                 e = KintoException(msg, e)
             raise e
 

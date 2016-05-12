@@ -414,7 +414,7 @@ class CollectionTest(unittest.TestCase):
                 collection="coll")
         expected_msg = ("Unauthorized. Please check that the bucket exists "
                         "and that you have the permission to create or write "
-                        "this collection.")
+                        "on this collection.")
         assert e.exception.message == expected_msg
 
 
@@ -695,5 +695,5 @@ class RecordTest(unittest.TestCase):
                 data={'foo': 'bar'})
         expected_msg = ("Unauthorized. Please check that the collection exists"
                         " and that you have the permission to create or write "
-                        "this record.")
+                        "on this collection record.")
         assert e.exception.message == expected_msg

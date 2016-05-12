@@ -4,10 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-4.2.0 (unreleased)
+5.0.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Breaking changes**
+
+- Rename the last_modified client parameter into if_match (#68)
 
 
 4.1.0 (2016-04-26)

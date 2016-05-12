@@ -220,9 +220,17 @@ class Client(object):
                                               safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self._get_endpoint('collection', bucket, collection)
-        resp, _ = self.session.request('put', endpoint, data=data,
-                                       permissions=permissions,
-                                       headers=headers)
+        try:
+            resp, _ = self.session.request('put', endpoint, data=data,
+                                           permissions=permissions,
+                                           headers=headers)
+        except KintoException as e:
+            if e.response.status_code == 403:
+                msg = ("Unauthorized. Please check that the bucket exists and "
+                       "that you have the permission to create or write on "
+                       "this collection.")
+                e = KintoException(msg, e)
+            raise e
         return resp
 
     def update_collection(self, data=None, collection=None, bucket=None,
@@ -285,9 +293,18 @@ class Client(object):
         headers = DO_NOT_OVERWRITE if safe else None
 
         endpoint = self._get_endpoint('record', bucket, collection, id)
-        resp, _ = self.session.request('put', endpoint, data=data,
-                                       permissions=permissions,
-                                       headers=headers)
+        try:
+            resp, _ = self.session.request('put', endpoint, data=data,
+                                           permissions=permissions,
+                                           headers=headers)
+        except KintoException as e:
+            if e.response.status_code == 403:
+                msg = ("Unauthorized. Please check that the collection exists "
+                       "and that you have the permission to create or write on "
+                       "this collection record.")
+                e = KintoException(msg, e)
+            raise e
+
         return resp
 
     def update_record(self, data, id=None, collection=None, permissions=None,

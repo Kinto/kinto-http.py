@@ -21,9 +21,21 @@ if sys.version_info < (2, 7, 9):
     REQUIREMENTS.append('ndg-httpsclient')
     REQUIREMENTS.append('pyasn1')
 
+test_requirements = [
+    'pytest',
+    'pytest-cache',
+    'pytest-cover',
+    'pytest-sugar',
+    'pytest-xdist',
+    'mock',
+    'kinto',
+    'unittest2',
+    'unidecode',
+    'six',
+]
 
 setup(name='kinto-client',
-      version='5.0.0.dev0',
+      version='5.0.0',
       description='Kinto client',
       long_description=README,
       license='Apache License (2.0)',
@@ -43,4 +55,6 @@ setup(name='kinto-client',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
-      install_requires=REQUIREMENTS)
+      install_requires=REQUIREMENTS,
+      test_suite='kinto_client.tests',
+      tests_require=test_requirements)

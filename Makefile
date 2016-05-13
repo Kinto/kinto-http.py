@@ -30,7 +30,7 @@ need-kinto-running:
 	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make runkinto' before starting tests." && exit 1)
 
 runkinto: install-dev
-	$(VENV)/bin/cliquet --ini kinto_client/tests/config/kinto.ini migrate
+	$(VENV)/bin/kinto --ini kinto_client/tests/config/kinto.ini migrate
 	$(VENV)/bin/kinto --ini kinto_client/tests/config/kinto.ini start
 
 tests-once: install-dev

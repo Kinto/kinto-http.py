@@ -85,15 +85,15 @@ at creation time, so that this value will be used by default.
 Getting server information
 --------------------------
 
-You can use the ``server_info`` methods to get the server information::
+You can use the ``server_info`` method to get the server information::
 
 .. code-block:: python
 
     from kinto_client import Client
 
     client = Client(server_url='http://localhost:8888/v1')
-    infos = client.server_info()
-    assert 'schema' in infos['capabilities'], "Server doesn't supports schema validation."
+    info = client.server_info()
+    assert 'schema' in info['capabilities'], "Server doesn't support schema validation."
 
 
 Handling buckets

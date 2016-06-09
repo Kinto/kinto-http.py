@@ -2,7 +2,7 @@ import mock
 from six import text_type
 from .support import unittest, mock_response, build_response, get_http_error
 
-from kinto_client import (KintoException, BucketNotFound, Client,
+from kinto_http import (KintoException, BucketNotFound, Client,
                           DO_NOT_OVERWRITE)
 
 
@@ -72,7 +72,7 @@ class ClientTest(unittest.TestCase):
     def test_batch_options_are_transmitted(self):
         settings = {"batch_max_requests": 25}
         self.session.request.side_effect = [({"settings": settings}, [])]
-        with mock.patch('kinto_client.create_session') as create_session:
+        with mock.patch('kinto_http.create_session') as create_session:
             with self.client.batch(bucket='moz', collection='test', retry=12,
                                    retry_after=20):
                 _, last_call_kwargs = create_session.call_args_list[-1]

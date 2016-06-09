@@ -3,8 +3,8 @@ import time
 import requests
 from six.moves.urllib.parse import urlparse
 
-from kinto_client import utils
-from kinto_client.exceptions import KintoException
+from kinto_http import utils
+from kinto_http.exceptions import KintoException
 
 
 def create_session(server_url=None, auth=None, session=None, retry=0,

@@ -1,8 +1,8 @@
 import mock
 
-from kinto_client.replication import replicate
-from kinto_client import Client
-from kinto_client import exceptions
+from kinto_http.replication import replicate
+from kinto_http import Client
+from kinto_http import exceptions
 
 from .support import unittest, mock_response
 
@@ -63,7 +63,7 @@ class ReplicationTest(unittest.TestCase):
         batched.delete_record.assert_any_call('1234', last_modified='1234')
         batched.delete_record.assert_any_call('4567', last_modified='4567')
 
-    @mock.patch('kinto_client.replication.logger')
+    @mock.patch('kinto_http.replication.logger')
     def test_logger_outputs_replication_information(self, logger):
         origin_session = mock.MagicMock()
         origin_session.server_url = "http://origin/v1"

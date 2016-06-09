@@ -1,7 +1,7 @@
 from six import text_type
 from .support import unittest
 
-from kinto_client import Endpoints, KintoException
+from kinto_http import Endpoints, KintoException
 
 
 class EndpointsTest(unittest.TestCase):

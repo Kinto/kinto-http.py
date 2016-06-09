@@ -1,7 +1,7 @@
 import argparse
 import mock
 
-from kinto_client import cli_utils
+from kinto_http import cli_utils
 from .support import unittest
 
 ALL_PARAMETERS = [
@@ -95,7 +95,7 @@ class GetAuthTest(unittest.TestCase):
 
 class ClientFromArgsTest(unittest.TestCase):
 
-    @mock.patch('kinto_client.cli_utils.Client')
+    @mock.patch('kinto_http.cli_utils.Client')
     def test_create_client_from_args_build_a_client(self, mocked_client):
         parser = cli_utils.add_parser_options(
             default_server="https://firefox.settings.services.mozilla.com/",
@@ -113,7 +113,7 @@ class ClientFromArgsTest(unittest.TestCase):
             bucket='blocklists',
             collection='certificates')
 
-    @mock.patch('kinto_client.cli_utils.Client')
+    @mock.patch('kinto_http.cli_utils.Client')
     def test_create_client_from_args_default_bucket_and_collection_to_none(
             self, mocked_client):
         parser = cli_utils.add_parser_options(

@@ -34,8 +34,8 @@ test_requirements = [
     'six',
 ]
 
-setup(name='kinto-client',
-      version='5.1.0.dev0',
+setup(name='kinto-http',
+      version='6.0.0.dev0',
       description='Kinto client',
       long_description=README,
       license='Apache License (2.0)',
@@ -51,10 +51,10 @@ setup(name='kinto-client',
       keywords="web services",
       author='Mozilla Services',
       author_email='storage@mozilla.com',
-      url='https://github.com/Kinto/kinto.py/',
+      url='https://github.com/Kinto/kinto-http.py/',
       packages=find_packages(),
       include_package_data=True,
       zip_safe=False,
       install_requires=REQUIREMENTS,
-      test_suite='kinto_client.tests',
+      test_suite='kinto_http.tests',
       tests_require=test_requirements)

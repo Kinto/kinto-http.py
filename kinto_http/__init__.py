@@ -5,10 +5,10 @@ from six import iteritems
 from contextlib import contextmanager
 
 
-from kinto_client import utils
-from kinto_client.session import create_session, Session
-from kinto_client.batch import BatchSession
-from kinto_client.exceptions import BucketNotFound, KintoException
+from kinto_http import utils
+from kinto_http.session import create_session, Session
+from kinto_http.batch import BatchSession
+from kinto_http.exceptions import BucketNotFound, KintoException
 
 
 __all__ = ('Endpoints', 'Session', 'Client',

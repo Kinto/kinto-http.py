@@ -2,7 +2,7 @@ import unittest2 as unittest  # NOQA
 
 import mock
 
-from kinto_client.exceptions import KintoException
+from kinto_http.exceptions import KintoException
 
 
 def mock_response(session, data=None, permissions=None, headers=None,

@@ -87,7 +87,7 @@ This document describes changes between each past release.
 - Added a retry option for batch requests (#51)
 - Use the "default" bucket if nothing is specified (#50)
 - Added a ``if_not_exists`` argument to the creation methods (#42)
-- Added a replication mechanism in ``kinto_client.replication`` (#26)
+- Added a replication mechanism in ``kinto_http.replication`` (#26)
 - Handle the ``last_modified`` argument on update or create operations (#24)
 
 **Bug fixes**
@@ -131,7 +131,7 @@ This document describes changes between each past release.
 
 **Breaking changes**
 
-- Rename kintoclient to kinto_client (#8)
+- Rename kintoclient to kinto_http (#8)
 
 **Features**
 

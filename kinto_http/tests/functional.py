@@ -7,8 +7,8 @@ from six.moves import configparser
 
 from cliquet import utils as cliquet_utils
 
-from kinto_client import Client, BucketNotFound, KintoException
-from kinto_client import replication
+from kinto_http import Client, BucketNotFound, KintoException
+from kinto_http import replication
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 

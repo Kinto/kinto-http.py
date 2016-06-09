@@ -1,2 +1,2 @@
 [run]
-omit = kinto_client/tests/*
+omit = kinto_http/tests/*

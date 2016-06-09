@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from unittest2 import TestCase
 
-from kinto_client import utils
+from kinto_http import utils
 
 
 class UtilsTest(TestCase):

@@ -1,20 +1,20 @@
 Kinto python client
 ###################
 
-.. image:: https://img.shields.io/travis/Kinto/kinto.py.svg
-        :target: https://travis-ci.org/Kinto/kinto.py
+.. image:: https://img.shields.io/travis/Kinto/kinto-http.py.svg
+        :target: https://travis-ci.org/Kinto/kinto-http.py
 
-.. image:: https://img.shields.io/pypi/v/kinto-client.svg
-        :target: https://pypi.python.org/pypi/kinto-client
+.. image:: https://img.shields.io/pypi/v/kinto-http.svg
+        :target: https://pypi.python.org/pypi/kinto-http
 
-.. image:: https://coveralls.io/repos/Kinto/kinto.py/badge.svg?branch=master
-        :target: https://coveralls.io/r/Kinto/kinto.py
+.. image:: https://coveralls.io/repos/Kinto/kinto-http.py/badge.svg?branch=master
+        :target: https://coveralls.io/r/Kinto/kinto-http.py
 
 
 Kinto is a service that allows to store and synchronize arbitrary data,
 attached to a user account. Its primary interface is HTTP.
 
-*kinto-client* is a Python library that eases the interactions with
+*kinto-http* is a Python library that eases the interactions with
 a *Kinto* server instance. `A project with related goals is
 also available for JavaScript <https://github.com/kinto/kinto.js>`_.
 
@@ -24,7 +24,7 @@ Installation
 
 Use pip::
 
-  $ pip install kinto-client
+  $ pip install kinto-http
 
 
 Usage
@@ -43,7 +43,7 @@ Here is an overview of what the API provides:
 
 .. code-block:: python
 
-    from kinto_client import Client
+    from kinto_http import Client
 
     client = Client(server_url="http://localhost:8888/v1",
                     auth=('alexis', 'p4ssw0rd'))
@@ -68,7 +68,7 @@ Basic authentication policies.
 
 .. code-block:: python
 
-    from kinto_client import Client
+    from kinto_http import Client
     credentials = ('alexis', 'p4ssw0rd')
 
     client = Client(server_url='http://localhost:8888/v1',
@@ -89,7 +89,7 @@ You can use the ``server_info`` method to get the server information::
 
 .. code-block:: python
 
-    from kinto_client import Client
+    from kinto_http import Client
 
     client = Client(server_url='http://localhost:8888/v1')
     info = client.server_info()
@@ -105,7 +105,7 @@ If no specific bucket name is provided, the "default" bucket is used.
 
 .. code-block:: python
 
-    from kinto_client import Client
+    from kinto_http import Client
     credentials = ('alexis', 'p4ssw0rd')
 
     client = Client(server_url='http://localhost:8888/v1',
@@ -297,7 +297,7 @@ to ease configuration and initialization of client from command-line arguments.
   import argparse
   import logging
 
-  from kinto_client import cli_utils
+  from kinto_http import cli_utils
 
   logger = logging.getLogger(__name__)
 

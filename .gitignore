@@ -1,6 +1,6 @@
 .cache
 *.pyc
-kinto_client.egg-info/
+kinto_http.egg-info/
 .coverage
 .venv/
 .tox

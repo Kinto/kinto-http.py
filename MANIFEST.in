@@ -1,4 +1,4 @@
 include *.rst README.rst CHANGELOG.rst tox.ini Makefile .coveragerc
 include *.txt
 include LICENSE
-recursive-include kinto_client *.ini
+recursive-include kinto_http *.ini

@@ -1,7 +1,7 @@
 import argparse
 import logging
 
-from kinto_client import Client, cli_utils
+from kinto_http import Client, cli_utils
 
 logger = logging.getLogger(__name__)
 

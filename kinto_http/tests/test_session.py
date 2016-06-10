@@ -1,14 +1,14 @@
 import mock
 
-from kinto_client.session import Session, create_session
-from kinto_client.exceptions import KintoException
+from kinto_http.session import Session, create_session
+from kinto_http.exceptions import KintoException
 
 from .support import unittest, get_200, get_503, get_403
 
 
 class SessionTest(unittest.TestCase):
     def setUp(self):
-        p = mock.patch('kinto_client.session.requests')
+        p = mock.patch('kinto_http.session.requests')
         self.requests_mock = p.start()
         self.addCleanup(p.stop)
 
@@ -115,7 +115,7 @@ class SessionTest(unittest.TestCase):
     def test_initialization_fails_on_missing_args(self):
         self.assertRaises(AttributeError, create_session)
 
-    @mock.patch('kinto_client.session.Session')
+    @mock.patch('kinto_http.session.Session')
     def test_creates_a_session_if_needed(self, session_mock):
         # Mock the session response.
         create_session(server_url=mock.sentinel.server_url,
@@ -161,7 +161,7 @@ class SessionTest(unittest.TestCase):
 class RetryRequestTest(unittest.TestCase):
 
     def setUp(self):
-        p = mock.patch('kinto_client.session.requests')
+        p = mock.patch('kinto_http.session.requests')
         self.requests_mock = p.start()
         self.addCleanup(p.stop)
 
@@ -207,7 +207,7 @@ class RetryRequestTest(unittest.TestCase):
     def test_does_not_wait_if_retry_after_header_is_not_present(self):
         self.requests_mock.request.side_effect = [self.response_503,
                                                   self.response_200]
-        with mock.patch('kinto_client.session.time.sleep') as sleep_mocked:
+        with mock.patch('kinto_http.session.time.sleep') as sleep_mocked:
             session = Session('https://example.org', retry=1)
             session.request('GET', '/v1/foobar')
             sleep_mocked.assert_called_with(0)
@@ -216,7 +216,7 @@ class RetryRequestTest(unittest.TestCase):
         self.response_503.headers["Retry-After"] = 27
         self.requests_mock.request.side_effect = [self.response_503,
                                                   self.response_200]
-        with mock.patch('kinto_client.session.time.sleep') as sleep_mocked:
+        with mock.patch('kinto_http.session.time.sleep') as sleep_mocked:
             session = Session('https://example.org', retry=1)
             session.request('GET', '/v1/foobar')
             self.assertTrue(sleep_mocked.called)
@@ -224,7 +224,7 @@ class RetryRequestTest(unittest.TestCase):
     def test_waits_if_retry_after_is_forced(self):
         self.requests_mock.request.side_effect = [self.response_503,
                                                   self.response_200]
-        with mock.patch('kinto_client.session.time.sleep') as sleep_mocked:
+        with mock.patch('kinto_http.session.time.sleep') as sleep_mocked:
             session = Session('https://example.org', retry=1, retry_after=10)
             session.request('GET', '/v1/foobar')
             sleep_mocked.assert_called_with(10)
@@ -233,7 +233,7 @@ class RetryRequestTest(unittest.TestCase):
         self.response_503.headers["Retry-After"] = 27
         self.requests_mock.request.side_effect = [self.response_503,
                                                   self.response_200]
-        with mock.patch('kinto_client.session.time.sleep') as sleep_mocked:
+        with mock.patch('kinto_http.session.time.sleep') as sleep_mocked:
             session = Session('https://example.org', retry=1, retry_after=10)
             session.request('GET', '/v1/foobar')
             sleep_mocked.assert_called_with(10)

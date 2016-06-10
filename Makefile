@@ -30,17 +30,17 @@ need-kinto-running:
 	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make runkinto' before starting tests." && exit 1)
 
 runkinto: install-dev
-	$(VENV)/bin/kinto --ini kinto_client/tests/config/kinto.ini migrate
-	$(VENV)/bin/kinto --ini kinto_client/tests/config/kinto.ini start
+	$(VENV)/bin/kinto --ini kinto_http/tests/config/kinto.ini migrate
+	$(VENV)/bin/kinto --ini kinto_http/tests/config/kinto.ini start
 
 tests-once: install-dev
-	$(VENV)/bin/py.test --cov-report term-missing --cov-fail-under 100 --cov kinto_client
+	$(VENV)/bin/py.test --cov-report term-missing --cov-fail-under 100 --cov kinto_http
 
 functional: install-dev need-kinto-running
-	$(VENV)/bin/py.test kinto_client/tests/functional.py
+	$(VENV)/bin/py.test kinto_http/tests/functional.py
 
 tests: install-dev need-kinto-running
-	$(VENV)/bin/py.test -f kinto_client/tests/ kinto_client/tests/functional.py
+	$(VENV)/bin/py.test -f kinto_http/tests/ kinto_http/tests/functional.py
 
 clean:
 	find . -name '*.pyc' -delete

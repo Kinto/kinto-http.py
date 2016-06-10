@@ -1,8 +1,8 @@
 import unittest2 as unittest
 import mock
 
-from kinto_client.batch import BatchSession
-from kinto_client.exceptions import KintoException
+from kinto_http.batch import BatchSession
+from kinto_http.exceptions import KintoException
 
 
 class BatchRequestsTest(unittest.TestCase):

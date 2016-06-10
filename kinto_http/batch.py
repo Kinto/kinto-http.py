@@ -1,7 +1,7 @@
 from . import utils
 from collections import defaultdict
 
-from kinto_client.exceptions import KintoException
+from kinto_http.exceptions import KintoException
 
 
 class BatchSession(object):

@@ -4,10 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-5.1.0 (unreleased)
+6.0.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Breaking changes**
+
+- Rename kinto_client to kinto_http (#74)
 
 
 5.0.0 (2016-05-12)
@@ -87,7 +89,7 @@ This document describes changes between each past release.
 - Added a retry option for batch requests (#51)
 - Use the "default" bucket if nothing is specified (#50)
 - Added a ``if_not_exists`` argument to the creation methods (#42)
-- Added a replication mechanism in ``kinto_client.replication`` (#26)
+- Added a replication mechanism in ``kinto_http.replication`` (#26)
 - Handle the ``last_modified`` argument on update or create operations (#24)
 
 **Bug fixes**

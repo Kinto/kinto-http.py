@@ -5,10 +5,10 @@ import unittest2
 import requests
 from six.moves import configparser
 
-from cliquet import utils as cliquet_utils
+from kinto.core import utils as kinto_core_utils
 
-from kinto_client import Client, BucketNotFound, KintoException
-from kinto_client import replication
+from kinto_http import Client, BucketNotFound, KintoException
+from kinto_http import replication
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 
@@ -38,7 +38,7 @@ class FunctionalTest(unittest2.TestCase):
     def get_user_id(self, credentials):
         hmac_secret = self.config.get('app:main', 'kinto.userid_hmac_secret')
         credentials = '%s:%s' % credentials
-        digest = cliquet_utils.hmac_digest(hmac_secret, credentials)
+        digest = kinto_core_utils.hmac_digest(hmac_secret, credentials)
         return 'basicauth:%s' % digest
 
     def test_bucket_creation(self):

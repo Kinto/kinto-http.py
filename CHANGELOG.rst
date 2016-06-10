@@ -4,10 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-5.1.0 (unreleased)
+6.0.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Breaking changes**
+
+- Rename kinto_client to kinto_http (#74)
 
 
 5.0.0 (2016-05-12)
@@ -131,7 +133,7 @@ This document describes changes between each past release.
 
 **Breaking changes**
 
-- Rename kintoclient to kinto_http (#8)
+- Rename kintoclient to kinto_client (#8)
 
 **Features**
 

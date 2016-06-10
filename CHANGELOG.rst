@@ -4,6 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
+6.1.0 (unreleased)
+==================
+
+- Nothing changed yet.
+
+
 6.0.0 (2016-06-10)
 ==================
 

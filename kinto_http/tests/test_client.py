@@ -3,7 +3,7 @@ from six import text_type
 from .support import unittest, mock_response, build_response, get_http_error
 
 from kinto_http import (KintoException, BucketNotFound, Client,
-                          DO_NOT_OVERWRITE)
+                        DO_NOT_OVERWRITE)
 
 
 class ClientTest(unittest.TestCase):

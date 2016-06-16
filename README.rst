@@ -49,7 +49,7 @@ Here is an overview of what the API provides:
                     auth=('alexis', 'p4ssw0rd'))
 
     records = client.get_records(bucket='default', collection='todos')
-    for i, record in enumerate(records['data']):
+    for i, record in enumerate(records):
         record['title'] = 'Todo #%d' %i
 
     for record in records:

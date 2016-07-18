@@ -16,7 +16,7 @@ attached to a user account. Its primary interface is HTTP.
 
 *kinto-http* is a Python library that eases the interactions with
 a *Kinto* server instance. `A project with related goals is
-also available for JavaScript <https://github.com/kinto/kinto.js>`_.
+also available for JavaScript <https://github.com/kinto/kinto-http.js>`_.
 
 
 Installation
@@ -355,3 +355,4 @@ In another, run the tests against it:
 ::
 
     $ make tests
+

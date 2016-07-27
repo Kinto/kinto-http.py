@@ -121,8 +121,9 @@ class Client(object):
             'get', endpoint, headers=headers, params=kwargs)
 
         # Save the current records collection timestamp
-        etag = headers['ETag'].strip('"')
-        self._records_collection_timestamp[endpoint] = etag
+        if 'etag' in map(str.lower, headers.keys()):
+            etag = headers['ETag'].strip('"')
+            self._records_collection_timestamp[endpoint] = etag
 
         if record_resp:
             records_tuples = [(r['id'], r) for r in record_resp['data']]

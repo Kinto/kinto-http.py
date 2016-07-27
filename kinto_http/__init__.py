@@ -109,7 +109,8 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
-    def _paginated(self, endpoint, records=None, if_none_match=None, **kwargs):
+    def _paginated(self, endpoint, records=None, if_none_match=None,
+                   with_etag=None, **kwargs):
         if records is None:
             records = collections.OrderedDict()
         headers = {}
@@ -128,6 +129,8 @@ class Client(object):
                 next_page = headers['Next-Page']
                 return self._paginated(next_page, records,
                                        if_none_match=if_none_match)
+        if with_etag:
+            return records.values(), headers['ETag']
         return records.values()
 
     def _get_cache_headers(self, safe, data=None, if_match=None):

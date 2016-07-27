@@ -537,6 +537,13 @@ class RecordTest(unittest.TestCase):
         records = self.client.get_records()
         assert list(records) == [{'id': 'foo'}, {'id': 'bar'}]
 
+    def test_collection_can_return_collection_etag(self):
+        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
+                      headers={"ETag": '"123456"'})
+        records, etag = self.client.get_records(with_etag=True)
+        assert list(records) == [{'id': 'foo'}, {'id': 'bar'}]
+        assert etag == '"123456"'
+
     def test_pagination_is_followed(self):
         # Mock the calls to request.
         link = ('http://example.org/buckets/buck/collections/coll/records/'

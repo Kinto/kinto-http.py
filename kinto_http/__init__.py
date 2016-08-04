@@ -306,8 +306,7 @@ class Client(object):
                                      bucket=bucket,
                                      collection=collection)
         if endpoint not in self._records_timestamp:
-            record_resp, headers = self.session.request(
-                'get', endpoint, params=kwargs)
+            record_resp, headers = self.session.request('head', endpoint)
 
             # Save the current records collection timestamp
             etag = headers.get('ETag', '').strip('"')

@@ -157,7 +157,10 @@ A record is a dict with the "permissions" and "data" keys.
                          collection='todos', bucket='default')
 
     # Retrieve all records.
-    record = client.get_records(collection='todos', bucket='default')
+    records = client.get_records(collection='todos', bucket='default')
+
+    # Retrieve records timestamp.
+    records_timestamp = client.get_records_timestamp(collection='todos', bucket='default')
 
     # Retrieve a specific record and update it.
     record = client.get_record('89881454-e4e9-4ef0-99a9-404d95900352',

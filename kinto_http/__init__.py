@@ -69,7 +69,7 @@ class Client(object):
         self._bucket_name = bucket
         self._collection_name = collection
         self._server_settings = None
-        self._records_collection_timestamp = {}
+        self._records_timestamp = {}
 
     def clone(self, **kwargs):
         kwargs.setdefault('session', self.session)
@@ -121,9 +121,8 @@ class Client(object):
             'get', endpoint, headers=headers, params=kwargs)
 
         # Save the current records collection timestamp
-        if 'etag' in map(str.lower, headers.keys()):
-            etag = headers['ETag'].strip('"')
-            self._records_collection_timestamp[endpoint] = etag
+        etag = headers.get('ETag', '').strip('"')
+        self._records_timestamp[endpoint] = etag
 
         if record_resp:
             records_tuples = [(r['id'], r) for r in record_resp['data']]
@@ -301,14 +300,20 @@ class Client(object):
 
     # Records
 
-    def records_collection_timestamp(self, collection=None, bucket=None,
-                                     **kwargs):
+    def get_records_timestamp(self, collection=None, bucket=None,
+                              **kwargs):
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)
-        if endpoint not in self._records_collection_timestamp:
-            self._paginated(endpoint, **kwargs)
-        return self._records_collection_timestamp[endpoint]
+        if endpoint not in self._records_timestamp:
+            record_resp, headers = self.session.request(
+                'get', endpoint, params=kwargs)
+
+            # Save the current records collection timestamp
+            etag = headers.get('ETag', '').strip('"')
+            self._records_timestamp[endpoint] = etag
+
+        return self._records_timestamp[endpoint]
 
     def get_records(self, collection=None, bucket=None, **kwargs):
         """Returns all the records"""

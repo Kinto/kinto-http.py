@@ -537,21 +537,21 @@ class RecordTest(unittest.TestCase):
         records = self.client.get_records()
         assert list(records) == [{'id': 'foo'}, {'id': 'bar'}]
 
-    def test_collection_can_retrieve_records_collection_timestamp(self):
+    def test_collection_can_retrieve_records_timestamp(self):
         mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
                       headers={"ETag": '"12345"'})
-        timestamp = self.client.records_collection_timestamp()
+        timestamp = self.client.get_records_timestamp()
         assert timestamp == '12345'
 
-    def test_records_collection_timestamp_is_cached(self):
+    def test_records_timestamp_is_cached(self):
         mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
                       headers={"ETag": '"12345"'})
         self.client.get_records()
-        timestamp = self.client.records_collection_timestamp()
+        timestamp = self.client.get_records_timestamp()
         assert timestamp == '12345'
         assert self.session.request.call_count == 1
 
-    def test_records_collection_timestamp_is_cached_per_collection(self):
+    def test_records_timestamp_is_cached_per_collection(self):
         mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
                       headers={"ETag": '"12345"'})
         self.client.get_records(collection="foo")
@@ -559,10 +559,10 @@ class RecordTest(unittest.TestCase):
                       headers={"ETag": '"67890"'})
         self.client.get_records(collection="bar")
 
-        timestamp = self.client.records_collection_timestamp("foo")
+        timestamp = self.client.get_records_timestamp("foo")
         assert timestamp == '12345'
 
-        timestamp = self.client.records_collection_timestamp("bar")
+        timestamp = self.client.get_records_timestamp("bar")
         assert timestamp == '67890'
 
     def test_pagination_is_followed(self):

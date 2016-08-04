@@ -69,6 +69,7 @@ class Client(object):
         self._bucket_name = bucket
         self._collection_name = collection
         self._server_settings = None
+        self._records_timestamp = {}
 
     def clone(self, **kwargs):
         kwargs.setdefault('session', self.session)
@@ -118,6 +119,11 @@ class Client(object):
 
         record_resp, headers = self.session.request(
             'get', endpoint, headers=headers, params=kwargs)
+
+        # Save the current records collection timestamp
+        etag = headers.get('ETag', '').strip('"')
+        self._records_timestamp[endpoint] = etag
+
         if record_resp:
             records_tuples = [(r['id'], r) for r in record_resp['data']]
             records.update(collections.OrderedDict(records_tuples))
@@ -293,6 +299,20 @@ class Client(object):
         return resp['data']
 
     # Records
+
+    def get_records_timestamp(self, collection=None, bucket=None,
+                              **kwargs):
+        endpoint = self.get_endpoint('records',
+                                     bucket=bucket,
+                                     collection=collection)
+        if endpoint not in self._records_timestamp:
+            record_resp, headers = self.session.request('head', endpoint)
+
+            # Save the current records collection timestamp
+            etag = headers.get('ETag', '').strip('"')
+            self._records_timestamp[endpoint] = etag
+
+        return self._records_timestamp[endpoint]
 
     def get_records(self, collection=None, bucket=None, **kwargs):
         """Returns all the records"""

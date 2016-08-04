@@ -7,7 +7,9 @@ This document describes changes between each past release.
 6.1.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**New features**
+
+- Add a ``get_records_timestamp`` method to get the collection ``ETag``. (#81)
 
 
 6.0.0 (2016-06-10)

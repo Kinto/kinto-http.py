@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-6.1.0 (unreleased)
+6.1.0 (2016-08-04)
 ==================
 
 **New features**

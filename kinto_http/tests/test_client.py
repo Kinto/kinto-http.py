@@ -565,6 +565,21 @@ class RecordTest(unittest.TestCase):
         timestamp = self.client.get_records_timestamp("bar")
         assert timestamp == '67890'
 
+    def test_records_timestamp_cache_can_be_refreshed(self):
+        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
+                      headers={"ETag": '"12345"'})
+
+        timestamp = self.client.get_records_timestamp("foo")
+        assert timestamp == '12345'
+
+        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
+                      headers={"ETag": '"67890"'})
+        timestamp = self.client.get_records_timestamp("foo")
+        assert timestamp == '12345'
+
+        timestamp = self.client.get_records_timestamp("foo", refresh=True)
+        assert timestamp == '67890'
+
     def test_pagination_is_followed(self):
         # Mock the calls to request.
         link = ('http://example.org/buckets/buck/collections/coll/records/'

@@ -301,11 +301,11 @@ class Client(object):
     # Records
 
     def get_records_timestamp(self, collection=None, bucket=None,
-                              **kwargs):
+                              refresh=False, **kwargs):
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)
-        if endpoint not in self._records_timestamp:
+        if endpoint not in self._records_timestamp or refresh:
             record_resp, headers = self.session.request('head', endpoint)
 
             # Save the current records collection timestamp

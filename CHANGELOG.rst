@@ -10,6 +10,7 @@ This document describes changes between each past release.
 **New features**
 
 - Add a ``refresh`` method to force the cache to be refreshed. (#85)
+- Automatically refresh the cache for action changing the record list. (#85)
 
 
 6.1.0 (2016-08-04)

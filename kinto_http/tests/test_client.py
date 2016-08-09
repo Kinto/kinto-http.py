@@ -429,6 +429,40 @@ class RecordTest(unittest.TestCase):
             session=self.session, bucket='mybucket',
             collection='mycollection')
 
+    def test_create_record_refresh_records_timestamp(self):
+        mock_response(self.session)
+        self.client._records_timestamp = mock.sentinel.records_timestamp
+        self.client.create_record({'foo': 'bar'})
+        assert self.client._records_timestamp == {}
+
+    def test_update_record_refresh_records_timestamp(self):
+        mock_response(self.session)
+        self.client._records_timestamp = mock.sentinel.records_timestamp
+        self.client.update_record(data={'id': '1234'},
+                                  collection='good_collection',
+                                  permissions=mock.sentinel.permissions)
+        assert self.client._records_timestamp == {}
+
+    def test_patch_record_refresh_records_timestamp(self):
+        mock_response(self.session)
+        self.client._records_timestamp = mock.sentinel.records_timestamp
+        self.client.patch_record(data={'id': '1234'},
+                                 collection='good_collection',
+                                 permissions=mock.sentinel.permissions)
+        assert self.client._records_timestamp == {}
+
+    def test_delete_record_refresh_records_timestamp(self):
+        mock_response(self.session)
+        self.client._records_timestamp = mock.sentinel.records_timestamp
+        self.client.delete_record('1234')
+        assert self.client._records_timestamp == {}
+
+    def test_delete_records_refresh_records_timestamp(self):
+        mock_response(self.session)
+        self.client._records_timestamp = mock.sentinel.records_timestamp
+        self.client.delete_records('1234')
+        assert self.client._records_timestamp == {}
+
     def test_record_id_is_given_after_creation(self):
         mock_response(self.session, data={'id': 5678})
         record = self.client.create_record({'foo': 'bar'})

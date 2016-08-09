@@ -575,7 +575,8 @@ class RecordTest(unittest.TestCase):
         timestamp = self.client.get_records_timestamp("foo")
         assert timestamp == '12345'
 
-        timestamp = self.client.get_records_timestamp("foo", refresh=True)
+        self.client.refresh()
+        timestamp = self.client.get_records_timestamp("foo")
         assert timestamp == '67890'
 
     def test_pagination_is_followed(self):

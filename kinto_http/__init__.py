@@ -300,12 +300,9 @@ class Client(object):
 
     # Records
 
-    def refresh(self, collection=None, bucket=None):
+    def refresh(self):
         """Invalidate the cache for the collection."""
-        endpoint = self.get_endpoint('records',
-                                     bucket=bucket,
-                                     collection=collection)
-        self._records_timestamp.pop(endpoint, None)
+        self._records_timestamp = {}
 
     def get_records_timestamp(self, collection=None, bucket=None, **kwargs):
         endpoint = self.get_endpoint('records',
@@ -363,7 +360,7 @@ class Client(object):
                 e = KintoException(msg, e)
             raise e
 
-        self.refresh(collection, bucket)
+        self.refresh()
         return resp
 
     def update_record(self, data, id=None, collection=None, permissions=None,
@@ -379,7 +376,7 @@ class Client(object):
         resp, _ = self.session.request(method, endpoint, data=data,
                                        headers=headers,
                                        permissions=permissions)
-        self.refresh(collection, bucket)
+        self.refresh()
         return resp
 
     def patch_record(self, *args, **kwargs):
@@ -393,7 +390,7 @@ class Client(object):
                                      collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
-        self.refresh(collection, bucket)
+        self.refresh()
         return resp['data']
 
     def delete_records(self, collection=None, bucket=None,
@@ -403,7 +400,7 @@ class Client(object):
                                      collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
-        self.refresh(collection, bucket)
+        self.refresh()
         return resp['data']
 
     def __repr__(self):

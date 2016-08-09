@@ -60,7 +60,7 @@ def refresh_cache(f):
     @functools.wraps(f)
     def wraps(self, *args, **kwargs):
         self.refresh()
-        f(self, *args, **kwargs)
+        return f(self, *args, **kwargs)
     return wraps
 
 

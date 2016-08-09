@@ -163,8 +163,8 @@ A record is a dict with the "permissions" and "data" keys.
     records_timestamp = client.get_records_timestamp(collection='todos', bucket='default')
 
     # Retrieve records timestamp and refresh its value.
-    records_timestamp = client.get_records_timestamp(collection='todos', bucket='default',
-	                                                 refresh=True)
+    client.refresh(collection='todos', bucket='default')
+    records_timestamp = client.get_records_timestamp()
 
     # Retrieve a specific record and update it.
     record = client.get_record('89881454-e4e9-4ef0-99a9-404d95900352',

@@ -299,6 +299,11 @@ class Client(object):
         return resp['data']
 
     # Records
+    def clear_records_timestamp_cache(self, collection=None, bucket=None):
+        endpoint = self.get_endpoint('records',
+                                     bucket=bucket,
+                                     collection=collection)
+        self._records_timestamp.pop(endpoint, None)
 
     def get_records_timestamp(self, collection=None, bucket=None,
                               refresh=False, **kwargs):
@@ -357,6 +362,7 @@ class Client(object):
                 e = KintoException(msg, e)
             raise e
 
+        self.clear_records_timestamp_cache(collection, bucket)
         return resp
 
     def update_record(self, data, id=None, collection=None, permissions=None,
@@ -372,6 +378,7 @@ class Client(object):
         resp, _ = self.session.request(method, endpoint, data=data,
                                        headers=headers,
                                        permissions=permissions)
+        self.clear_records_timestamp_cache(collection, bucket)
         return resp
 
     def patch_record(self, *args, **kwargs):
@@ -385,6 +392,7 @@ class Client(object):
                                      collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
+        self.clear_records_timestamp_cache(collection, bucket)
         return resp['data']
 
     def delete_records(self, collection=None, bucket=None,
@@ -394,6 +402,7 @@ class Client(object):
                                      collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
+        self.clear_records_timestamp_cache(collection, bucket)
         return resp['data']
 
     def __repr__(self):

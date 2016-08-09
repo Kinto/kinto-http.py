@@ -9,7 +9,7 @@ This document describes changes between each past release.
 
 **New features**
 
-- Allo ``get_records_timestamp`` cache to be refreshed. (#84)
+- Allow ``get_records_timestamp`` cache to be refreshed. (#84)
 
 
 6.1.0 (2016-08-04)

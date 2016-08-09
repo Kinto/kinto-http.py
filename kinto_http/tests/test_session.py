@@ -138,6 +138,14 @@ class SessionTest(unittest.TestCase):
         body, headers = session.request('get', 'https://example.org/test')
         assert body is None
 
+    def test_body_is_none_on_method_head(self):
+        response = mock.MagicMock()
+        response.status_code = 200
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        body, headers = session.request('head', 'https://example.org/test')
+        assert body is None
+
     def test_no_payload_is_sent_on_get_requests(self):
         response = mock.MagicMock()
         response.status_code = 200

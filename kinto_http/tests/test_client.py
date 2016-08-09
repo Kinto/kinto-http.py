@@ -566,14 +566,12 @@ class RecordTest(unittest.TestCase):
         assert timestamp == '67890'
 
     def test_records_timestamp_cache_can_be_refreshed(self):
-        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
-                      headers={"ETag": '"12345"'})
+        mock_response(self.session, headers={"ETag": '"12345"'})
 
         timestamp = self.client.get_records_timestamp("foo")
         assert timestamp == '12345'
 
-        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
-                      headers={"ETag": '"67890"'})
+        mock_response(self.session, headers={"ETag": '"67890"'})
         timestamp = self.client.get_records_timestamp("foo")
         assert timestamp == '12345'
 

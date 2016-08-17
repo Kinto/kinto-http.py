@@ -4,7 +4,7 @@ pytest-cover
 pytest-sugar
 pytest-xdist
 mock
-kinto
+kinto>=4.0.0
 unittest2
 unidecode
 six

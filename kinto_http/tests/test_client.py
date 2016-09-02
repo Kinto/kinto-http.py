@@ -111,7 +111,7 @@ class ClientTest(unittest.TestCase):
 
     def test_client_clone_with_session(self) :
         with self.assertRaises(KintoException) :
-            client_clone = self.client.clone(self.session)
+            client_clone = self.client.clone(self.client.session)
 
 
 class BucketTest(unittest.TestCase):

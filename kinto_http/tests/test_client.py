@@ -101,6 +101,18 @@ class ClientTest(unittest.TestCase):
             bucket="buck")
         assert client._bucket_name == "buck"
 
+    def test_client_clone_with_auth(self) :
+        with self.assertRaises(KintoException) :
+            client = self.clone(auth=("reviewer", ""))
+
+    def test_client_clone_with_server_url(self) :
+        with self.assertRaises(KintoException) :
+            client = self.clone(server_url="https://kinto.notmyidea.org/v1")
+
+    def test_client_clone_with_session(self) :
+        with self.assertRaises(KintoException) :
+            client = self.clone(self.session)
+
 
 class BucketTest(unittest.TestCase):
 

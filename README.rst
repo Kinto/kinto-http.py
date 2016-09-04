@@ -85,7 +85,7 @@ at creation time, so that this value will be used by default.
 Getting server information
 --------------------------
 
-You can use the ``server_info`` method to get the server information::
+You can use the ``server_info`` method to get the server information:
 
 .. code-block:: python
 

@@ -116,6 +116,13 @@ class ClientTest(unittest.TestCase):
     def test_client_clone_with_new_session(self) :
         client_clone = self.client.clone(session="")
 
+    def test_client_clone_with_new_bucket_and_collection(self) :
+        client_clone = self.client.clone(bucket="blah", collection="blah")
+
+    def test_client_clone_with_auth_and_server_url_bucket_and_collection(self) :
+        client_clone = self.client.clone(auth=("reviewer", ""), server_url="https://kinto.notmyidea.org/v1", bucket="blah", collection="blah")
+
+
 class BucketTest(unittest.TestCase):
 
     def setUp(self):

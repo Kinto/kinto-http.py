@@ -60,21 +60,27 @@ class Client(object):
     def __init__(self, server_url=None, session=None, auth=None,
                  bucket="default", collection=None, retry=0, retry_after=None):
         self.endpoints = Endpoints()
-        self.session_kwargs = dict(server_url=server_url,
-                                   auth=auth,
-                                   session=session,
-                                   retry=retry,
-                                   retry_after=retry_after)
-        self.session = create_session(**self.session_kwargs)
+        session_kwargs = dict(server_url=server_url,
+                              auth=auth,
+                              session=session,
+                              retry=retry,
+                              retry_after=retry_after)
+        self.session = create_session(**session_kwargs)
         self._bucket_name = bucket
         self._collection_name = collection
         self._server_settings = None
         self._records_timestamp = {}
 
     def clone(self, **kwargs):
-        kwargs.setdefault('session', self.session)
+        if 'server_url' in kwargs or 'auth' in kwargs:
+            kwargs.setdefault('server_url', self.session.server_url)
+            kwargs.setdefault('auth', self.session.auth)
+        else:
+            kwargs.setdefault('session', self.session)
         kwargs.setdefault('bucket', self._bucket_name)
         kwargs.setdefault('collection', self._collection_name)
+        kwargs.setdefault('retry', self.session.nb_retry)
+        kwargs.setdefault('retry_after', self.session.retry_after)
         return Client(**kwargs)
 
     @contextmanager

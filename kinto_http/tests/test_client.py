@@ -5,6 +5,7 @@ from .support import unittest, mock_response, build_response, get_http_error
 
 from kinto_http import (KintoException, BucketNotFound, Client,
                         DO_NOT_OVERWRITE)
+from kinto_http.session import create_session
 
 
 class ClientTest(unittest.TestCase):
@@ -102,33 +103,86 @@ class ClientTest(unittest.TestCase):
             bucket="buck")
         assert client._bucket_name == "buck"
 
-    def test_client_clone_with_auth(self) :
-        with pytest.raises(AttributeError):
-            client_clone = self.client.clone(auth=("reviewer", ""))
+    def test_client_clone_with_auth(self):
+        client_clone = self.client.clone(auth=("reviewer", ""))
+        assert client_clone.session.auth == ("reviewer", "")
+        assert self.client.session != client_clone.session
+        assert self.client.session.server_url == client_clone.session.server_url
+        assert self.client.session.auth != client_clone.session.auth
+        assert self.client.session.nb_retry == client_clone.session.nb_retry
+        assert self.client.session.retry_after == client_clone.session.retry_after
+        assert self.client._bucket_name == client_clone._bucket_name
+        assert self.client._collection_name == client_clone._collection_name
 
-    def test_client_clone_with_server_url(self) :
-        with pytest.raises(AttributeError):
-            client_clone = self.client.clone(server_url="https://kinto.notmyidea.org/v1")
+    def test_client_clone_with_server_url(self):
+        client_clone = self.client.clone(server_url="https://kinto.notmyidea.org/v1")
+        assert client_clone.session.server_url == "https://kinto.notmyidea.org/v1"
+        assert self.client.session != client_clone.session
+        assert self.client.session.server_url != client_clone.session.server_url
+        assert self.client.session.auth == client_clone.session.auth
+        assert self.client.session.nb_retry == client_clone.session.nb_retry
+        assert self.client.session.retry_after == client_clone.session.retry_after
+        assert self.client._bucket_name == client_clone._bucket_name
+        assert self.client._collection_name == client_clone._collection_name
 
-    def test_client_clone_with_existing_session(self) :
-        with pytest.raises(AttributeError):
-            client_clone = self.client.clone(session=self.client.session)
+    def test_client_clone_with_new_session(self):
+        session = create_session(auth=("reviewer", ""),
+                                 server_url="https://kinto.notmyidea.org/v1")
+        client_clone = self.client.clone(session=session)
+        assert client_clone.session == session
+        assert self.client.session != client_clone.session
+        assert self.client.session.server_url != client_clone.session.server_url
+        assert self.client.session.auth != client_clone.session.auth
+        assert self.client._bucket_name == client_clone._bucket_name
+        assert self.client._collection_name == client_clone._collection_name
 
-    def test_client_clone_with_auth_and_server_url(self) :
-        with pytest.raises(AttributeError):
-            client_clone = self.client.clone(auth=("reviewer", ""), server_url="https://kinto.notmyidea.org/v1")
+    def test_client_clone_with_auth_and_server_url(self):
+        client_clone = self.client.clone(auth=("reviewer", ""),
+                                         server_url="https://kinto.notmyidea.org/v1")
+        assert client_clone.session.auth == ("reviewer", "")
+        assert client_clone.session.server_url == "https://kinto.notmyidea.org/v1"
+        assert self.client.session != client_clone.session
+        assert self.client.session.server_url != client_clone.session.server_url
+        assert self.client.session.auth != client_clone.session.auth
+        assert self.client.session.nb_retry == client_clone.session.nb_retry
+        assert self.client.session.retry_after == client_clone.session.retry_after
+        assert self.client._bucket_name == client_clone._bucket_name
+        assert self.client._collection_name == client_clone._collection_name
 
-    def test_client_clone_with_new_session(self) :
-        with pytest.raises(AttributeError):
-            client_clone = self.client.clone(session="")
+    def test_client_clone_with_existing_session(self):
+        client_clone = self.client.clone(session=self.client.session)
+        assert self.client.session == client_clone.session
+        assert self.client.session.server_url == client_clone.session.server_url
+        assert self.client.session.auth == client_clone.session.auth
+        assert self.client._bucket_name == client_clone._bucket_name
+        assert self.client._collection_name == client_clone._collection_name
 
-    def test_client_clone_with_new_bucket_and_collection(self) :
-        with pytest.raises(AttributeError):
-            client_clone = self.client.clone(bucket="blah", collection="blah")
+    def test_client_clone_with_new_bucket_and_collection(self):
+        client_clone = self.client.clone(bucket="bucket_blah", collection="coll_blah")
+        assert self.client.session == client_clone.session
+        assert self.client.session.server_url == client_clone.session.server_url
+        assert self.client.session.auth == client_clone.session.auth
+        assert self.client.session.nb_retry == client_clone.session.nb_retry
+        assert self.client.session.retry_after == client_clone.session.retry_after
+        assert self.client._bucket_name != client_clone._bucket_name
+        assert self.client._collection_name != client_clone._collection_name
+        assert client_clone._bucket_name == "bucket_blah"
+        assert client_clone._collection_name == "coll_blah"
 
-    def test_client_clone_with_auth_and_server_url_bucket_and_collection(self) :
-        with pytest.raises(AttributeError):
-            client_clone = self.client.clone(auth=("reviewer", ""), server_url="https://kinto.notmyidea.org/v1", bucket="blah", collection="blah")
+    def test_client_clone_with_auth_and_server_url_bucket_and_collection(self):
+        client_clone = self.client.clone(auth=("reviewer", ""),
+                                         server_url="https://kinto.notmyidea.org/v1",
+                                         bucket="bucket_blah",
+                                         collection="coll_blah")
+        assert self.client.session != client_clone.session
+        assert self.client.session.server_url != client_clone.session.server_url
+        assert self.client.session.auth != client_clone.session.auth
+        assert self.client._bucket_name != client_clone._bucket_name
+        assert self.client._collection_name != client_clone._collection_name
+        assert client_clone.session.auth == ("reviewer", "")
+        assert client_clone.session.server_url == "https://kinto.notmyidea.org/v1"
+        assert client_clone._bucket_name == "bucket_blah"
+        assert client_clone._collection_name == "coll_blah"
 
 
 class BucketTest(unittest.TestCase):

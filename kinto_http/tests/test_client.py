@@ -1,10 +1,8 @@
 import mock
-import pytest
 from six import text_type
 from .support import unittest, mock_response, build_response, get_http_error
 
-from kinto_http import (KintoException, BucketNotFound, Client,
-                        DO_NOT_OVERWRITE)
+from kinto_http import KintoException, BucketNotFound, Client, DO_NOT_OVERWRITE
 from kinto_http.session import create_session
 
 

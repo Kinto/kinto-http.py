@@ -128,6 +128,18 @@ class FunctionalTest(unittest2.TestCase):
         self.client.delete_collection('payments', bucket='mozilla')
         assert len(self.client.get_collections(bucket='mozilla')) == 0
 
+    def test_collection_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.create_collection('payments', bucket='mozilla')
+        self.client.delete_collection('payments', bucket='mozilla')
+        self.client.delete_collection('payments', bucket='mozilla', if_exists=True)
+
+    def test_collection_deletion_can_still_raise_errors(self):
+        error = KintoException("An error occured")
+        with mock.patch.object(self.client.session, 'request', side_effect=error):
+            with pytest.raises(KintoException):
+                self.client.delete_collection('payments', bucket='mozilla', if_exists=True)
+
     def test_collections_deletion(self):
         self.client.create_bucket('mozilla')
         self.client.create_collection('amo', bucket='mozilla')

@@ -1,8 +1,10 @@
 import os.path
 from six.moves.urllib.parse import urljoin
 
-import unittest2
+import mock
+import pytest
 import requests
+import unittest2
 from six.moves import configparser
 
 from kinto.core import utils as kinto_core_utils
@@ -127,6 +129,18 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_collection('payments', bucket='mozilla')
         self.client.delete_collection('payments', bucket='mozilla')
         assert len(self.client.get_collections(bucket='mozilla')) == 0
+
+    def test_collection_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.create_collection('payments', bucket='mozilla')
+        self.client.delete_collection('payments', bucket='mozilla')
+        self.client.delete_collection('payments', bucket='mozilla', if_exists=True)
+
+    def test_collection_deletion_can_still_raise_errors(self):
+        error = KintoException("An error occured")
+        with mock.patch.object(self.client.session, 'request', side_effect=error):
+            with pytest.raises(KintoException):
+                self.client.delete_collection('payments', bucket='mozilla', if_exists=True)
 
     def test_collections_deletion(self):
         self.client.create_bucket('mozilla')

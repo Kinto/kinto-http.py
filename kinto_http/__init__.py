@@ -171,12 +171,13 @@ class Client(object):
             get_method = getattr(self, 'get_%s' % resource)
             return get_method(**get_kwargs)
 
-    def _delete_if_exists(self, resource, **kwargs) :
-        try :
+    def _delete_if_exists(self, resource, **kwargs):
+        try:
             delete_method = getattr(self, 'delete_%s' % resource)
             return delete_method(**kwargs)
         except KintoException as e:
-            if not hasattr(e, 'response') or e.response.status_code != 404:
+            if not (hasattr(e, 'response') and e.response is not None and
+                    e.response.status_code == 404):
                 raise e
 
     # Server Info
@@ -299,7 +300,7 @@ class Client(object):
 
     def delete_collection(self, collection=None, bucket=None,
                           safe=True, if_match=None, if_exists=False):
-        if if_exists :
+        if if_exists:
             return self._delete_if_exists('collection',
                                           collection=collection,
                                           bucket=bucket,

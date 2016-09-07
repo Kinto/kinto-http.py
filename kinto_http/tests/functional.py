@@ -1,6 +1,8 @@
 import os.path
 from six.moves.urllib.parse import urljoin
 
+import mock
+import pytest
 import unittest2
 import requests
 from six.moves import configparser

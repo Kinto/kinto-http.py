@@ -1,6 +1,8 @@
 import os.path
 from six.moves.urllib.parse import urljoin
 
+import mock
+import pytest
 import unittest2
 import requests
 from six.moves import configparser
@@ -81,11 +83,21 @@ class FunctionalTest(unittest2.TestCase):
         self.client.delete_bucket('mozilla')
         self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
 
+    def test_bucket_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.delete_bucket('mozilla')
+        self.client.delete_bucket('mozilla', if_exists=True)
+
     def test_buckets_deletion(self):
         self.client.create_bucket('mozilla')
         buckets = self.client.delete_buckets()
         assert buckets[0]['id'] == 'mozilla'
         self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
+
+    def test_buckets_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.delete_buckets()
+        self.client.delete_buckets(if_exists=True)
 
     def test_bucket_save(self):
         self.client.create_bucket('mozilla', permissions={'write': ['alexis']})
@@ -128,12 +140,31 @@ class FunctionalTest(unittest2.TestCase):
         self.client.delete_collection('payments', bucket='mozilla')
         assert len(self.client.get_collections(bucket='mozilla')) == 0
 
+    def test_collection_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.create_collection('payments', bucket='mozilla')
+        self.client.delete_collection('payments', bucket='mozilla')
+        self.client.delete_collection('payments', bucket='mozilla', if_exists=True)
+
+    def test_collection_deletion_can_still_raise_errors(self):
+        error = KintoException("An error occured")
+        with mock.patch.object(self.client.session, 'request', side_effect=error):
+            with pytest.raises(KintoException):
+                self.client.delete_collection('payments', bucket='mozilla', if_exists=True)
+
     def test_collections_deletion(self):
         self.client.create_bucket('mozilla')
         self.client.create_collection('amo', bucket='mozilla')
         self.client.create_collection('blocklist', bucket='mozilla')
         self.client.delete_collections(bucket='mozilla')
         assert len(self.client.get_collections(bucket='mozilla')) == 0
+
+    def test_collections_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.create_collection('amo', bucket='mozilla')
+        self.client.create_collection('blocklist', bucket='mozilla')
+        self.client.delete_collections(bucket='mozilla')
+        self.client.delete_collections(bucket='mozilla', if_exists=True)
 
     def test_record_creation_and_retrieval(self):
         client = Client(server_url=self.server_url, auth=self.auth,
@@ -229,6 +260,17 @@ class FunctionalTest(unittest2.TestCase):
         assert deleted['deleted'] is True
         assert len(client.get_records()) == 0
 
+    def test_record_deletion_if_exists(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        record = client.create_record({'foo': 'bar'})
+        deleted = client.delete_record(record['data']['id'])
+        deleted_if_exists = client.delete_record(record['data']['id'], if_exists=True)
+        assert deleted['deleted'] is True
+        assert deleted_if_exists is None
+
     def test_multiple_record_deletion(self):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla', collection='payments')
@@ -237,6 +279,15 @@ class FunctionalTest(unittest2.TestCase):
         client.create_record({'foo': 'bar'})
         client.delete_records()
         assert len(client.get_records()) == 0
+
+    def test_records_deletion_if_exists(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        client.create_record({'foo': 'bar'})
+        client.delete_records()
+        client.delete_records(if_exists=True)
 
     def test_bucket_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')

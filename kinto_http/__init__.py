@@ -171,6 +171,24 @@ class Client(object):
             get_method = getattr(self, 'get_%s' % resource)
             return get_method(**get_kwargs)
 
+    def _delete_if_exists(self, resource, **kwargs):
+        try:
+            delete_method = getattr(self, 'delete_%s' % resource)
+            return delete_method(**kwargs)
+        except KintoException as e:
+            # Should not raise in case of a 404.
+            should_raise = not (hasattr(e, 'response') and
+                                e.response is not None and
+                                e.response.status_code == 404)
+
+            # Should not raise in case of a 403 on a bucket.
+            if should_raise and resource.startswith('bucket'):
+                should_raise = not (hasattr(e, 'response') and
+                                    e.response is not None and
+                                    e.response.status_code == 403)
+            if should_raise:
+                raise e
+
     # Server Info
 
     def server_info(self):
@@ -220,13 +238,22 @@ class Client(object):
             raise BucketNotFound(bucket or self._bucket_name, e)
         return resp
 
-    def delete_bucket(self, bucket=None, safe=True, if_match=None):
+    def delete_bucket(self, bucket=None, safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('bucket',
+                                          bucket=bucket,
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_buckets(self, safe=True, if_match=None):
+    def delete_buckets(self, safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('buckets',
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('buckets')
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
@@ -290,7 +317,13 @@ class Client(object):
         return resp
 
     def delete_collection(self, collection=None, bucket=None,
-                          safe=True, if_match=None):
+                          safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('collection',
+                                          collection=collection,
+                                          bucket=bucket,
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
                                      collection=collection)
@@ -298,7 +331,12 @@ class Client(object):
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_collections(self, bucket=None, safe=True, if_match=None):
+    def delete_collections(self, bucket=None, safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('collections',
+                                          bucket=bucket,
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('collections', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
@@ -385,7 +423,14 @@ class Client(object):
         return self.update_record(*args, **kwargs)
 
     def delete_record(self, id, collection=None, bucket=None,
-                      safe=True, if_match=None):
+                      safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('record',
+                                          id=id,
+                                          collection=collection,
+                                          bucket=bucket,
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,
                                      collection=collection)
@@ -394,7 +439,13 @@ class Client(object):
         return resp['data']
 
     def delete_records(self, collection=None, bucket=None,
-                       safe=True, if_match=None):
+                       safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('records',
+                                          collection=collection,
+                                          bucket=bucket,
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)

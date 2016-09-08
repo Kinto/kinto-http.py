@@ -4,10 +4,15 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-6.2.0 (unreleased)
+6.2.1 (2016-09-08)
 ==================
 
-- Nothing changed yet.
+**New features**
+
+- Add a ``if_exists`` flag to delete methods to avoid raising if the
+  item was already deleted. (#82)
+- Improving the ``clone`` method to keep all the previous parameters values
+  if missing as parameters. (#91)
 
 
 6.1.0 (2016-08-04)

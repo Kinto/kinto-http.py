@@ -35,7 +35,7 @@ test_requirements = [
 ]
 
 setup(name='kinto-http',
-      version='6.2.1',
+      version='6.3.0.dev0',
       description='Kinto client',
       long_description=README,
       license='Apache License (2.0)',

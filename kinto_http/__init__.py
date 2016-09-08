@@ -230,12 +230,21 @@ class Client(object):
         return resp
 
     def delete_bucket(self, bucket=None, safe=True, if_match=None):
+        # if if_exists:
+        #     return self._delete_if_exists('bucket',
+        #                                   bucket=bucket,
+        #                                   safe=safe,
+        #                                   if_match=if_match)
         endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_buckets(self, safe=True, if_match=None):
+    def delete_buckets(self, safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('buckets',
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('buckets')
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)

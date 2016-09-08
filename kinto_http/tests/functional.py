@@ -83,11 +83,21 @@ class FunctionalTest(unittest2.TestCase):
         self.client.delete_bucket('mozilla')
         self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
 
+    # def test_bucket_deletion_if_exists(self):
+    #     self.client.create_bucket('mozilla')
+    #     self.client.delete_bucket('mozilla')
+    #     self.client.delete_bucket('mozilla', if_exists=True)
+
     def test_buckets_deletion(self):
         self.client.create_bucket('mozilla')
         buckets = self.client.delete_buckets()
         assert buckets[0]['id'] == 'mozilla'
         self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
+
+    def test_buckets_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.delete_buckets()
+        self.client.delete_buckets(if_exists=True)
 
     def test_bucket_save(self):
         self.client.create_bucket('mozilla', permissions={'write': ['alexis']})

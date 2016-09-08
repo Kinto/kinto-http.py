@@ -313,7 +313,12 @@ class Client(object):
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_collections(self, bucket=None, safe=True, if_match=None):
+    def delete_collections(self, bucket=None, safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('collections',
+                                          bucket=bucket,
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('collections', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)

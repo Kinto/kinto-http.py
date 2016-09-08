@@ -149,6 +149,13 @@ class FunctionalTest(unittest2.TestCase):
         self.client.delete_collections(bucket='mozilla')
         assert len(self.client.get_collections(bucket='mozilla')) == 0
 
+    def test_collections_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.create_collection('amo', bucket='mozilla')
+        self.client.create_collection('blocklist', bucket='mozilla')
+        self.client.delete_collections(bucket='mozilla')
+        self.client.delete_collections(bucket='mozilla', if_exists=True)
+
     def test_record_creation_and_retrieval(self):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla', collection='payments')

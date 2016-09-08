@@ -405,7 +405,14 @@ class Client(object):
         return self.update_record(*args, **kwargs)
 
     def delete_record(self, id, collection=None, bucket=None,
-                      safe=True, if_match=None):
+                      safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('record',
+                                          id=id,
+                                          collection=collection,
+                                          bucket=bucket,
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,
                                      collection=collection)
@@ -414,7 +421,13 @@ class Client(object):
         return resp['data']
 
     def delete_records(self, collection=None, bucket=None,
-                       safe=True, if_match=None):
+                       safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('records',
+                                          collection=collection,
+                                          bucket=bucket,
+                                          safe=safe,
+                                          if_match=if_match)
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)

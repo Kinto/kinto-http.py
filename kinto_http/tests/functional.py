@@ -250,6 +250,17 @@ class FunctionalTest(unittest2.TestCase):
         assert deleted['deleted'] is True
         assert len(client.get_records()) == 0
 
+    def test_record_deletion_if_exists(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        record = client.create_record({'foo': 'bar'})
+        deleted = client.delete_record(record['data']['id'])
+        deleted_if_exists = client.delete_record(record['data']['id'], if_exists=True)
+        assert deleted['deleted'] is True
+        assert deleted_if_exists is None
+
     def test_multiple_record_deletion(self):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla', collection='payments')
@@ -258,6 +269,15 @@ class FunctionalTest(unittest2.TestCase):
         client.create_record({'foo': 'bar'})
         client.delete_records()
         assert len(client.get_records()) == 0
+
+    def test_records_deletion_if_exists(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        client.create_record({'foo': 'bar'})
+        client.delete_records()
+        client.delete_records(if_exists=True)
 
     def test_bucket_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')

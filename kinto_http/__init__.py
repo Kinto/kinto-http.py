@@ -229,7 +229,7 @@ class Client(object):
             raise BucketNotFound(bucket or self._bucket_name, e)
         return resp
 
-    def delete_bucket(self, bucket=None, safe=True, if_match=None):
+    def delete_bucket(self, bucket=None, safe=True, if_match=None, if_exists=False):
         if if_exists:
             return self._delete_if_exists('bucket',
                                           bucket=bucket,

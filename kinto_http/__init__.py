@@ -176,8 +176,17 @@ class Client(object):
             delete_method = getattr(self, 'delete_%s' % resource)
             return delete_method(**kwargs)
         except KintoException as e:
-            if not (hasattr(e, 'response') and e.response is not None and
-                    e.response.status_code == 404):
+            # Should not raise in case of a 404.
+            should_raise = not (hasattr(e, 'response') and
+                                e.response is not None and
+                                e.response.status_code == 404)
+
+            # Should not raise in case of a 403 on a bucket.
+            if should_raise and resource.startswith('bucket'):
+                should_raise = not (hasattr(e, 'response') and
+                                    e.response is not None and
+                                    e.response.status_code == 403)
+            if should_raise:
                 raise e
 
     # Server Info

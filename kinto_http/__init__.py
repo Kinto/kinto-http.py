@@ -116,7 +116,7 @@ class Client(object):
         kwargs = {
             'bucket': bucket or self._bucket_name,
             'collection': collection or self._collection_name,
-            'group' : group or self._group_name,
+            'group': group or self._group_name,
             'id': id
         }
         return self.endpoints.get(name, **kwargs)

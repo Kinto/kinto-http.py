@@ -82,6 +82,7 @@ class Client(object):
             kwargs.setdefault('session', self.session)
         kwargs.setdefault('bucket', self._bucket_name)
         kwargs.setdefault('collection', self._collection_name)
+        kwargs.setdefault('group', self._group_name)
         kwargs.setdefault('retry', self.session.nb_retry)
         kwargs.setdefault('retry_after', self.session.retry_after)
         return Client(**kwargs)

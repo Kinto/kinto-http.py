@@ -32,8 +32,6 @@ class Endpoints(object):
         'batch':        '{root}/batch',
         'buckets':      '{root}/buckets',
         'bucket':       '{root}/buckets/{bucket}',
-        'groups':       '{root}/buckets/{bucket}/groups',
-        'group':        '{root}/buckets/{bucket}/groups/{group}',
         'collections':  '{root}/buckets/{bucket}/collections',
         'collection':   '{root}/buckets/{bucket}/collections/{collection}',
         'records':      '{root}/buckets/{bucket}/collections/{collection}/records',      # NOQA
@@ -60,7 +58,7 @@ class Endpoints(object):
 class Client(object):
 
     def __init__(self, server_url=None, session=None, auth=None,
-                 bucket="default", group=None, collection=None, retry=0, retry_after=None):
+                 bucket="default", collection=None, retry=0, retry_after=None):
         self.endpoints = Endpoints()
         session_kwargs = dict(server_url=server_url,
                               auth=auth,
@@ -69,7 +67,6 @@ class Client(object):
                               retry_after=retry_after)
         self.session = create_session(**session_kwargs)
         self._bucket_name = bucket
-        self._group_name = group
         self._collection_name = collection
         self._server_settings = None
         self._records_timestamp = {}
@@ -100,22 +97,17 @@ class Client(object):
         batch_session.send()
         batch_session.reset()
 
-    def get_endpoint(self, name, bucket=None, collection=None, group=None, id=None):
+    def get_endpoint(self, name, bucket=None, collection=None, id=None):
         """Return the endpoint with named parameters.
-
            Please always use the method as if it was defined like this:
-
                get_endpoint(self, name, *,
                             bucket=None, collection=None, id=None)
-
            Meaning that bucket, collection and id should always be
            named parameters.
-
         """
         kwargs = {
             'bucket': bucket or self._bucket_name,
             'collection': collection or self._collection_name,
-            'group' : group or self._group_name,
             'id': id
         }
         return self.endpoints.get(name, **kwargs)
@@ -164,16 +156,13 @@ class Client(object):
             # The exception contains the existing record in details.existing
             # but it's not enough as we also need to return the permissions.
             get_kwargs = {}
-            if resource in('bucket', 'group', 'collection', 'record'):
+            if resource in('bucket', 'collection', 'record'):
                 get_kwargs['bucket'] = kwargs['bucket']
-            if resource == 'group':
-                get_kwargs['group'] = kwargs['group']
-            else :
-                if resource in ('collection', 'record'):
-                    get_kwargs['collection'] = kwargs['collection']
-                if resource == 'record':
-                    _id = kwargs.get('id') or kwargs['data']['id']
-                    get_kwargs['id'] = _id
+            if resource in ('collection', 'record'):
+                get_kwargs['collection'] = kwargs['collection']
+            if resource == 'record':
+                _id = kwargs.get('id') or kwargs['data']['id']
+                get_kwargs['id'] = _id
 
             get_method = getattr(self, 'get_%s' % resource)
             return get_method(**get_kwargs)
@@ -262,89 +251,6 @@ class Client(object):
                                           safe=safe,
                                           if_match=if_match)
         endpoint = self.get_endpoint('buckets')
-        headers = self._get_cache_headers(safe, if_match=if_match)
-        resp, _ = self.session.request('delete', endpoint, headers=headers)
-        return resp['data']
-
-    # Groups
-
-    def get_groups(self, bucket=None):
-        endpoint = self.get_endpoint('groups', bucket=bucket)
-        return self._paginated(endpoint)
-
-    def create_group(self, group=None, bucket=None,
-                          data=None, permissions=None, safe=True,
-                          if_not_exists=False):
-        if if_not_exists:
-            return self._create_if_not_exists('group',
-                                              group=group,
-                                              bucket=bucket,
-                                              data=data,
-                                              permissions=permissions,
-                                              safe=safe)
-        headers = DO_NOT_OVERWRITE if safe else None
-        endpoint = self.get_endpoint('group',
-                                     bucket=bucket,
-                                     group=group)
-        try:
-            resp, _ = self.session.request('put', endpoint, data=data,
-                                           permissions=permissions,
-                                           headers=headers)
-        except KintoException as e:
-            if e.response.status_code == 403:
-                msg = ("Unauthorized. Please check that the bucket exists and "
-                       "that you have the permission to create or write on "
-                       "this group.")
-                e = KintoException(msg, e)
-            raise e
-
-        return resp
-
-    def update_group(self, data=None, group=None, bucket=None,
-                          permissions=None, method='put',
-                          safe=True, if_match=None):
-        endpoint = self.get_endpoint('group',
-                                     bucket=bucket,
-                                     group=group)
-        headers = self._get_cache_headers(safe, data, if_match)
-        resp, _ = self.session.request(method, endpoint, data=data,
-                                       permissions=permissions,
-                                       headers=headers)
-        return resp
-
-    def patch_group(self, *args, **kwargs):
-        kwargs['method'] = 'patch'
-        return self.update_group(*args, **kwargs)
-
-    def get_group(self, group=None, bucket=None):
-        endpoint = self.get_endpoint('group',
-                                     bucket=bucket,
-                                     group=group)
-        resp, _ = self.session.request('get', endpoint)
-        return resp
-
-    def delete_group(self, group=None, bucket=None,
-                          safe=True, if_match=None, if_exists=False):
-        if if_exists:
-            return self._delete_if_exists('group',
-                                          group=group,
-                                          bucket=bucket,
-                                          safe=safe,
-                                          if_match=if_match)
-        endpoint = self.get_endpoint('group',
-                                     bucket=bucket,
-                                     group=group)
-        headers = self._get_cache_headers(safe, if_match=if_match)
-        resp, _ = self.session.request('delete', endpoint, headers=headers)
-        return resp['data']
-
-    def delete_groups(self, bucket=None, safe=True, if_match=None, if_exists=False):
-        if if_exists:
-            return self._delete_if_exists('groups',
-                                          bucket=bucket,
-                                          safe=safe,
-                                          if_match=if_match)
-        endpoint = self.get_endpoint('groups', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
@@ -550,4 +456,4 @@ class Client(object):
             collection=self._collection_name
         )
         absolute_endpoint = utils.urljoin(self.session.server_url, endpoint)
-        return "<KintoClient %s>" % absolute_endpoint
+return "<KintoClient %s>" % absolute_endpoint

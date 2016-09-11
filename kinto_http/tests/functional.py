@@ -119,16 +119,19 @@ class FunctionalTest(unittest2.TestCase):
     def test_group_creation_if_not_exists(self):
         self.client.create_bucket('mozilla')
         self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
-        self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, if_not_exists=True)
+        self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, 
+                                 if_not_exists=True)
 
     def test_group_creation_if_bucket_does_not_exist(self):
         with pytest.raises(KintoException):
             self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
-            self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, if_not_exists=True)
+            self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, 
+                                     if_not_exists=True)
 
     def test_group_updation(self):
         self.client.create_bucket('mozilla')
-        group = self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, if_not_exists=True)
+        group = self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, 
+                                         if_not_exists=True)
         assert group['data']['members'][0] == 'blah'
         group = self.client.update_group(data={'members': ['blah', 'foo']}, group='payments', bucket='mozilla')
         assert len(group['data']['members']) == 2
@@ -200,7 +203,6 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('mozilla')
         self.client.create_collection('receipts', bucket='mozilla')
         self.client.create_collection('assets', bucket='mozilla')
-
         # The returned collections should be strings.
         collections = self.client.get_collections('mozilla')
         self.assertEquals(2, len(collections))
@@ -379,8 +381,7 @@ class FunctionalTest(unittest2.TestCase):
                         bucket='mozilla', group='payments')
         client.create_bucket()
         client.create_group(data={'members': ['blah', ]})
-
-        client.patch_group(data={'secret': 'psssssst!','members': ['blah', ]})
+        client.patch_group(data={'secret': 'psssssst!', 'members': ['blah', ]})
         group = client.get_group()
         assert group['data']['secret'] == 'psssssst!'
 

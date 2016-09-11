@@ -274,8 +274,8 @@ class Client(object):
         return self._paginated(endpoint)
 
     def create_group(self, group=None, bucket=None,
-                          data=None, permissions=None, safe=True,
-                          if_not_exists=False):
+                     data=None, permissions=None, safe=True,
+                     if_not_exists=False):
         if if_not_exists:
             return self._create_if_not_exists('group',
                                               group=group,
@@ -302,8 +302,8 @@ class Client(object):
         return resp
 
     def update_group(self, data=None, group=None, bucket=None,
-                          permissions=None, method='put',
-                          safe=True, if_match=None):
+                     permissions=None, method='put',
+                     safe=True, if_match=None):
         endpoint = self.get_endpoint('group',
                                      bucket=bucket,
                                      group=group)
@@ -325,7 +325,7 @@ class Client(object):
         return resp
 
     def delete_group(self, group=None, bucket=None,
-                          safe=True, if_match=None, if_exists=False):
+                     safe=True, if_match=None, if_exists=False):
         if if_exists:
             return self._delete_if_exists('group',
                                           group=group,

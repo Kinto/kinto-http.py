@@ -25,7 +25,6 @@ class FunctionalTest(unittest2.TestCase):
         # XXX Read the configuration from env variables.
         self.server_url = SERVER_URL
         self.auth = DEFAULT_AUTH
-
         # Read the configuration.
         self.config = configparser.RawConfigParser()
         self.config.read(os.path.join(__HERE__, 'config/kinto.ini'))
@@ -120,20 +119,22 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('mozilla')
         self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
         self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, 
-                                 if_not_exists=True)
+                                if_not_exists=True)
 
     def test_group_creation_if_bucket_does_not_exist(self):
         with pytest.raises(KintoException):
             self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
-            self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, 
-                                     if_not_exists=True)
+            self.client.create_group('payments', bucket='mozilla', 
+                                    data={'members': ['blah', ]}, 
+                                    if_not_exists=True)
 
     def test_group_updation(self):
         self.client.create_bucket('mozilla')
         group = self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, 
-                                         if_not_exists=True)
+                                        if_not_exists=True)
         assert group['data']['members'][0] == 'blah'
-        group = self.client.update_group(data={'members': ['blah', 'foo']}, group='payments', bucket='mozilla')
+        group = self.client.update_group(data={'members': ['blah', 'foo']}, 
+                                        group='payments', bucket='mozilla')
         assert len(group['data']['members']) == 2
         assert group['data']['members'][1] == 'foo'
         
@@ -141,7 +142,6 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('mozilla')
         self.client.create_group('receipts', bucket='mozilla', data={'members': ['blah', ]})
         self.client.create_group('assets', bucket='mozilla', data={'members': ['blah', ]})
-
         # The returned groups should be strings.
         groups = self.client.get_groups('mozilla')
         self.assertEquals(2, len(groups))
@@ -206,7 +206,6 @@ class FunctionalTest(unittest2.TestCase):
         # The returned collections should be strings.
         collections = self.client.get_collections('mozilla')
         self.assertEquals(2, len(collections))
-
         self.assertEquals(set([coll['id'] for coll in collections]),
                           set(['receipts', 'assets']))
 
@@ -282,10 +281,8 @@ class FunctionalTest(unittest2.TestCase):
         created = client.create_record(data={'foo': 'bar'},
                                        permissions={'read': ['alexis']})
         created['data']['bar'] = 'baz'
-
         # XXX enhance this in order to have to pass only one argument, created.
         client.update_record(id=created['data']['id'], data=created['data'])
-
         retrieved = client.get_record(created['data']['id'])
         assert 'alexis' in retrieved['permissions']['read']
         assert retrieved['data']['foo'] == u'bar'
@@ -299,7 +296,6 @@ class FunctionalTest(unittest2.TestCase):
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
                                        permissions={'read': ['alexis']})
-
         with self.assertRaises(KintoException):
             # Create a second record with the ID of the first one.
             client.create_record(data={'id': created['data']['id'],
@@ -367,11 +363,9 @@ class FunctionalTest(unittest2.TestCase):
     def test_bucket_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)
-
         # Create a bucket and share it with alice.
         self.client.create_bucket('shared-bucket',
                                   permissions={'read': [alice_userid, ]})
-
         alice_client = Client(server_url=self.server_url,
                               auth=alice_credentials)
         alice_client.get_bucket('shared-bucket')
@@ -390,7 +384,6 @@ class FunctionalTest(unittest2.TestCase):
                         bucket='mozilla', collection='payments')
         client.create_bucket()
         client.create_collection()
-
         client.patch_collection(data={'secret': 'psssssst!'})
         collection = client.get_collection()
         assert collection['data']['secret'] == 'psssssst!'
@@ -398,13 +391,11 @@ class FunctionalTest(unittest2.TestCase):
     def test_collection_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)
-
         self.client.create_bucket('bob-bucket')
         self.client.create_collection(
             'shared',
             bucket='bob-bucket',
             permissions={'read': [alice_userid, ]})
-
         # Try to read the collection as Alice.
         alice_client = Client(server_url=self.server_url,
                               auth=alice_credentials)
@@ -413,7 +404,6 @@ class FunctionalTest(unittest2.TestCase):
     def test_record_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)
-
         # Create a record, and share it with Alice.
         self.client.create_bucket('bob-bucket')
         self.client.create_collection('bob-personal-collection',
@@ -423,7 +413,6 @@ class FunctionalTest(unittest2.TestCase):
             permissions={'read': [alice_userid, ]},
             bucket='bob-bucket',
             collection='bob-personal-collection')
-
         # Try to read the record as Alice
         alice_client = Client(server_url=self.server_url,
                               auth=alice_credentials)
@@ -431,7 +420,6 @@ class FunctionalTest(unittest2.TestCase):
             id=record['data']['id'],
             bucket='bob-bucket',
             collection='bob-personal-collection')
-
         assert record['data']['foo'] == 'bar'
 
     def test_request_batching(self):
@@ -442,7 +430,6 @@ class FunctionalTest(unittest2.TestCase):
                                 permissions={'read': ['natim']})
             batch.create_record(data={'bar': 'baz'},
                                 permissions={'read': ['alexis']})
-
         records = self.client.get_records(bucket='mozilla', collection='fonts')
         assert len(records) == 2
 

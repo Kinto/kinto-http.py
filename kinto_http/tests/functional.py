@@ -118,23 +118,26 @@ class FunctionalTest(unittest2.TestCase):
     def test_group_creation_if_not_exists(self):
         self.client.create_bucket('mozilla')
         self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
-        self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, 
-                                if_not_exists=True)
+        self.client.create_group('payments', bucket='mozilla', 
+                                 data={'members': ['blah', ]}, 
+                                 if_not_exists=True)
 
     def test_group_creation_if_bucket_does_not_exist(self):
         with pytest.raises(KintoException):
-            self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
             self.client.create_group('payments', bucket='mozilla', 
-                                    data={'members': ['blah', ]}, 
-                                    if_not_exists=True)
+                                     data={'members': ['blah', ]})
+            self.client.create_group('payments', bucket='mozilla', 
+                                     data={'members': ['blah', ]}, 
+                                     if_not_exists=True)
 
     def test_group_updation(self):
         self.client.create_bucket('mozilla')
-        group = self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, 
-                                        if_not_exists=True)
+        group = self.client.create_group('payments', bucket='mozilla', 
+                                         data={'members': ['blah', ]}, 
+                                         if_not_exists=True)
         assert group['data']['members'][0] == 'blah'
         group = self.client.update_group(data={'members': ['blah', 'foo']}, 
-                                        group='payments', bucket='mozilla')
+                                         group='payments', bucket='mozilla')
         assert len(group['data']['members']) == 2
         assert group['data']['members'][1] == 'foo'
         

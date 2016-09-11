@@ -121,6 +121,19 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
         self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, if_not_exists=True)
 
+    def test_group_creation_if_bucket_does_not_exist(self):
+        with pytest.raises(KintoException):
+            self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
+            self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, if_not_exists=True)
+
+    def test_group_updation(self):
+        self.client.create_bucket('mozilla')
+        group = self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]}, if_not_exists=True)
+        assert group['data']['members'][0] == 'blah'
+        group = self.client.update_group(data={'members': ['blah', 'foo']}, group='payments', bucket='mozilla')
+        assert len(group['data']['members']) == 2
+        assert group['data']['members'][1] == 'foo'
+        
     def test_group_list(self):
         self.client.create_bucket('mozilla')
         self.client.create_group('receipts', bucket='mozilla', data={'members': ['blah', ]})
@@ -157,6 +170,13 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_group('blocklist', bucket='mozilla', data={'members': ['blah', ]})
         self.client.delete_groups(bucket='mozilla')
         assert len(self.client.get_groups(bucket='mozilla')) == 0
+
+    def test_groups_deletion_if_exists(self):
+        self.client.create_bucket('mozilla')
+        self.client.create_group('amo', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.create_group('blocklist', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.delete_groups(bucket='mozilla')
+        self.client.delete_groups(bucket='mozilla', if_exists=True)
 
     def test_collection_creation(self):
         self.client.create_bucket('mozilla')
@@ -300,7 +320,6 @@ class FunctionalTest(unittest2.TestCase):
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
                                        permissions={'read': ['alexis']})
-
         client.create_record(data={'id': created['data']['id'],
                                    'bar': 'baz'}, safe=False)
 
@@ -354,6 +373,16 @@ class FunctionalTest(unittest2.TestCase):
         alice_client = Client(server_url=self.server_url,
                               auth=alice_credentials)
         alice_client.get_bucket('shared-bucket')
+
+    def test_updating_data_on_a_group(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', group='payments')
+        client.create_bucket()
+        client.create_group(data={'members': ['blah', ]})
+
+        client.patch_group(data={'secret': 'psssssst!','members': ['blah', ]})
+        group = client.get_group()
+        assert group['data']['secret'] == 'psssssst!'
 
     def test_updating_data_on_a_collection(self):
         client = Client(server_url=self.server_url, auth=self.auth,

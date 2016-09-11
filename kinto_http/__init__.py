@@ -169,7 +169,7 @@ class Client(object):
                 get_kwargs['bucket'] = kwargs['bucket']
             if resource == 'group':
                 get_kwargs['group'] = kwargs['group']
-            else :
+            else:
                 if resource in ('collection', 'record'):
                     get_kwargs['collection'] = kwargs['collection']
                 if resource == 'record':

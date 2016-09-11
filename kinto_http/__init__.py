@@ -60,7 +60,7 @@ class Endpoints(object):
 class Client(object):
 
     def __init__(self, server_url=None, session=None, auth=None,
-                 bucket="default", group=None, collection=None, retry=0, retry_after=None):
+                 bucket="default", collection=None, retry=0, retry_after=None):
         self.endpoints = Endpoints()
         session_kwargs = dict(server_url=server_url,
                               auth=auth,
@@ -69,7 +69,6 @@ class Client(object):
                               retry_after=retry_after)
         self.session = create_session(**session_kwargs)
         self._bucket_name = bucket
-        self._group_name = group
         self._collection_name = collection
         self._server_settings = None
         self._records_timestamp = {}
@@ -82,7 +81,6 @@ class Client(object):
             kwargs.setdefault('session', self.session)
         kwargs.setdefault('bucket', self._bucket_name)
         kwargs.setdefault('collection', self._collection_name)
-        kwargs.setdefault('group', self._group_name)
         kwargs.setdefault('retry', self.session.nb_retry)
         kwargs.setdefault('retry_after', self.session.retry_after)
         return Client(**kwargs)
@@ -101,7 +99,7 @@ class Client(object):
         batch_session.send()
         batch_session.reset()
 
-    def get_endpoint(self, name, bucket=None, collection=None, group=None, id=None):
+    def get_endpoint(self, name, bucket=None, group=None, collection=None, id=None):
         """Return the endpoint with named parameters.
 
            Please always use the method as if it was defined like this:
@@ -116,7 +114,7 @@ class Client(object):
         kwargs = {
             'bucket': bucket or self._bucket_name,
             'collection': collection or self._collection_name,
-            'group': group or self._group_name,
+            'group': group,
             'id': id
         }
         return self.endpoints.get(name, **kwargs)
@@ -169,9 +167,8 @@ class Client(object):
                 get_kwargs['bucket'] = kwargs['bucket']
             if resource == 'group':
                 get_kwargs['group'] = kwargs['group']
-            else:
-                if resource in ('collection', 'record'):
-                    get_kwargs['collection'] = kwargs['collection']
+            elif resource in ('collection', 'record'):
+                get_kwargs['collection'] = kwargs['collection']
                 if resource == 'record':
                     _id = kwargs.get('id') or kwargs['data']['id']
                     get_kwargs['id'] = _id
@@ -273,9 +270,9 @@ class Client(object):
         endpoint = self.get_endpoint('groups', bucket=bucket)
         return self._paginated(endpoint)
 
-    def create_group(self, group=None, bucket=None,
-                     data=None, permissions=None, safe=True,
-                     if_not_exists=False):
+    def create_group(self, group, bucket=None,
+                     data=None, permissions=None,
+                     safe=True, if_not_exists=False):
         if if_not_exists:
             return self._create_if_not_exists('group',
                                               group=group,
@@ -301,7 +298,7 @@ class Client(object):
 
         return resp
 
-    def update_group(self, data=None, group=None, bucket=None,
+    def update_group(self, group, data=None, bucket=None,
                      permissions=None, method='put',
                      safe=True, if_match=None):
         endpoint = self.get_endpoint('group',
@@ -317,15 +314,16 @@ class Client(object):
         kwargs['method'] = 'patch'
         return self.update_group(*args, **kwargs)
 
-    def get_group(self, group=None, bucket=None):
+    def get_group(self, group, bucket=None):
         endpoint = self.get_endpoint('group',
                                      bucket=bucket,
                                      group=group)
         resp, _ = self.session.request('get', endpoint)
         return resp
 
-    def delete_group(self, group=None, bucket=None,
-                     safe=True, if_match=None, if_exists=False):
+    def delete_group(self, group, bucket=None,
+                     safe=True, if_match=None,
+                     if_exists=False):
         if if_exists:
             return self._delete_if_exists('group',
                                           group=group,
@@ -339,12 +337,7 @@ class Client(object):
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_groups(self, bucket=None, safe=True, if_match=None, if_exists=False):
-        if if_exists:
-            return self._delete_if_exists('groups',
-                                          bucket=bucket,
-                                          safe=safe,
-                                          if_match=if_match)
+    def delete_groups(self, bucket=None, safe=True, if_match=None):
         endpoint = self.get_endpoint('groups', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         resp, _ = self.session.request('delete', endpoint, headers=headers)

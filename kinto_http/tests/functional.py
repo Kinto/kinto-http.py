@@ -127,18 +127,18 @@ class FunctionalTest(unittest2.TestCase):
         with pytest.raises(KintoException):
             self.client.create_group(
                 'payments', bucket='mozilla',
-                 data={'members': ['blah', ]})
+                data={'members': ['blah', ]})
             self.client.create_group(
                 'payments', bucket='mozilla',
-                 data={'members': ['blah', ]},
-                 if_not_exists=True)
+                data={'members': ['blah', ]},
+                if_not_exists=True)
 
     def test_group_update(self):
         self.client.create_bucket('mozilla')
         group = self.client.create_group(
                     'payments', bucket='mozilla',
-                     data={'members': ['blah', ]},
-                     if_not_exists=True)
+                    data={'members': ['blah', ]},
+                    if_not_exists=True)
         assert group['data']['members'][0] == 'blah'
         group = self.client.update_group(
                     data={'members': ['blah', 'foo']},

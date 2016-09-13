@@ -11,7 +11,7 @@ Kinto python client
         :target: https://coveralls.io/r/Kinto/kinto-http.py
 
 
-Kinto is a service that allows to store and synchronize arbitrary data,
+Kinto is a service that allows users to store and synchronize arbitrary data,
 attached to a user account. Its primary interface is HTTP.
 
 *kinto-http* is a Python library that eases the interactions with
@@ -33,9 +33,9 @@ Usage
 .. note::
 
     Operations are always performed directly on the server, and no
-    synchronisation features are implemented yet.
+    synchronisation features have been implemented yet.
 
-- The first version of this API doesn't cache any access nor provide any
+- The first version of this API doesn't cache any access nor provides any
   refresh mechanism. If you want to be sure you have the latest data available,
   issue another call.
 
@@ -117,10 +117,28 @@ If no specific bucket name is provided, the "default" bucket is used.
     client.update_bucket('payments', permissions={})
 
     # Or delete a bucket and everything under.
-    client.delete_bucket('payment')
+    client.delete_bucket('payment',if_exists=True)
 
     # Or even every writable buckets.
     client.delete_buckets()
+
+Groups
+------
+
+A group associates a name to a list of principals. It is useful in order to handle permissions. 
+
+.. code-block:: python
+
+    client.create_group('receipts', bucket='payments')
+
+    # Or get an existing one.
+    client.get_group('receipts', bucket='payments')
+
+    # To delete an existing group.
+    client.delete_group('receipts', bucket='payments', if_exists=True)
+
+    # Or all groups in a bucket.
+    client.delete_groups(bucket='payments')
 
 
 Collections
@@ -136,7 +154,7 @@ A collection is where records are stored.
     client.get_collection('receipts', bucket='payments')
 
     # To delete an existing collection.
-    client.delete_collection('receipts', bucket='payments')
+    client.delete_collection('receipts', bucket='payments', if_exists=True)
 
     # Or every collections in a bucket.
     client.delete_collections(bucket='payments')
@@ -172,7 +190,7 @@ A record is a dict with the "permissions" and "data" keys.
 
     # It is also possible to delete a record.
     client.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352',
-                         collection='todos')
+                         collection='todos', if_exists=True)
 
     # Or every records of a collection.
     client.delete_records(collection='todos')
@@ -211,7 +229,7 @@ For instance to give access to "leplatrem" to a specific record, you would do:
 Get or create
 -------------
 
-In some cases, you might want to create a bucket, collection or record only if
+In some cases, you might want to create a bucket, collection, group or record only if
 it doesn't exist already. To do so, you can pass the ``if_not_exists=True``
 to the ``create_*`` methods::
 

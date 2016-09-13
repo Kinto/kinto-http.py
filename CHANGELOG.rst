@@ -7,7 +7,7 @@ This document describes changes between each past release.
 6.3.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Added CRUD methods for the endpoint group. (#87)
 
 
 6.2.1 (2016-09-08)

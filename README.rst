@@ -117,7 +117,7 @@ If no specific bucket name is provided, the "default" bucket is used.
     client.update_bucket('payments', permissions={})
 
     # Or delete a bucket and everything under.
-    client.delete_bucket('payment',if_exists=True)
+    client.delete_bucket('payment')
 
     # Or even every writable buckets.
     client.delete_buckets()
@@ -129,13 +129,13 @@ A group associates a name to a list of principals. It is useful in order to hand
 
 .. code-block:: python
 
-    client.create_group('receipts', bucket='payments')
+    client.create_group('receipts', bucket='payments', data={'members': ['blah', 'foo']})
 
     # Or get an existing one.
-    client.get_group('receipts', bucket='payments')
+    group = client.get_group('receipts', bucket='payments')
 
     # To delete an existing group.
-    client.delete_group('receipts', bucket='payments', if_exists=True)
+    client.delete_group('receipts', bucket='payments')
 
     # Or all groups in a bucket.
     client.delete_groups(bucket='payments')
@@ -151,10 +151,10 @@ A collection is where records are stored.
     client.create_collection('receipts', bucket='payments')
 
     # Or get an existing one.
-    client.get_collection('receipts', bucket='payments')
+    collection = client.get_collection('receipts', bucket='payments')
 
     # To delete an existing collection.
-    client.delete_collection('receipts', bucket='payments', if_exists=True)
+    client.delete_collection('receipts', bucket='payments')
 
     # Or every collections in a bucket.
     client.delete_collections(bucket='payments')
@@ -190,7 +190,7 @@ A record is a dict with the "permissions" and "data" keys.
 
     # It is also possible to delete a record.
     client.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352',
-                         collection='todos', if_exists=True)
+                         collection='todos')
 
     # Or every records of a collection.
     client.delete_records(collection='todos')
@@ -234,6 +234,15 @@ it doesn't exist already. To do so, you can pass the ``if_not_exists=True``
 to the ``create_*`` methods::
 
   client.create_bucket('bucket', if_not_exists=True)
+
+Delete
+------
+
+In some cases, you might want to delete a bucket, collection, group or record only if
+it exists already. To do so, you can pass the ``if_exists=True``
+to the ``delete_*`` methods::
+
+  client.delete_bucket('bucket', if_exists=True)
 
 Overwriting existing objects
 ----------------------------

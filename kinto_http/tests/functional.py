@@ -150,7 +150,6 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('mozilla')
         self.client.create_group('receipts', bucket='mozilla', data={'members': ['blah', ]})
         self.client.create_group('assets', bucket='mozilla', data={'members': ['blah', ]})
-        
         # The returned groups should be strings.
         groups = self.client.get_groups('mozilla')
         self.assertEquals(2, len(groups))
@@ -324,7 +323,6 @@ class FunctionalTest(unittest2.TestCase):
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
                                        permissions={'read': ['alexis']})
-        
         client.create_record(data={'id': created['data']['id'],
                                    'bar': 'baz'}, safe=False)
 

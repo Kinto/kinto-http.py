@@ -94,6 +94,10 @@ class FunctionalTest(unittest2.TestCase):
         assert buckets[0]['id'] == 'mozilla'
         self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
 
+    def test_buckets_deletion_when_no_buckets_exist(self):
+        deleted_buckets = self.client.delete_buckets()
+        assert len(deleted_buckets) == 0
+
     def test_bucket_save(self):
         self.client.create_bucket('mozilla', permissions={'write': ['alexis']})
         bucket = self.client.get_bucket('mozilla')
@@ -175,6 +179,11 @@ class FunctionalTest(unittest2.TestCase):
         self.client.delete_groups(bucket='mozilla')
         assert len(self.client.get_groups(bucket='mozilla')) == 0
 
+    def test_groups_deletion_when_no_groups_exist(self):
+        self.client.create_bucket('mozilla')
+        deleted_groups = self.client.delete_groups(bucket='mozilla')
+        assert len(deleted_groups) == 0
+
     def test_collection_creation(self):
         self.client.create_bucket('mozilla')
         self.client.create_collection(
@@ -229,6 +238,11 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_collection('blocklist', bucket='mozilla')
         self.client.delete_collections(bucket='mozilla')
         assert len(self.client.get_collections(bucket='mozilla')) == 0
+
+    def test_collections_deletion_when_no_collections_exist(self):
+        self.client.create_bucket('mozilla')
+        deleted_collections = self.client.delete_collections(bucket='mozilla')
+        assert len(deleted_collections) == 0
 
     def test_record_creation_and_retrieval(self):
         client = Client(server_url=self.server_url, auth=self.auth,
@@ -343,6 +357,14 @@ class FunctionalTest(unittest2.TestCase):
         client.create_record({'foo': 'bar'})
         client.delete_records()
         assert len(client.get_records()) == 0
+
+    def test_records_deletion_when_no_records_exist(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        deleted_records = client.delete_records()
+        assert len(deleted_records) == 0
 
     def test_bucket_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')

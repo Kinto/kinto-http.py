@@ -11,7 +11,7 @@ Kinto python client
         :target: https://coveralls.io/r/Kinto/kinto-http.py
 
 
-Kinto is a service that allows to store and synchronize arbitrary data,
+Kinto is a service that allows users to store and synchronize arbitrary data,
 attached to a user account. Its primary interface is HTTP.
 
 *kinto-http* is a Python library that eases the interactions with
@@ -33,9 +33,9 @@ Usage
 .. note::
 
     Operations are always performed directly on the server, and no
-    synchronisation features are implemented yet.
+    synchronisation features have been implemented yet.
 
-- The first version of this API doesn't cache any access nor provide any
+- The first version of this API doesn't cache any access nor provides any
   refresh mechanism. If you want to be sure you have the latest data available,
   issue another call.
 
@@ -122,6 +122,24 @@ If no specific bucket name is provided, the "default" bucket is used.
     # Or even every writable buckets.
     client.delete_buckets()
 
+Groups
+------
+
+A group associates a name to a list of principals. It is useful in order to handle permissions. 
+
+.. code-block:: python
+
+    client.create_group('receipts', bucket='payments', data={'members': ['blah', 'foo']})
+
+    # Or get an existing one.
+    group = client.get_group('receipts', bucket='payments')
+
+    # To delete an existing group.
+    client.delete_group('receipts', bucket='payments')
+
+    # Or all groups in a bucket.
+    client.delete_groups(bucket='payments')
+
 
 Collections
 -----------
@@ -133,7 +151,7 @@ A collection is where records are stored.
     client.create_collection('receipts', bucket='payments')
 
     # Or get an existing one.
-    client.get_collection('receipts', bucket='payments')
+    collection = client.get_collection('receipts', bucket='payments')
 
     # To delete an existing collection.
     client.delete_collection('receipts', bucket='payments')
@@ -211,11 +229,20 @@ For instance to give access to "leplatrem" to a specific record, you would do:
 Get or create
 -------------
 
-In some cases, you might want to create a bucket, collection or record only if
+In some cases, you might want to create a bucket, collection, group or record only if
 it doesn't exist already. To do so, you can pass the ``if_not_exists=True``
 to the ``create_*`` methods::
 
   client.create_bucket('bucket', if_not_exists=True)
+
+Delete
+------
+
+In some cases, you might want to delete a bucket, collection, group or record only if
+it exists already. To do so, you can pass the ``if_exists=True``
+to the ``delete_*`` methods::
+
+  client.delete_bucket('bucket', if_exists=True)
 
 Overwriting existing objects
 ----------------------------

@@ -25,6 +25,7 @@ class FunctionalTest(unittest2.TestCase):
         # XXX Read the configuration from env variables.
         self.server_url = SERVER_URL
         self.auth = DEFAULT_AUTH
+
         # Read the configuration.
         self.config = configparser.RawConfigParser()
         self.config.read(os.path.join(__HERE__, 'config/kinto.ini'))
@@ -149,6 +150,7 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('mozilla')
         self.client.create_group('receipts', bucket='mozilla', data={'members': ['blah', ]})
         self.client.create_group('assets', bucket='mozilla', data={'members': ['blah', ]})
+        
         # The returned groups should be strings.
         groups = self.client.get_groups('mozilla')
         self.assertEquals(2, len(groups))
@@ -202,9 +204,11 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('mozilla')
         self.client.create_collection('receipts', bucket='mozilla')
         self.client.create_collection('assets', bucket='mozilla')
+
         # The returned collections should be strings.
         collections = self.client.get_collections('mozilla')
         self.assertEquals(2, len(collections))
+
         self.assertEquals(set([coll['id'] for coll in collections]),
                           set(['receipts', 'assets']))
 
@@ -280,8 +284,10 @@ class FunctionalTest(unittest2.TestCase):
         created = client.create_record(data={'foo': 'bar'},
                                        permissions={'read': ['alexis']})
         created['data']['bar'] = 'baz'
+
         # XXX enhance this in order to have to pass only one argument, created.
         client.update_record(id=created['data']['id'], data=created['data'])
+
         retrieved = client.get_record(created['data']['id'])
         assert 'alexis' in retrieved['permissions']['read']
         assert retrieved['data']['foo'] == u'bar'
@@ -295,6 +301,7 @@ class FunctionalTest(unittest2.TestCase):
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
                                        permissions={'read': ['alexis']})
+
         with self.assertRaises(KintoException):
             # Create a second record with the ID of the first one.
             client.create_record(data={'id': created['data']['id'],
@@ -317,6 +324,7 @@ class FunctionalTest(unittest2.TestCase):
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
                                        permissions={'read': ['alexis']})
+        
         client.create_record(data={'id': created['data']['id'],
                                    'bar': 'baz'}, safe=False)
 
@@ -362,9 +370,11 @@ class FunctionalTest(unittest2.TestCase):
     def test_bucket_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)
+
         # Create a bucket and share it with alice.
         self.client.create_bucket('shared-bucket',
                                   permissions={'read': [alice_userid, ]})
+
         alice_client = Client(server_url=self.server_url,
                               auth=alice_credentials)
         alice_client.get_bucket('shared-bucket')
@@ -374,6 +384,7 @@ class FunctionalTest(unittest2.TestCase):
                         bucket='mozilla')
         client.create_bucket()
         client.create_group('payments', data={'members': []})
+        
         client.patch_group('payments', data={'secret': 'psssssst!'})
         group = client.get_group('payments')
         assert group['data']['secret'] == 'psssssst!'
@@ -406,6 +417,7 @@ class FunctionalTest(unittest2.TestCase):
     def test_record_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')
         alice_userid = self.get_user_id(alice_credentials)
+
         # Create a record, and share it with Alice.
         self.client.create_bucket('bob-bucket')
         self.client.create_collection('bob-personal-collection',

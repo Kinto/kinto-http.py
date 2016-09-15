@@ -110,7 +110,6 @@ class FunctionalTest(unittest2.TestCase):
             'payments', bucket='mozilla',
             data={'members': ['blah', ]},
             permissions={'write': ['blah', ]})
-
         # Test retrieval of a group gets the permissions as well.
         group = self.client.get_group('payments', bucket='mozilla')
         assert 'blah' in group['permissions']['write']
@@ -382,7 +381,6 @@ class FunctionalTest(unittest2.TestCase):
                         bucket='mozilla')
         client.create_bucket()
         client.create_group('payments', data={'members': []})
-        
         client.patch_group('payments', data={'secret': 'psssssst!'})
         group = client.get_group('payments')
         assert group['data']['secret'] == 'psssssst!'

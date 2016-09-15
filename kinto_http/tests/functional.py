@@ -94,11 +94,6 @@ class FunctionalTest(unittest2.TestCase):
         assert buckets[0]['id'] == 'mozilla'
         self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
 
-    def test_buckets_deletion_if_exists(self):
-        self.client.create_bucket('mozilla')
-        self.client.delete_buckets()
-        self.client.delete_buckets(if_exists=True)
-
     def test_bucket_save(self):
         self.client.create_bucket('mozilla', permissions={'write': ['alexis']})
         bucket = self.client.get_bucket('mozilla')
@@ -235,13 +230,6 @@ class FunctionalTest(unittest2.TestCase):
         self.client.delete_collections(bucket='mozilla')
         assert len(self.client.get_collections(bucket='mozilla')) == 0
 
-    def test_collections_deletion_if_exists(self):
-        self.client.create_bucket('mozilla')
-        self.client.create_collection('amo', bucket='mozilla')
-        self.client.create_collection('blocklist', bucket='mozilla')
-        self.client.delete_collections(bucket='mozilla')
-        self.client.delete_collections(bucket='mozilla', if_exists=True)
-
     def test_record_creation_and_retrieval(self):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla', collection='payments')
@@ -355,15 +343,6 @@ class FunctionalTest(unittest2.TestCase):
         client.create_record({'foo': 'bar'})
         client.delete_records()
         assert len(client.get_records()) == 0
-
-    def test_records_deletion_if_exists(self):
-        client = Client(server_url=self.server_url, auth=self.auth,
-                        bucket='mozilla', collection='payments')
-        client.create_bucket()
-        client.create_collection()
-        client.create_record({'foo': 'bar'})
-        client.delete_records()
-        client.delete_records(if_exists=True)
 
     def test_bucket_sharing(self):
         alice_credentials = ('alice', 'p4ssw0rd')

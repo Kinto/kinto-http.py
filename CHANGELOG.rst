@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-6.3.0 (unreleased)
+7.0.0 (2016-09-30)
 ==================
 
 - Added CRUD methods for the endpoint group. (#95)

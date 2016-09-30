@@ -4,10 +4,21 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-6.3.0 (unreleased)
+7.0.0 (2016-09-30)
 ==================
 
-- Added CRUD methods for the endpoint group. (#95)
+**Breaking changes**
+
+- Removed ``if_exists`` argument from the ``delete_*s`` methods for plural endpoints
+  (#98, thanks @mansimarkaur!)
+
+**New features**
+
+- Added CRUD methods for the group endpoints (#95, thanks @mansimarkaur!)
+
+**Documentation**
+
+- Add contributing guide (#90, thanks @sahildua2305!)
 
 
 6.2.1 (2016-09-08)

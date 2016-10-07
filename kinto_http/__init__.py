@@ -1,4 +1,5 @@
 import collections
+import functools
 import uuid
 from six import iteritems
 
@@ -55,6 +56,14 @@ class Endpoints(object):
             msg = "Cannot get {endpoint} endpoint, {field} is missing"
             raise KintoException(msg.format(endpoint=endpoint,
                                  field=','.join(e.args)))
+
+
+def refresh_cache(f):
+    @functools.wraps(f)
+    def wraps(self, *args, **kwargs):
+        self.refresh()
+        return f(self, *args, **kwargs)
+    return wraps
 
 
 class Client(object):
@@ -419,8 +428,11 @@ class Client(object):
 
     # Records
 
-    def get_records_timestamp(self, collection=None, bucket=None,
-                              **kwargs):
+    def refresh(self):
+        """Invalidate the cache for the collection."""
+        self._records_timestamp = {}
+
+    def get_records_timestamp(self, collection=None, bucket=None, **kwargs):
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)
@@ -447,6 +459,7 @@ class Client(object):
         resp, _ = self.session.request('get', endpoint)
         return resp
 
+    @refresh_cache
     def create_record(self, data, id=None, collection=None, permissions=None,
                       bucket=None, safe=True, if_not_exists=False):
         if if_not_exists:
@@ -478,6 +491,7 @@ class Client(object):
 
         return resp
 
+    @refresh_cache
     def update_record(self, data, id=None, collection=None, permissions=None,
                       bucket=None, safe=True, method='put',
                       if_match=None):
@@ -497,6 +511,7 @@ class Client(object):
         kwargs['method'] = 'patch'
         return self.update_record(*args, **kwargs)
 
+    @refresh_cache
     def delete_record(self, id, collection=None, bucket=None,
                       safe=True, if_match=None, if_exists=False):
         if if_exists:
@@ -513,6 +528,7 @@ class Client(object):
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
+    @refresh_cache
     def delete_records(self, collection=None, bucket=None,
                        safe=True, if_match=None):
         endpoint = self.get_endpoint('records',

@@ -7,7 +7,10 @@ This document describes changes between each past release.
 7.1.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**New features**
+
+- Add a ``refresh`` method to force the cache to be refreshed. (#85)
+- Automatically refresh the cache for action changing the record list. (#85)
 
 
 7.0.0 (2016-09-30)

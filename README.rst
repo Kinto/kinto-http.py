@@ -131,7 +131,7 @@ If no specific bucket name is provided, the "default" bucket is used.
     client.update_bucket('payments', data={'description': 'My payments data.'})
 
     # or patch some fields in a bucket.
-    client.patch_bucket('payments', data={'description': 'My spendings.'})
+    client.patch_bucket('payments', data={'status': 'updated'})
 
     # It is also possible to manipulate bucket permissions (see later)
     client.patch_bucket('payments', permissions={})
@@ -189,10 +189,10 @@ A collection is where records are stored.
     collections = client.get_collections(bucket='payments')
 
     # To update an exiting collection.
-    collections = client.update_collection(bucket='payments', data={'description':'bleeh'})
+    client.update_collection(bucket='payments', data={'description':'bleeh'})
 
     # Or patch some fields of an existing collection.
-    collections = client.update_collection(bucket='payments', data={'status':'updated'})
+    client.patch_collection(bucket='payments', data={'status':'updated'})
 
     # To delete an existing collection.
     client.delete_collection('receipts', bucket='payments')
@@ -237,7 +237,7 @@ A record is a dict with the "permissions" and "data" keys.
     client.update_record({'status': 'unknown'}, id='todo2', collection='todos', bucket='default')
 
     # Or patch some fields.
-    client.update_record({'status': 'delayed'}, id='todo2', collection='todos', bucket='default')
+    client.patch_record({'assignee': 'bob'}, id='todo2', collection='todos', bucket='default')
 
     # Or Update multiple records at once.
     client.update_records(records, collection='todos')

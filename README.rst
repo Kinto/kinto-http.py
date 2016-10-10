@@ -124,13 +124,13 @@ If no specific bucket name is provided, the "default" bucket is used.
     # To get an existing bucket 
     bucket = client.get_bucket('payments')
 
-    # Or retriave all readable buckets.
+    # Or retrieve all readable buckets.
     buckets = client.get_buckets()
 
-    # To update a bucket.
+    # To create or replace an existing bucket.
     client.update_bucket('payments', data={'description': 'My payments data.'})
 
-    # or patch some fields in a bucket.
+    # Or modify some fields in an existing bucket.
     client.patch_bucket('payments', data={'status': 'updated'})
 
     # It is also possible to manipulate bucket permissions (see later)
@@ -156,13 +156,13 @@ A group associates a name to a list of principals. It is useful in order to hand
     # Or get an existing one.
     group = client.get_group('receipts', bucket='payments')
 
-    # Or retriave all groups in the bucket.
+    # Or retrieve all groups in the bucket.
     groups = client.get_groups(bucket='payments')
 
-    # To update an exiting group.
+    # To create or replace an existing bucket.
     client.update_group('receipts', bucket='payments', data={'members': ['foo']})
 
-    # Or patch some fields of an existing group.
+    # Or modify some fields in an existing group.
     client.patch_group('receipts', bucket='payments', data={'description': 'my group'})
 
     # To delete an existing group.
@@ -185,13 +185,13 @@ A collection is where records are stored.
     # Or get an existing one.
     collection = client.get_collection('receipts', bucket='payments')
 
-    # Or retriave all of them inside a bucket.
+    # Or retrieve all of them inside a bucket.
     collections = client.get_collections(bucket='payments')
 
-    # To update an exiting collection.
+    # To create or replace an exiting collection.
     client.update_collection(bucket='payments', data={'description':'bleeh'})
 
-    # Or patch some fields of an existing collection.
+    # Or modify some fields of an existing collection.
     client.patch_collection(bucket='payments', data={'status':'updated'})
 
     # To delete an existing collection.
@@ -221,25 +221,25 @@ A record is a dict with the "permissions" and "data" keys.
     # Or get an existing one by its id.
     record = client.get_record('todo2', collection='todos', bucket='default')
 
-    # Or Retrieve all records.
+    # Or retrieve all records.
     records = client.get_records(collection='todos', bucket='default')
 
     # Or retrieve records timestamp.
     records_timestamp = client.get_records_timestamp(collection='todos', bucket='default')
 
-    # To retrieve a specific record and update it.
+    # To retrieve a specific record and replace it.
     record = client.get_record('89881454-e4e9-4ef0-99a9-404d95900352',
                                collection='todos', bucket='default')
     record['status'] = 'doing'
     client.update_record(record, collection='todos', bucket='default')
 
-    # Or update it by its id.
+    # Or create or replace it by its id.
     client.update_record({'status': 'unknown'}, id='todo2', collection='todos', bucket='default')
 
-    # Or patch some fields.
+    # Or modify some fields in an existing record.
     client.patch_record({'assignee': 'bob'}, id='todo2', collection='todos', bucket='default')
 
-    # Or Update multiple records at once.
+    # Or update multiple records at once.
     client.update_records(records, collection='todos')
 
     # To delete an existing record.

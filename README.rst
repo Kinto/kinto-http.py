@@ -227,10 +227,7 @@ A record is a dict with the "permissions" and "data" keys.
     # Or retrieve records timestamp.
     records_timestamp = client.get_records_timestamp(collection='todos', bucket='default')
 
-    # To retrieve a specific record and replace it.
-    record = client.get_record('89881454-e4e9-4ef0-99a9-404d95900352',
-                               collection='todos', bucket='default')
-    record['status'] = 'doing'
+    # To replace a record using a previously fetched record
     client.update_record(record, collection='todos', bucket='default')
 
     # Or create or replace it by its id.

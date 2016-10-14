@@ -69,6 +69,8 @@ class Session(object):
         while retry >= 0:
             resp = requests.request(method, actual_url, **kwargs)
             retry = retry - 1
+            if 'Alert' in resp:
+                print resp['Alert']
             if not (200 <= resp.status_code < 400):
                 if resp.status_code >= 500 and retry >= 0:
                     # Wait and try again.

@@ -320,6 +320,36 @@ class BucketTest(unittest.TestCase):
                 bucket="buck",
                 if_not_exists=True)
 
+    def test_create_bucket_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.create_bucket(
+                bucket="buck",
+                data={'foo': 'bar'})
+            mocked_logger.info.assert_called_with(
+                "Create bucket 'buck' with data {'foo': 'bar'}")
+
+    def test_update_bucket_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.update_bucket(
+                bucket="buck",
+                data={'foo': 'bar'})
+            mocked_logger.info.assert_called_with(
+                "Update bucket 'buck' with data {'foo': 'bar'}")
+
+    def test_get_bucket_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.get_bucket(
+                bucket="buck")
+            mocked_logger.info.assert_called_with(
+                "Get bucket 'buck'")
+
+    def test_delete_bucket_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.delete_bucket(
+                bucket="buck")
+            mocked_logger.info.assert_called_with(
+                "Delete bucket 'buck'")
+
 
 class CollectionTest(unittest.TestCase):
 

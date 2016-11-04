@@ -500,7 +500,9 @@ class Client(object):
                                      bucket=bucket,
                                      collection=collection)
 
-        logger.info("Get record with id %r from collection %r in bucket %r" % (id, collection, bucket))
+        logger.info(
+          "Get record with id %r from collection %r in bucket %r"
+          % (id, collection, bucket))
 
         resp, _ = self.session.request('get', endpoint)
         return resp
@@ -579,7 +581,9 @@ class Client(object):
                                      collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
-        logger.info("Delete record with id %r from collection %r in bucket %r" % (id, collection, bucket))
+        logger.info(
+          "Delete record with id %r from collection %r in bucket %r"
+          % (id, collection, bucket))
 
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']

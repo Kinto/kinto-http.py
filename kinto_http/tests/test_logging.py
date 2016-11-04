@@ -140,3 +140,35 @@ class CollectionLoggingTest(unittest.TestCase):
                 bucket="buck")
             mocked_logger.info.assert_called_with(
                 "Delete collections for bucket 'buck' for if_match None")
+
+
+class RecordLoggingTest(unittest.TestCase):
+    def setUp(self):
+        self.session = mock.MagicMock()
+        self.client = Client(session=self.session)
+        mock_response(self.session)
+
+    def test_create_record_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.create_bucket('buck')
+            self.client.create_collection('mozilla',
+                                          bucket='buck')
+            self.client.create_record(
+                data={'foo': 'bar'},
+                permissions={'write': ['blah', ]},
+                bucket='buck',
+                collection='mozilla')
+            mocked_logger.info.assert_called_with(
+                "Create record in collection 'mozilla' in bucket 'buck' with "
+                "data {'foo': 'bar'} and permissions {'write': ['blah']}")
+
+    def test_delete_records_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.create_bucket('buck')
+            self.client.create_collection('mozilla',
+                                          bucket='buck')
+            self.client.delete_records(
+                bucket='buck',
+                collection='mozilla')
+            mocked_logger.info.assert_called_with(
+                "Delete records from collection 'mozilla' in bucket 'buck'")

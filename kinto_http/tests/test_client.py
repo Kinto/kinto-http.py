@@ -320,6 +320,7 @@ class BucketTest(unittest.TestCase):
                 bucket="buck",
                 if_not_exists=True)
 
+
 class CollectionTest(unittest.TestCase):
 
     def setUp(self):

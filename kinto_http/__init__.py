@@ -298,7 +298,9 @@ class Client(object):
                                      bucket=bucket,
                                      group=group)
 
-        logger.info("Create group %r for bucket %r with data %r and permissions %r" % (group, bucket, data, permissions))
+        logger.info(
+          "Create group %r for bucket %r with data %r and permissions %r"
+          % (group, bucket, data, permissions))
 
         try:
             resp, _ = self.session.request('put', endpoint, data=data,
@@ -322,7 +324,9 @@ class Client(object):
                                      group=group)
         headers = self._get_cache_headers(safe, data, if_match)
 
-        logger.info("Update group %r for bucket %r with data %r and permissions %r" % (group, bucket, data, permissions))
+        logger.info(
+          "Update group %r for bucket %r with data %r and permissions %r"
+          % (group, bucket, data, permissions))
 
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,

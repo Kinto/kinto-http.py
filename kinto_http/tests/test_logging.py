@@ -1,6 +1,7 @@
 import mock
-from .support import unittest, mock_response, build_response, get_http_error
+from .support import unittest, mock_response
 from kinto_http import Client
+
 
 class BucketLoggingTest(unittest.TestCase):
     def setUp(self):
@@ -44,6 +45,7 @@ class BucketLoggingTest(unittest.TestCase):
             mocked_logger.info.assert_called_with(
                 'Delete buckets for if_match None')
 
+
 class GroupLoggingTest(unittest.TestCase):
     def setUp(self):
         self.session = mock.MagicMock()
@@ -57,7 +59,8 @@ class GroupLoggingTest(unittest.TestCase):
                 data={'foo': 'bar'},
                 permissions={'write': ['blah', ]})
             mocked_logger.info.assert_called_with(
-                "Create group 'mozilla' for bucket 'buck' with data {'foo': 'bar'} and permissions {'write': ['blah']}")
+                "Create group 'mozilla' for bucket 'buck' with data {'foo': 'bar'} "
+                "and permissions {'write': ['blah']}")
 
     def test_update_group_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
@@ -66,7 +69,8 @@ class GroupLoggingTest(unittest.TestCase):
                 group='mozilla', bucket='buck',
                 permissions={'write': ['blahblah', ]})
             mocked_logger.info.assert_called_with(
-                "Update group 'mozilla' for bucket 'buck' with data {'foo': 'bar'} and permissions {'write': ['blahblah']}")
+                "Update group 'mozilla' for bucket 'buck' with data {'foo': 'bar'} "
+                "and permissions {'write': ['blahblah']}")
 
     def test_get_group_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:

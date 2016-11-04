@@ -48,7 +48,7 @@ git remote add {your_name} git@github.com:{your_name}/kinto-http.py.git
 
 ## Testing
 
- -  `make tests-once` to run the test with the current venv.
+ -  `make tests-once` to run the tests with the current venv.
  -  `make tests` to run all the tests (with Py2 and Py3, flake8 and functional tests)
 
 You may need to use `make runkinto` before running the functional tests.
@@ -65,6 +65,6 @@ git push -u {your_name} issue_number-bug-title
 ```
 
 Then you can create a Pull-Request.
-Please create your pull-request as soon as you have one commit even if it is only a failing tests. This will allow us to help and give guidance.
+Please create your pull-request as soon as you have at least one commit even if it has only failing tests. This will allow us to help and give guidance.
 
-You will be able to update your pull-request by adding commit in your branch.
+You will be able to update your pull-request by pushing commits to your branch.

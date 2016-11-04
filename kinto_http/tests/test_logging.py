@@ -92,3 +92,51 @@ class GroupLoggingTest(unittest.TestCase):
                 bucket="buck")
             mocked_logger.info.assert_called_with(
                 "Delete groups for bucket 'buck' for if_match None")
+
+
+class CollectionLoggingTest(unittest.TestCase):
+    def setUp(self):
+        self.session = mock.MagicMock()
+        self.client = Client(session=self.session)
+        mock_response(self.session)
+
+    def test_create_collection_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.create_collection(
+                'mozilla', bucket="buck",
+                data={'foo': 'bar'},
+                permissions={'write': ['blah', ]})
+            mocked_logger.info.assert_called_with(
+                "Create collection 'mozilla' for bucket 'buck' with data {'foo': 'bar'} "
+                "and permissions {'write': ['blah']}")
+
+    def test_update_collection_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.update_collection(
+                data={'foo': 'bar'},
+                collection='mozilla', bucket='buck',
+                permissions={'write': ['blahblah', ]})
+            mocked_logger.info.assert_called_with(
+                "Update collection 'mozilla' for bucket 'buck' with data {'foo': 'bar'} "
+                "and permissions {'write': ['blahblah']}")
+
+    def test_get_collection_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.get_collection(
+                'mozilla', bucket='buck')
+            mocked_logger.info.assert_called_with(
+                "Get collection 'mozilla' for bucket 'buck'")
+
+    def test_delete_collection_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.delete_collection(
+                'mozilla', bucket="buck")
+            mocked_logger.info.assert_called_with(
+                "Delete collection 'mozilla' for bucket 'buck'")
+
+    def test_delete_collections_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.delete_collections(
+                bucket="buck")
+            mocked_logger.info.assert_called_with(
+                "Delete collections for bucket 'buck' for if_match None")

@@ -4,12 +4,14 @@ from six import iteritems
 
 from contextlib import contextmanager
 
+import logging
 
 from kinto_http import utils
 from kinto_http.session import create_session, Session
 from kinto_http.batch import BatchSession
 from kinto_http.exceptions import BucketNotFound, KintoException
 
+logger = logging.getLogger('kinto_http')
 
 __all__ = ('Endpoints', 'Session', 'Client',
            'create_session', 'BucketNotFound', 'KintoException')
@@ -213,6 +215,9 @@ class Client(object):
                                               safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self.get_endpoint('bucket', bucket=bucket)
+
+        logger.info("Create bucket %r with data %r" % (bucket, data))
+
         resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -222,6 +227,9 @@ class Client(object):
                       safe=True, if_match=None, method='put'):
         endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, data, if_match)
+
+        logger.info("Update bucket %r with data %r" % (bucket, data))
+
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -237,6 +245,9 @@ class Client(object):
 
     def get_bucket(self, bucket=None):
         endpoint = self.get_endpoint('bucket', bucket=bucket)
+
+        logger.info("Get bucket %r" % bucket)
+
         try:
             resp, _ = self.session.request('get', endpoint)
         except KintoException as e:
@@ -251,12 +262,18 @@ class Client(object):
                                           if_match=if_match)
         endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete bucket %r" % bucket)
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def delete_buckets(self, safe=True, if_match=None):
         endpoint = self.get_endpoint('buckets')
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete buckets for if_match %r" % if_match)
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 

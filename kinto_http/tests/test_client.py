@@ -350,6 +350,12 @@ class BucketTest(unittest.TestCase):
             mocked_logger.info.assert_called_with(
                 "Delete bucket 'buck'")
 
+    def test_delete_buckets_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.delete_buckets()
+            mocked_logger.info.assert_called_with(
+                'Delete buckets for if_match None')
+
 
 class CollectionTest(unittest.TestCase):
 

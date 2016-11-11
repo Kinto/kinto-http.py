@@ -165,7 +165,7 @@ class RecordLoggingTest(unittest.TestCase):
                                           bucket='buck')
             self.client.update_record(
                 id='fake-record',
-                data={'ss':'aa'},
+                data={'ss': 'aa'},
                 bucket='buck',
                 collection='mozilla')
             mocked_logger.info.assert_called_with(

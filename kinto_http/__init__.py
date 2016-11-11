@@ -4,12 +4,14 @@ from six import iteritems
 
 from contextlib import contextmanager
 
+import logging
 
 from kinto_http import utils
 from kinto_http.session import create_session, Session
 from kinto_http.batch import BatchSession
 from kinto_http.exceptions import BucketNotFound, KintoException
 
+logger = logging.getLogger('kinto_http')
 
 __all__ = ('Endpoints', 'Session', 'Client',
            'create_session', 'BucketNotFound', 'KintoException')
@@ -213,6 +215,9 @@ class Client(object):
                                               safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self.get_endpoint('bucket', bucket=bucket)
+
+        logger.info("Create bucket %r" % bucket)
+
         resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -222,6 +227,9 @@ class Client(object):
                       safe=True, if_match=None, method='put'):
         endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, data, if_match)
+
+        logger.info("Update bucket %r" % bucket)
+
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -237,6 +245,9 @@ class Client(object):
 
     def get_bucket(self, bucket=None):
         endpoint = self.get_endpoint('bucket', bucket=bucket)
+
+        logger.info("Get bucket %r" % bucket)
+
         try:
             resp, _ = self.session.request('get', endpoint)
         except KintoException as e:
@@ -251,12 +262,18 @@ class Client(object):
                                           if_match=if_match)
         endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete bucket %r" % bucket)
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def delete_buckets(self, safe=True, if_match=None):
         endpoint = self.get_endpoint('buckets')
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete buckets")
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
@@ -280,6 +297,9 @@ class Client(object):
         endpoint = self.get_endpoint('group',
                                      bucket=bucket,
                                      group=group)
+
+        logger.info("Create group %r in bucket %r" % (group, bucket))
+
         try:
             resp, _ = self.session.request('put', endpoint, data=data,
                                            permissions=permissions,
@@ -301,6 +321,9 @@ class Client(object):
                                      bucket=bucket,
                                      group=group)
         headers = self._get_cache_headers(safe, data, if_match)
+
+        logger.info("Update group %r in bucket %r" % (group, bucket))
+
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -314,6 +337,9 @@ class Client(object):
         endpoint = self.get_endpoint('group',
                                      bucket=bucket,
                                      group=group)
+
+        logger.info("Get group %r in bucket %r" % (group, bucket))
+
         resp, _ = self.session.request('get', endpoint)
         return resp
 
@@ -330,12 +356,18 @@ class Client(object):
                                      bucket=bucket,
                                      group=group)
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete group %r in bucket %r" % (group, bucket))
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def delete_groups(self, bucket=None, safe=True, if_match=None):
         endpoint = self.get_endpoint('groups', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete groups in bucket %r" % bucket)
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
@@ -359,6 +391,9 @@ class Client(object):
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
                                      collection=collection)
+
+        logger.info("Create collection %r in bucket %r" % (collection, bucket))
+
         try:
             resp, _ = self.session.request('put', endpoint, data=data,
                                            permissions=permissions,
@@ -380,6 +415,9 @@ class Client(object):
                                      bucket=bucket,
                                      collection=collection)
         headers = self._get_cache_headers(safe, data, if_match)
+
+        logger.info("Update collection %r in bucket %r" % (collection, bucket))
+
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
@@ -393,6 +431,9 @@ class Client(object):
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
                                      collection=collection)
+
+        logger.info("Get collection %r in bucket %r" % (collection, bucket))
+
         resp, _ = self.session.request('get', endpoint)
         return resp
 
@@ -408,12 +449,18 @@ class Client(object):
                                      bucket=bucket,
                                      collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete collection %r in bucket %r" % (collection, bucket))
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
     def delete_collections(self, bucket=None, safe=True, if_match=None):
         endpoint = self.get_endpoint('collections', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete collections in bucket %r" % bucket)
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
@@ -444,6 +491,11 @@ class Client(object):
         endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,
                                      collection=collection)
+
+        logger.info(
+          "Get record with id %r from collection %r in bucket %r"
+          % (id, collection, bucket))
+
         resp, _ = self.session.request('get', endpoint)
         return resp
 
@@ -464,6 +516,11 @@ class Client(object):
         endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,
                                      collection=collection)
+
+        logger.info(
+          "Create record with id %r in collection %r in bucket %r"
+          % (id, collection, bucket))
+
         try:
             resp, _ = self.session.request('put', endpoint, data=data,
                                            permissions=permissions,
@@ -488,6 +545,11 @@ class Client(object):
                                      bucket=bucket,
                                      collection=collection)
         headers = self._get_cache_headers(safe, data, if_match)
+
+        logger.info(
+          "Update record with id %r in collection %r in bucket %r"
+          % (id, collection, bucket))
+
         resp, _ = self.session.request(method, endpoint, data=data,
                                        headers=headers,
                                        permissions=permissions)
@@ -510,6 +572,11 @@ class Client(object):
                                      bucket=bucket,
                                      collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info(
+          "Delete record with id %r from collection %r in bucket %r"
+          % (id, collection, bucket))
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
@@ -519,6 +586,9 @@ class Client(object):
                                      bucket=bucket,
                                      collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Delete records from collection %r in bucket %r" % (collection, bucket))
+
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 

@@ -150,12 +150,13 @@ class RecordLoggingTest(unittest.TestCase):
             self.client.create_collection('mozilla',
                                           bucket='buck')
             self.client.create_record(
+                id='fake-record',
                 data={'foo': 'bar'},
                 permissions={'write': ['blah', ]},
                 bucket='buck',
                 collection='mozilla')
             mocked_logger.info.assert_called_with(
-                "Create record in collection 'mozilla' in bucket 'buck'")
+                "Create record with id 'fake-record' in collection 'mozilla' in bucket 'buck'")
 
     def test_delete_records_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:

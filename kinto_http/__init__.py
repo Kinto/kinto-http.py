@@ -518,8 +518,8 @@ class Client(object):
                                      collection=collection)
 
         logger.info(
-          "Create record in collection %r in bucket %r"
-          % (collection, bucket))
+          "Create record with id %r in collection %r in bucket %r"
+          % (id, collection, bucket))
 
         try:
             resp, _ = self.session.request('put', endpoint, data=data,

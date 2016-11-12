@@ -75,13 +75,13 @@ class FunctionalTest(unittest2.TestCase):
         assert 'version' not in bucket['data']
 
     def test_bucket_retrieval_fails_when_not_created(self):
-        self.assertRaises(BucketNotFound, self.client.get_bucket,
+        self.assertRaises(KintoException, self.client.get_bucket,
                           'non-existent')
 
     def test_bucket_deletion(self):
         self.client.create_bucket('mozilla')
         self.client.delete_bucket('mozilla')
-        self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
+        self.assertRaises(KintoException, self.client.get_bucket, 'mozilla')
 
     def test_bucket_deletion_if_exists(self):
         self.client.create_bucket('mozilla')
@@ -92,7 +92,7 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket('mozilla')
         buckets = self.client.delete_buckets()
         assert buckets[0]['id'] == 'mozilla'
-        self.assertRaises(BucketNotFound, self.client.get_bucket, 'mozilla')
+        self.assertRaises(KintoException, self.client.get_bucket, 'mozilla')
 
     def test_buckets_deletion_when_no_buckets_exist(self):
         deleted_buckets = self.client.delete_buckets()

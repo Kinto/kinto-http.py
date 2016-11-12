@@ -261,12 +261,14 @@ class BucketTest(unittest.TestCase):
         exception.request = mock.sentinel.request
         self.session.request.side_effect = exception
 
-        with self.assertRaises(BucketNotFound) as cm:
+        with self.assertRaises(KintoException) as cm:
             self.client.get_bucket('test')
         e = cm.exception
         self.assertEquals(e.response, exception.response)
         self.assertEquals(e.request, mock.sentinel.request)
-        self.assertEquals(e.message, 'test')
+        self.assertEquals(e.message, "Unauthorized. Please check that the bucket exists and "
+                                     "that you have the permission to create or write on "
+                                     "this group.")
 
     def test_http_500_raises_an_error(self):
         exception = KintoException()

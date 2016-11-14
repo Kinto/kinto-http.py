@@ -8,7 +8,7 @@ import unittest2
 from six.moves import configparser
 from six.moves.urllib.parse import urljoin
 
-from kinto_http import Client, BucketNotFound, KintoException
+from kinto_http import Client, KintoException
 from kinto_http import replication
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))

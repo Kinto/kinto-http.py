@@ -9,7 +9,7 @@ from six.moves import configparser
 
 from kinto.core import utils as kinto_core_utils
 
-from kinto_http import Client, BucketNotFound, KintoException
+from kinto_http import Client, KintoException
 from kinto_http import replication
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))

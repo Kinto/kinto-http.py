@@ -4,7 +4,7 @@ import requests
 from six.moves.urllib.parse import urlparse
 
 from kinto_http import utils
-from kinto_http.exceptions import KintoException
+from kinto_http.exceptions import KintoException, BackoffException
 
 
 def create_session(server_url=None, auth=None, session=None, retry=0,
@@ -68,6 +68,14 @@ class Session(object):
         retry = self.nb_retry
         while retry >= 0:
             resp = requests.request(method, actual_url, **kwargs)
+            retry_after = resp.headers.get("Backoff")
+            if retry_after:
+                message = '{0} - {1}'.format(resp.status_code, resp.json())
+                exception = BackoffException(message, retry_after)
+                exception.request = resp.request
+                exception.response = resp
+                raise exception
+
             retry = retry - 1
             if not (200 <= resp.status_code < 400):
                 if resp.status_code >= 500 and retry >= 0:

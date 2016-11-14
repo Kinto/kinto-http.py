@@ -15,3 +15,10 @@ class KintoException(Exception):
 
 class BucketNotFound(KintoException):
     pass
+
+
+class BackoffException(KintoException):
+
+    def __init__(message, retry_after, exception=None):
+        message = str(message) + '\nBackoff time: ' + str(retry_after)
+        super(BackoffException, self).__init__(message, exception)

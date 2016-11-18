@@ -25,7 +25,7 @@ OBJECTS_PERMISSIONS = {
 }
 
 ID_FIELD = 'id'
-DO_NOT_OVERWRITE = {'If-None-Match': '*'}
+DO_NOT_OVERWRITE = {'If-None-Match': '"*"'}
 
 
 class Endpoints(object):

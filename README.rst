@@ -79,6 +79,14 @@ at creation time, so that this value will be used by default.
 
 .. code-block:: python
 
+    from fxa.plugins.requests import FxABearerTokenAuth
+    auth = FxABearerTokenAuth(
+        email, passwd,
+        scopes=['kinto'],
+        client_id="<FXA-CLIENT-ID>",
+        account_server_url='https://api.accounts.firefox.com/v1',
+        oauth_server_url='https://oauth.accounts.firefox.com/v1',
+    )
     client = Client(bucket="payments", collection="receipts", auth=auth)
 
 After creating a client, you can also replicate an existing one and overwrite

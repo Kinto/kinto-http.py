@@ -3,7 +3,6 @@ python: 2.7
 env:
     - TOX_ENV=py27
     - TOX_ENV=py34
-    - TOX_ENV=py34 SERVER=development
     - TOX_ENV=flake8
 before_install:
     - if [[ $SERVER != development ]]; then pip install kinto; fi
@@ -18,3 +17,8 @@ after_success:
     # Report coverage results to coveralls.io
     - pip install coveralls
     - coveralls
+matrix:
+  include:
+    - python: 3.5
+      env:
+        - TOX_ENV=py35 SERVER=development

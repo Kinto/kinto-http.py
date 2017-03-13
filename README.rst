@@ -79,14 +79,7 @@ at creation time, so that this value will be used by default.
 
 .. code-block:: python
 
-    from fxa.plugins.requests import FxABearerTokenAuth
-    auth = FxABearerTokenAuth(
-        email, passwd,
-        scopes=['kinto'],
-        client_id="<FXA-CLIENT-ID>",
-        account_server_url='https://api.accounts.firefox.com/v1',
-        oauth_server_url='https://oauth.accounts.firefox.com/v1',
-    )
+    auth = ("token", "secret")
     client = Client(bucket="payments", collection="receipts", auth=auth)
 
 After creating a client, you can also replicate an existing one and overwrite
@@ -95,6 +88,22 @@ some key arguments.
 .. code-block:: python
 
     client2 = client.clone(collection="orders")
+
+Using FxA from a script with the email/password
+-----------------------------------------------
+
+.. code-block:: python
+
+    from fxa.plugins.requests import FxABearerTokenAuth
+
+    auth = FxABearerTokenAuth(
+        email, passwd,
+        scopes=['kinto'],
+        client_id="<FXA-CLIENT-ID>",
+        account_server_url='https://api.accounts.firefox.com/v1',
+        oauth_server_url='https://oauth.accounts.firefox.com/v1',
+    )
+    client = Client(bucket="payments", collection="receipts", auth=auth)
 
 
 Getting server information

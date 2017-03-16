@@ -1,13 +1,12 @@
-import os.path
-from six.moves.urllib.parse import urljoin
-
+import hashlib
+import hmac
 import mock
+import os.path
 import pytest
-import unittest2
 import requests
+import unittest2
 from six.moves import configparser
-
-from kinto.core import utils as kinto_core_utils
+from six.moves.urllib.parse import urljoin
 
 from kinto_http import Client, BucketNotFound, KintoException
 from kinto_http import replication
@@ -16,6 +15,16 @@ __HERE__ = os.path.abspath(os.path.dirname(__file__))
 
 SERVER_URL = "http://localhost:8888/v1"
 DEFAULT_AUTH = ('user', 'p4ssw0rd')
+
+
+# Backported from kinto.core.utils
+def hmac_digest(secret, message, encoding='utf-8'):
+    """Return hex digest of a message HMAC using secret"""
+    if isinstance(secret, str):
+        secret = secret.encode(encoding)
+    return hmac.new(secret,
+                    message.encode(encoding),
+                    hashlib.sha256).hexdigest()
 
 
 class FunctionalTest(unittest2.TestCase):
@@ -40,7 +49,7 @@ class FunctionalTest(unittest2.TestCase):
     def get_user_id(self, credentials):
         hmac_secret = self.config.get('app:main', 'kinto.userid_hmac_secret')
         credentials = '%s:%s' % credentials
-        digest = kinto_core_utils.hmac_digest(hmac_secret, credentials)
+        digest = hmac_digest(hmac_secret, credentials)
         return 'basicauth:%s' % digest
 
     def test_bucket_creation(self):

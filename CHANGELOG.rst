@@ -4,12 +4,23 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-7.1.0 (unreleased)
+7.1.0 (2017-03-16)
 ==================
 
 **Bug fixes**
 
 - Method for plural endpoints now return list of objects instead of ``odict_values``.
+
+**New features**
+
+- Add logging (fixes #36, #110, thanks @sahildua2305)
+
+**Documentation**
+
+- Fix explanation about safe/if_match/last_modified
+- Fix missing methods in docs (#102, thanks @gabisurita)
+- Improve contributing guide (#104, #111,  thanks @Sayli-Karnik)
+- Show how to use the FxABearerTokenAuth auth (#117)
 
 
 7.0.0 (2016-09-30)

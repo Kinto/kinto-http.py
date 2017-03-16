@@ -7,7 +7,9 @@ This document describes changes between each past release.
 7.1.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Bug fixes**
+
+- Method for plural endpoints now return list of objects instead of ``odict_values``.
 
 
 7.0.0 (2016-09-30)

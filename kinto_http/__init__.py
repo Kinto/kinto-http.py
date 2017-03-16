@@ -145,7 +145,7 @@ class Client(object):
                 next_page = headers['Next-Page']
                 return self._paginated(next_page, records,
                                        if_none_match=if_none_match)
-        return records.values()
+        return list(records.values())
 
     def _get_cache_headers(self, safe, data=None, if_match=None):
         has_data = data is not None and data.get('last_modified')

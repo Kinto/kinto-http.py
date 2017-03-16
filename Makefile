@@ -1,4 +1,4 @@
-VIRTUALENV = virtualenv
+VIRTUALENV = virtualenv --python python3
 VENV := $(shell echo $${VIRTUAL_ENV-.venv})
 PYTHON = $(VENV)/bin/python
 DEV_STAMP = $(VENV)/.dev_env_installed.stamp
@@ -30,6 +30,7 @@ need-kinto-running:
 	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make runkinto' before starting tests." && exit 1)
 
 runkinto: install-dev
+	$(VENV)/bin/python --version
 	$(VENV)/bin/kinto --ini kinto_http/tests/config/kinto.ini migrate
 	$(VENV)/bin/kinto --ini kinto_http/tests/config/kinto.ini start
 

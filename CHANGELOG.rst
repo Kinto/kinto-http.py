@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-7.2.0 (unreleased)
+7.2.0 (2017-03-17)
 ==================
 
 - Only provide the `data` JSON field when data is provided. (#122)

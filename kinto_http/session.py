@@ -38,6 +38,7 @@ class Session(object):
     """Handles all the interactions with the network.
     """
     def __init__(self, server_url, auth=None, retry=0, retry_after=None):
+        self.backoff = None
         self.server_url = server_url
         self.auth = auth
         self.nb_retry = retry
@@ -45,6 +46,10 @@ class Session(object):
 
     def request(self, method, endpoint, data=None, permissions=None,
                 payload=None, **kwargs):
+        current_time = time.time()
+        if self.backoff and self.backoff > current_time:
+            raise BackoffException("Retry after", int(current_time - self.backoff))
+
         parsed = urlparse(endpoint)
         if not parsed.scheme:
             actual_url = utils.urljoin(self.server_url, endpoint)
@@ -70,11 +75,9 @@ class Session(object):
             resp = requests.request(method, actual_url, **kwargs)
             retry_after = resp.headers.get("Backoff")
             if retry_after:
-                message = '{0} - {1}'.format(resp.status_code, resp.json())
-                exception = BackoffException(message, retry_after)
-                exception.request = resp.request
-                exception.response = resp
-                raise exception
+                self.backoff = time.time() + int(retry_after)
+            else:
+                self.backoff = None
 
             retry = retry - 1
             if not (200 <= resp.status_code < 400):

@@ -18,7 +18,6 @@ class BucketNotFound(KintoException):
 
 
 class BackoffException(KintoException):
-
-    def __init__(message, retry_after, exception=None):
-        message = str(message) + '\nBackoff time: ' + str(retry_after)
+    def __init__(self, message, backoff, exception=None):
+        self.backoff = backoff
         super(BackoffException, self).__init__(message, exception)

@@ -55,13 +55,13 @@ class Session(object):
             kwargs.setdefault('auth', self.auth)
 
         payload = payload or {}
-        # if data is not None:
-        payload['data'] = data or {}
+        if data is not None:
+            payload['data'] = data
         if permissions is not None:
             if hasattr(permissions, 'as_dict'):
                 permissions = permissions.as_dict()
             payload['permissions'] = permissions
-        if payload and method not in ('get', 'head'):
+        if method not in ('get', 'head'):
             payload_kwarg = 'data' if 'files' in kwargs else 'json'
             kwargs.setdefault(payload_kwarg, payload)
 

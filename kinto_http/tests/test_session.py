@@ -91,7 +91,7 @@ class SessionTest(unittest.TestCase):
                         permissions=permissions)
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
-            json={'data': {}, 'permissions': {'foo': 'bar'}})
+            json={'permissions': {'foo': 'bar'}})
 
     def test_url_is_used_if_schema_is_present(self):
         response = mock.MagicMock()
@@ -154,8 +154,7 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         session.request('put', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'put', 'https://example.org/anothertest',
-            json={'data': {}})
+            'put', 'https://example.org/anothertest', json={})
 
 
 class RetryRequestTest(unittest.TestCase):

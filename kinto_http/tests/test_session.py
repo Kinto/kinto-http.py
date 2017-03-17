@@ -236,3 +236,11 @@ class RetryRequestTest(unittest.TestCase):
             session = Session('https://example.org', retry=1, retry_after=10)
             session.request('GET', '/v1/foobar')
             sleep_mocked.assert_called_with(10)
+
+    def test_raises_exception_if_backoff_time_not_spent(self):
+        response = mock.MagicMock()
+        response.status_code = 200
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+
+        self.assertRaises(BackoffException, session.request, 'get', '/test')

@@ -7,7 +7,7 @@ This document describes changes between each past release.
 7.2.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Only provide the `data` JSON field when data is provided. (#122)
 
 
 7.1.0 (2017-03-16)

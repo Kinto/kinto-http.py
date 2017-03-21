@@ -1,4 +1,5 @@
 import time
+import warnings
 
 import requests
 from six.moves.urllib.parse import urlparse
@@ -81,12 +82,15 @@ class Session(object):
                 self.backoff = None
 
             retry = retry - 1
+            headers = resp.headers
+            if hasattr(headers, "Alert"):
+                warnings.warn(str(headers['Alert']['message']), DeprecationWarning)
             if not (200 <= resp.status_code < 400):
                 if resp.status_code >= 500 and retry >= 0:
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.
                     if self.retry_after is None:
-                        retry_after = resp.headers.get("Retry-After", 0)
+                        retry_after = headers.get("Retry-After", 0)
                     else:
                         retry_after = self.retry_after
                     time.sleep(retry_after)
@@ -104,4 +108,4 @@ class Session(object):
         else:
             body = resp.json()
         # XXX Add the status code.
-        return body, resp.headers
+        return body, headers

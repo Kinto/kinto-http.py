@@ -1,9 +1,18 @@
 import mock
+import pytest
+import time
 
 from kinto_http.session import Session, create_session
-from kinto_http.exceptions import KintoException
+from kinto_http.exceptions import KintoException, BackoffException
 
 from .support import unittest, get_200, get_503, get_403
+
+
+def fake_response(status_code):
+    response = mock.MagicMock()
+    response.headers = {}
+    response.status_code = status_code
+    return response
 
 
 class SessionTest(unittest.TestCase):
@@ -17,8 +26,7 @@ class SessionTest(unittest.TestCase):
         self.assertEquals(session.server_url, mock.sentinel.server_url)
 
     def test_no_auth_is_used_by_default(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         self.assertEquals(session.auth, None)
@@ -27,16 +35,14 @@ class SessionTest(unittest.TestCase):
             'get', 'https://example.org/test')
 
     def test_bad_http_status_raises_exception(self):
-        response = mock.MagicMock()
-        response.status_code = 400
+        response = fake_response(400)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
 
         self.assertRaises(KintoException, session.request, 'get', '/test')
 
     def test_session_injects_auth_on_requests(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session(auth=mock.sentinel.auth,
                           server_url='https://example.org')
@@ -46,8 +52,7 @@ class SessionTest(unittest.TestCase):
             auth=mock.sentinel.auth)
 
     def test_requests_arguments_are_forwarded(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('get', '/test',
@@ -57,8 +62,7 @@ class SessionTest(unittest.TestCase):
             foo=mock.sentinel.bar)
 
     def test_passed_data_is_encoded_to_json(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('post', '/test',
@@ -68,8 +72,7 @@ class SessionTest(unittest.TestCase):
             json={"data": {'foo': 'bar'}})
 
     def test_passed_data_is_passed_as_is_when_files_are_posted(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('post', '/test',
@@ -81,8 +84,7 @@ class SessionTest(unittest.TestCase):
             files={"attachment": {"filename"}})
 
     def test_passed_permissions_is_added_in_the_payload(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         permissions = mock.MagicMock()
@@ -94,8 +96,7 @@ class SessionTest(unittest.TestCase):
             json={'permissions': {'foo': 'bar'}})
 
     def test_url_is_used_if_schema_is_present(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         permissions = mock.MagicMock()
@@ -131,16 +132,14 @@ class SessionTest(unittest.TestCase):
         self.assertEquals(session, mock.sentinel.session)
 
     def test_body_is_none_on_304(self):
-        response = mock.MagicMock()
-        response.status_code = 304
+        response = fake_response(304)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         body, headers = session.request('get', 'https://example.org/test')
         assert body is None
 
     def test_no_payload_is_sent_on_get_requests(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('get', 'https://example.org/anothertest')
@@ -148,8 +147,7 @@ class SessionTest(unittest.TestCase):
             'get', 'https://example.org/anothertest')
 
     def test_payload_is_sent_on_put_requests(self):
-        response = mock.MagicMock()
-        response.status_code = 200
+        response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
         session.request('put', 'https://example.org/anothertest')
@@ -236,3 +234,32 @@ class RetryRequestTest(unittest.TestCase):
             session = Session('https://example.org', retry=1, retry_after=10)
             session.request('GET', '/v1/foobar')
             sleep_mocked.assert_called_with(10)
+
+    def test_raises_exception_if_backoff_time_not_spent(self):
+        response = fake_response(200)
+        response.headers = {"Backoff": "60"}
+        self.requests_mock.request.side_effect = [response]
+        session = Session('https://example.org')
+
+        session.request('get', '/test')  # The first call get's the Backoff
+        with pytest.raises(BackoffException) as e:
+            # This one raises because we made the next requests too fast.
+            session.request('get', '/test')
+        self.assertLessEqual(e.value.backoff, 60)
+        self.assertEqual(e.value.message, "Retry after 59 seconds")
+
+    def test_next_request_without_the_header_clear_the_backoff(self):
+        response1 = mock.MagicMock()
+        response1.headers = {"Backoff": "1"}
+        response1.status_code = 200
+        response2 = mock.MagicMock()
+        response2.headers = {}
+        response2.status_code = 200
+        self.requests_mock.request.side_effect = [response1, response2]
+        session = Session('https://example.org')
+
+        session.request('get', '/test')  # The first call get's the Backoff
+        self.assertGreaterEqual(session.backoff, time.time())
+        time.sleep(1)  # Spend the backoff
+        session.request('get', '/test')  # The second call reset the backoff
+        self.assertIsNone(session.backoff)

@@ -7,7 +7,10 @@ This document describes changes between each past release.
 7.3.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**New Feature**
+
+- Keep tracks of Backoff headers and raise an ``BackoffException`` if
+  we are not waiting enough between two calls. (#53)
 
 
 7.2.0 (2017-03-17)

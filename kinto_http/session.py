@@ -48,7 +48,8 @@ class Session(object):
                 payload=None, **kwargs):
         current_time = time.time()
         if self.backoff and self.backoff > current_time:
-            raise BackoffException("Retry after", int(current_time - self.backoff))
+            seconds = int(self.backoff - current_time)
+            raise BackoffException("Retry after {} seconds".format(seconds), seconds)
 
         parsed = urlparse(endpoint)
         if not parsed.scheme:
@@ -73,9 +74,9 @@ class Session(object):
         retry = self.nb_retry
         while retry >= 0:
             resp = requests.request(method, actual_url, **kwargs)
-            retry_after = resp.headers.get("Backoff")
-            if retry_after:
-                self.backoff = time.time() + int(retry_after)
+            backoff_seconds = resp.headers.get("Backoff")
+            if backoff_seconds:
+                self.backoff = time.time() + int(backoff_seconds)
             else:
                 self.backoff = None
 

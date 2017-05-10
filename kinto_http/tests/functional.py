@@ -76,10 +76,10 @@ class FunctionalTest(unittest2.TestCase):
     def test_bucket_modification(self):
         bucket = self.client.create_bucket('mozilla', data={'version': 1})
         assert bucket['data']['version'] == 1
-        bucket = self.client.patch_bucket('mozilla', data={'author': 'you'})
+        bucket = self.client.patch_bucket(bucket='mozilla', data={'author': 'you'})
         assert bucket['data']['version'] == 1
         assert bucket['data']['author'] == 'you'
-        bucket = self.client.update_bucket('mozilla', data={'date': 'today'})
+        bucket = self.client.update_bucket(bucket='mozilla', data={'date': 'today'})
         assert bucket['data']['date'] == 'today'
         assert 'version' not in bucket['data']
 
@@ -115,7 +115,7 @@ class FunctionalTest(unittest2.TestCase):
     def test_group_creation(self):
         self.client.create_bucket('mozilla')
         self.client.create_group(
-            'payments', bucket='mozilla',
+            group='payments', bucket='mozilla',
             data={'members': ['blah', ]},
             permissions={'write': ['blah', ]})
         # Test retrieval of a group gets the permissions as well.
@@ -124,9 +124,9 @@ class FunctionalTest(unittest2.TestCase):
 
     def test_group_creation_if_not_exists(self):
         self.client.create_bucket('mozilla')
-        self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.create_group(group='payments', bucket='mozilla', data={'members': ['blah', ]})
         self.client.create_group(
-            'payments', bucket='mozilla',
+            group='payments', bucket='mozilla',
             data={'members': ['blah', ]},
             permissions={'write': ['blah', ]},
             if_not_exists=True)
@@ -134,17 +134,17 @@ class FunctionalTest(unittest2.TestCase):
     def test_group_creation_if_bucket_does_not_exist(self):
         with pytest.raises(KintoException):
             self.client.create_group(
-                'payments', bucket='mozilla',
+                group='payments', bucket='mozilla',
                 data={'members': ['blah', ]})
             self.client.create_group(
-                'payments', bucket='mozilla',
+                group='payments', bucket='mozilla',
                 data={'members': ['blah', ]},
                 if_not_exists=True)
 
     def test_group_update(self):
         self.client.create_bucket('mozilla')
         group = self.client.create_group(
-                    'payments', bucket='mozilla',
+                    group='payments', bucket='mozilla',
                     data={'members': ['blah', ]},
                     if_not_exists=True)
         assert group['data']['members'][0] == 'blah'
@@ -155,8 +155,8 @@ class FunctionalTest(unittest2.TestCase):
 
     def test_group_list(self):
         self.client.create_bucket('mozilla')
-        self.client.create_group('receipts', bucket='mozilla', data={'members': ['blah', ]})
-        self.client.create_group('assets', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.create_group(group='receipts', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.create_group(group='assets', bucket='mozilla', data={'members': ['blah', ]})
         # The returned groups should be strings.
         groups = self.client.get_groups('mozilla')
         self.assertEquals(2, len(groups))
@@ -165,13 +165,13 @@ class FunctionalTest(unittest2.TestCase):
 
     def test_group_deletion(self):
         self.client.create_bucket('mozilla')
-        self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.create_group(group='payments', bucket='mozilla', data={'members': ['blah', ]})
         self.client.delete_group('payments', bucket='mozilla')
         assert len(self.client.get_groups(bucket='mozilla')) == 0
 
     def test_group_deletion_if_exists(self):
         self.client.create_bucket('mozilla')
-        self.client.create_group('payments', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.create_group(group='payments', bucket='mozilla', data={'members': ['blah', ]})
         self.client.delete_group('payments', bucket='mozilla')
         self.client.delete_group('payments', bucket='mozilla', if_exists=True)
 
@@ -183,8 +183,8 @@ class FunctionalTest(unittest2.TestCase):
 
     def test_groups_deletion(self):
         self.client.create_bucket('mozilla')
-        self.client.create_group('amo', bucket='mozilla', data={'members': ['blah', ]})
-        self.client.create_group('blocklist', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.create_group(group='amo', bucket='mozilla', data={'members': ['blah', ]})
+        self.client.create_group(group='blocklist', bucket='mozilla', data={'members': ['blah', ]})
         self.client.delete_groups(bucket='mozilla')
         assert len(self.client.get_groups(bucket='mozilla')) == 0
 
@@ -391,8 +391,8 @@ class FunctionalTest(unittest2.TestCase):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla')
         client.create_bucket()
-        client.create_group('payments', data={'members': []})
-        client.patch_group('payments', data={'secret': 'psssssst!'})
+        client.create_group(group='payments', data={'members': []})
+        client.patch_group(group='payments', data={'secret': 'psssssst!'})
         group = client.get_group('payments')
         assert group['data']['secret'] == 'psssssst!'
 
@@ -412,7 +412,7 @@ class FunctionalTest(unittest2.TestCase):
 
         self.client.create_bucket('bob-bucket')
         self.client.create_collection(
-            'shared',
+            collection='shared',
             bucket='bob-bucket',
             permissions={'read': [alice_userid, ]})
 

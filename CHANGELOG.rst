@@ -17,6 +17,10 @@ This document describes changes between each past release.
 - Fix retry behaviour when responses are successful (fixes #129)
 - Fix Retry-After value to be read as integer rather than string. (#131)
 
+**Internal changes**
+
+- ``make tests-once`` to run functional tests in order to calculate coverage correctly (#131)
+
 
 7.2.0 (2017-03-17)
 ==================

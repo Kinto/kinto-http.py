@@ -81,7 +81,10 @@ class Session(object):
                 self.backoff = None
 
             retry = retry - 1
-            if not (200 <= resp.status_code < 400):
+            if 200 <= resp.status_code < 400:
+                # Success
+                break
+            else:
                 if resp.status_code >= 500 and retry >= 0:
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.

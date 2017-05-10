@@ -12,6 +12,10 @@ This document describes changes between each past release.
 - Keep tracks of Backoff headers and raise an ``BackoffException`` if
   we are not waiting enough between two calls. (#53)
 
+**Bug fixes**
+
+- Fix retry behaviour when responses are successful (fixes #129)
+
 
 7.2.0 (2017-03-17)
 ==================

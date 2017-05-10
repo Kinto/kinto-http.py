@@ -173,6 +173,12 @@ class RetryRequestTest(unittest.TestCase):
         with self.assertRaises(KintoException):
             session.request('GET', '/v1/foobar')
 
+    def test_does_not_retry_if_successful(self):
+        self.requests_mock.request.side_effect = [self.response_200,
+                                                  self.response_403]  # retry 1
+        session = Session('https://example.org', retry=1)
+        session.request('GET', '/v1/foobar')  # Not raising.
+
     def test_succeeds_on_retry(self):
         self.requests_mock.request.side_effect = [self.response_503,
                                                   self.response_200]  # retry 1

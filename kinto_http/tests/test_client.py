@@ -79,7 +79,7 @@ class ClientTest(unittest.TestCase):
                 self.assertEqual(last_call_kwargs['retry'], 12)
                 self.assertEqual(last_call_kwargs['retry_after'], 20)
 
-    def test_client_is_represented_properly(self):
+    def test_client_is_represented_properly_with_bucket_and_collection(self):
         client = Client(
             server_url="https://kinto.notmyidea.org/v1",
             bucket="homebrewing",
@@ -87,6 +87,23 @@ class ClientTest(unittest.TestCase):
         )
         expected_repr = ("<KintoClient https://kinto.notmyidea.org/v1/"
                          "buckets/homebrewing/collections/recipes>")
+        assert str(client) == expected_repr
+
+    def test_client_is_represented_properly_with_bucket(self):
+        client = Client(
+            server_url="https://kinto.notmyidea.org/v1",
+            bucket="homebrewing",
+        )
+        expected_repr = ("<KintoClient https://kinto.notmyidea.org/v1/"
+                         "buckets/homebrewing>")
+        assert str(client) == expected_repr
+
+    def test_client_is_represented_properly_without_bucket(self):
+        client = Client(
+            server_url="https://kinto.notmyidea.org/v1",
+            bucket=None
+        )
+        expected_repr = ("<KintoClient https://kinto.notmyidea.org/v1/>")
         assert str(client) == expected_repr
 
     def test_client_uses_default_bucket_if_not_specified(self):

@@ -41,6 +41,17 @@ class SessionTest(unittest.TestCase):
 
         self.assertRaises(KintoException, session.request, 'get', '/test')
 
+    def test_bad_http_status_raises_exception_even_in_case_of_invalid_json_response(self):
+        response = fake_response(502)
+        response.json.side_effect = ValueError
+        response.text = "Foobar"
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+
+        with pytest.raises(KintoException) as e:
+            session.request('get', '/test')
+        self.assertEqual(e.value.message, "502 - Foobar")
+
     def test_session_injects_auth_on_requests(self):
         response = fake_response(200)
         self.requests_mock.request.return_value = response

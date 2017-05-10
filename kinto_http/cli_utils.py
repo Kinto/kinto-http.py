@@ -71,7 +71,8 @@ def add_parser_options(parser=None,
                         type=int, default=default_retry)
 
     parser.add_argument('--retry-after',
-                        help='Delay in seconds between retries when requests fail (default: provided by server)',
+                        help='Delay in seconds between retries when requests fail. '
+                        '(default: provided by server)',
                         type=int, default=default_retry_after)
 
     # Defaults

@@ -266,7 +266,7 @@ class BucketTest(unittest.TestCase):
         e = cm.exception
         self.assertEquals(e.response, exception.response)
         self.assertEquals(e.request, mock.sentinel.request)
-        self.assertEquals(e.message, "test")
+        self.assertEquals(e.message, 'test')
 
     def test_unauthorized_raises_a_kinto_exception(self):
         # Make the next call to sess.request raise a 401.
@@ -282,8 +282,8 @@ class BucketTest(unittest.TestCase):
         self.assertEquals(e.response, exception.response)
         self.assertEquals(e.request, mock.sentinel.request)
         self.assertEquals(e.message,
-                          "Unauthorized. Please check that the bucket exists and "
-                          "that you have the permission to read its content.")
+                          "Unauthorized. Please authenticate or make sure the bucket "
+                          "can be read anonymously.")
 
     def test_http_500_raises_an_error(self):
         exception = KintoException()

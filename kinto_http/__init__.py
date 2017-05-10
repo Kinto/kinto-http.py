@@ -253,8 +253,8 @@ class Client(object):
         except KintoException as e:
             error_resp_code = e.response.status_code
             if error_resp_code == 401:
-                msg = ("Unauthorized. Please check that the bucket exists and "
-                       "that you have the permission to read its content.")
+                msg = ("Unauthorized. Please authenticate or make sure the bucket "
+                       "can be read anonymously.")
                 e = KintoException(msg, e)
                 raise e
 

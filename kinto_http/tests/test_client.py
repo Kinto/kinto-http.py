@@ -208,14 +208,14 @@ class BucketTest(unittest.TestCase):
         mock_response(self.session)
 
     def test_put_is_issued_on_creation(self):
-        self.client.create_bucket('testbucket')
+        self.client.create_bucket(bucket='testbucket')
         self.session.request.assert_called_with(
             'put', '/buckets/testbucket', data=None, permissions=None,
             headers=DO_NOT_OVERWRITE)
 
     def test_put_is_issued_on_update(self):
         self.client.update_bucket(
-            'testbucket',
+            bucket='testbucket',
             data={'foo': 'bar', 'last_modified': '1234'},
             permissions={'read': ['natim']})
         self.session.request.assert_called_with(
@@ -226,9 +226,9 @@ class BucketTest(unittest.TestCase):
             headers={'If-Match': '"1234"'})
 
     def test_patch_is_issued_on_patch(self):
-        self.client.create_bucket('testbucket')
+        self.client.create_bucket(bucket='testbucket')
         self.client.patch_bucket(
-            'testbucket',
+            bucket='testbucket',
             data={'foo': 'bar'},
             permissions={'read': ['natim']})
         self.session.request.assert_called_with(
@@ -240,7 +240,7 @@ class BucketTest(unittest.TestCase):
 
     def test_update_bucket_handles_if_match(self):
         self.client.update_bucket(
-            'testbucket',
+            bucket='testbucket',
             data={'foo': 'bar'},
             if_match=1234)
         self.session.request.assert_called_with(
@@ -343,7 +343,7 @@ class BucketTest(unittest.TestCase):
             (bucket_data, None)
         ]
         returned_data = self.client.create_bucket(
-            "buck",
+            bucket="buck",
             if_not_exists=True)  # Should not raise.
         assert returned_data == bucket_data
 
@@ -369,7 +369,7 @@ class CollectionTest(unittest.TestCase):
 
     def test_collection_creation_issues_an_http_put(self):
         self.client.create_collection(
-            'mycollection',
+            collection='mycollection',
             permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
@@ -379,8 +379,8 @@ class CollectionTest(unittest.TestCase):
 
     def test_data_can_be_sent_on_creation(self):
         self.client.create_collection(
-            'mycollection',
-            'testbucket',
+            collection='mycollection',
+            bucket='testbucket',
             data={'foo': 'bar'})
 
         self.session.request.assert_called_with(
@@ -391,10 +391,8 @@ class CollectionTest(unittest.TestCase):
             headers=DO_NOT_OVERWRITE)
 
     def test_collection_update_issues_an_http_put(self):
-        self.client.update_collection(
-            {'foo': 'bar'},
-            collection='mycollection',
-            permissions=mock.sentinel.permissions)
+        self.client.update_collection({'foo': 'bar'}, 'mycollection',
+                                      permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
@@ -402,10 +400,9 @@ class CollectionTest(unittest.TestCase):
             permissions=mock.sentinel.permissions, headers=None)
 
     def test_update_handles_if_match(self):
-        self.client.update_collection(
-            {'foo': 'bar'},
-            collection='mycollection',
-            if_match=1234)
+        self.client.update_collection(collection='mycollection',
+                                      data={'foo': 'bar'},
+                                      if_match=1234)
 
         url = '/buckets/mybucket/collections/mycollection'
         headers = {'If-Match': '"1234"'}
@@ -415,10 +412,8 @@ class CollectionTest(unittest.TestCase):
 
     def test_collection_update_use_an_if_match_header(self):
         data = {'foo': 'bar', 'last_modified': '1234'}
-        self.client.update_collection(
-            data,
-            collection='mycollection',
-            permissions=mock.sentinel.permissions)
+        self.client.update_collection(data, 'mycollection',
+                                      permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
@@ -551,7 +546,7 @@ class RecordTest(unittest.TestCase):
 
     def test_generated_record_id_is_an_uuid(self):
         mock_response(self.session)
-        self.client.create_record({'foo': 'bar'})
+        self.client.create_record(data={'foo': 'bar'})
         id = self.session.request.mock_calls[0][1][1].split('/')[-1]
 
         uuid_regexp = r'[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12}'
@@ -560,7 +555,7 @@ class RecordTest(unittest.TestCase):
     def test_records_handles_permissions(self):
         mock_response(self.session)
         self.client.create_record(
-            {'id': '1234', 'foo': 'bar'},
+            data={'id': '1234', 'foo': 'bar'},
             permissions=mock.sentinel.permissions)
         self.session.request.assert_called_with(
             'put',

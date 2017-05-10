@@ -89,7 +89,7 @@ class Session(object):
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.
                     if self.retry_after is None:
-                        retry_after = resp.headers.get("Retry-After", 0)
+                        retry_after = int(resp.headers.get("Retry-After", 0))
                     else:
                         retry_after = self.retry_after
                     time.sleep(retry_after)

@@ -216,13 +216,13 @@ class RetryRequestTest(unittest.TestCase):
             sleep_mocked.assert_called_with(0)
 
     def test_waits_if_retry_after_header_is_present(self):
-        self.response_503.headers["Retry-After"] = 27
+        self.response_503.headers["Retry-After"] = "27"
         self.requests_mock.request.side_effect = [self.response_503,
                                                   self.response_200]
         with mock.patch('kinto_http.session.time.sleep') as sleep_mocked:
             session = Session('https://example.org', retry=1)
             session.request('GET', '/v1/foobar')
-            self.assertTrue(sleep_mocked.called)
+            sleep_mocked.assert_called_with(27)
 
     def test_waits_if_retry_after_is_forced(self):
         self.requests_mock.request.side_effect = [self.response_503,
@@ -233,7 +233,7 @@ class RetryRequestTest(unittest.TestCase):
             sleep_mocked.assert_called_with(10)
 
     def test_forced_retry_after_overrides_value_of_header(self):
-        self.response_503.headers["Retry-After"] = 27
+        self.response_503.headers["Retry-After"] = "27"
         self.requests_mock.request.side_effect = [self.response_503,
                                                   self.response_200]
         with mock.patch('kinto_http.session.time.sleep') as sleep_mocked:

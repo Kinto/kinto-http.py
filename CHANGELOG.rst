@@ -15,6 +15,7 @@ This document describes changes between each past release.
 **Bug fixes**
 
 - Fix retry behaviour when responses are successful (fixes #129)
+- Fix Retry-After value to be read as integer rather than string. (#131)
 
 
 7.2.0 (2017-03-17)

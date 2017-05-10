@@ -367,6 +367,26 @@ It is possible (but not recommended) to force this value in the clients:
                   retry=10,
                   retry_after=5)
 
+Pagination
+----------
+
+When the server responses are paginated, the client will download every pages and
+merge them transparently.
+
+However, it is possible to specify a limit for the number of items to be retrieved
+in one page:
+
+.. code-block:: python
+
+    records = client.get_records(_limit=10)
+
+In order to retrieve every available pages with a limited number of items in each
+of them, you can specify the number of pages:
+
+.. code-block:: python
+
+    records = client.get_records(_limit=10, pages=float('inf'))  # Infinity
+
 
 Generating endpoint paths
 -------------------------

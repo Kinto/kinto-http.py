@@ -674,10 +674,14 @@ class RecordTest(unittest.TestCase):
                 [{'id': '1', 'value': 'item1'},
                  {'id': '2', 'value': 'item2'}, ],
                 {'Next-Page': link}),
-            # Second one returns a list of items without a pagination token.
             build_response(
                 [{'id': '3', 'value': 'item3'},
                  {'id': '4', 'value': 'item4'}, ],
+                {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '5', 'value': 'item5'},
+                 {'id': '6', 'value': 'item6'}, ],
             ),
         ]
         records = self.client.get_records('bucket', 'collection')
@@ -687,6 +691,60 @@ class RecordTest(unittest.TestCase):
             {'id': '2', 'value': 'item2'},
             {'id': '3', 'value': 'item3'},
             {'id': '4', 'value': 'item4'},
+            {'id': '5', 'value': 'item5'},
+            {'id': '6', 'value': 'item6'},
+        ]
+
+    def test_pagination_is_followed_for_number_of_pages(self):
+        # Mock the calls to request.
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        self.session.request.side_effect = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                {'Next-Page': link}),
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+                {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '5', 'value': 'item5'},
+                 {'id': '6', 'value': 'item6'}, ],
+            ),
+        ]
+        records = self.client.get_records('bucket', 'collection', pages=2)
+
+        assert list(records) == [
+            {'id': '1', 'value': 'item1'},
+            {'id': '2', 'value': 'item2'},
+            {'id': '3', 'value': 'item3'},
+            {'id': '4', 'value': 'item4'},
+        ]
+
+    def test_pagination_is_not_followed_if_limit_is_specified(self):
+        # Mock the calls to request.
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        self.session.request.side_effect = [
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                {'Next-Page': link}),
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+            ),
+        ]
+        records = self.client.get_records('bucket', 'collection', _limit=2)
+
+        assert list(records) == [
+            {'id': '1', 'value': 'item1'},
+            {'id': '2', 'value': 'item2'}
         ]
 
     def test_pagination_supports_if_none_match(self):

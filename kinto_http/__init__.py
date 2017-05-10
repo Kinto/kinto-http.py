@@ -121,12 +121,15 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
-    def _paginated(self, endpoint, records=None, if_none_match=None, **kwargs):
+    def _paginated(self, endpoint, records=None, if_none_match=None, pages=None, **kwargs):
         if records is None:
             records = collections.OrderedDict()
         headers = {}
         if if_none_match is not None:
             headers['If-None-Match'] = utils.quote(if_none_match)
+
+        if pages is None:
+            pages = 1 if '_limit' in kwargs else float('inf')
 
         record_resp, headers = self.session.request(
             'get', endpoint, headers=headers, params=kwargs)
@@ -139,12 +142,13 @@ class Client(object):
             records_tuples = [(r['id'], r) for r in record_resp['data']]
             records.update(collections.OrderedDict(records_tuples))
 
-            if 'next-page' in map(str.lower, headers.keys()):
+            if pages > 1 and 'next-page' in map(str.lower, headers.keys()):
                 # Paginated wants a relative URL, but the returned one is
                 # absolute.
                 next_page = headers['Next-Page']
                 return self._paginated(next_page, records,
-                                       if_none_match=if_none_match)
+                                       if_none_match=if_none_match,
+                                       pages=pages - 1)
         return list(records.values())
 
     def _get_cache_headers(self, safe, data=None, if_match=None):
@@ -239,9 +243,9 @@ class Client(object):
         kwargs['method'] = 'patch'
         return self.update_bucket(*args, **kwargs)
 
-    def get_buckets(self):
+    def get_buckets(self, **kwargs):
         endpoint = self.get_endpoint('buckets')
-        return self._paginated(endpoint)
+        return self._paginated(endpoint, **kwargs)
 
     def get_bucket(self, bucket=None):
         endpoint = self.get_endpoint('bucket', bucket=bucket)
@@ -279,9 +283,9 @@ class Client(object):
 
     # Groups
 
-    def get_groups(self, bucket=None):
+    def get_groups(self, bucket=None, **kwargs):
         endpoint = self.get_endpoint('groups', bucket=bucket)
-        return self._paginated(endpoint)
+        return self._paginated(endpoint, **kwargs)
 
     def create_group(self, group, bucket=None,
                      data=None, permissions=None,
@@ -373,9 +377,9 @@ class Client(object):
 
     # Collections
 
-    def get_collections(self, bucket=None):
+    def get_collections(self, bucket=None, **kwargs):
         endpoint = self.get_endpoint('collections', bucket=bucket)
-        return self._paginated(endpoint)
+        return self._paginated(endpoint, **kwargs)
 
     def create_collection(self, collection=None, bucket=None,
                           data=None, permissions=None, safe=True,

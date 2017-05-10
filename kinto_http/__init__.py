@@ -255,6 +255,13 @@ class Client(object):
         try:
             resp, _ = self.session.request('get', endpoint)
         except KintoException as e:
+            error_resp_code = e.response.status_code
+            if error_resp_code == 401:
+                msg = ("Unauthorized. Please authenticate or make sure the bucket "
+                       "can be read anonymously.")
+                e = KintoException(msg, e)
+                raise e
+
             raise BucketNotFound(bucket or self._bucket_name, e)
         return resp
 

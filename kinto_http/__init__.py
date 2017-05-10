@@ -209,8 +209,12 @@ class Client(object):
 
     # Buckets
 
-    def create_bucket(self, bucket=None, data=None, permissions=None,
+    def create_bucket(self, data=None, bucket=None, permissions=None,
                       safe=True, if_not_exists=False):
+
+        if bucket is None and data:
+            bucket = data.get('id', None)
+
         if if_not_exists:
             return self._create_if_not_exists('bucket',
                                               bucket=bucket,
@@ -227,8 +231,12 @@ class Client(object):
                                        headers=headers)
         return resp
 
-    def update_bucket(self, bucket=None, data=None, permissions=None,
+    def update_bucket(self, data=None, bucket=None, permissions=None,
                       safe=True, if_match=None, method='put'):
+
+        if bucket is None and data:
+            bucket = data.get('id', None)
+
         endpoint = self.get_endpoint('bucket', bucket=bucket)
         headers = self._get_cache_headers(safe, data, if_match)
 
@@ -294,9 +302,15 @@ class Client(object):
         endpoint = self.get_endpoint('groups', bucket=bucket)
         return self._paginated(endpoint, **kwargs)
 
-    def create_group(self, group, bucket=None,
-                     data=None, permissions=None,
-                     safe=True, if_not_exists=False):
+    def create_group(self, data=None, group=None, bucket=None,
+                     permissions=None, safe=True, if_not_exists=False):
+
+        if group is None and data:
+            group = data.get('id', None)
+
+        if group is None:
+            raise KeyError('Please provide a group id')
+
         if if_not_exists:
             return self._create_if_not_exists('group',
                                               group=group,
@@ -325,9 +339,16 @@ class Client(object):
 
         return resp
 
-    def update_group(self, group, data=None, bucket=None,
+    def update_group(self, data=None, group=None, bucket=None,
                      permissions=None, method='put',
                      safe=True, if_match=None):
+
+        if group is None and data:
+            group = data.get('id', None)
+
+        if group is None:
+            raise KeyError('Please provide a group id')
+
         endpoint = self.get_endpoint('group',
                                      bucket=bucket,
                                      group=group)
@@ -345,9 +366,7 @@ class Client(object):
         return self.update_group(*args, **kwargs)
 
     def get_group(self, group, bucket=None):
-        endpoint = self.get_endpoint('group',
-                                     bucket=bucket,
-                                     group=group)
+        endpoint = self.get_endpoint('group', bucket=bucket, group=group)
 
         logger.info("Get group %r in bucket %r" % (group, bucket or self._bucket_name))
 
@@ -388,9 +407,12 @@ class Client(object):
         endpoint = self.get_endpoint('collections', bucket=bucket)
         return self._paginated(endpoint, **kwargs)
 
-    def create_collection(self, collection=None, bucket=None,
-                          data=None, permissions=None, safe=True,
-                          if_not_exists=False):
+    def create_collection(self, data=None, collection=None, bucket=None,
+                          permissions=None, safe=True, if_not_exists=False):
+
+        if collection is None and data:
+            collection = data.get('id', None)
+
         if if_not_exists:
             return self._create_if_not_exists('collection',
                                               collection=collection,
@@ -398,6 +420,7 @@ class Client(object):
                                               data=data,
                                               permissions=permissions,
                                               safe=safe)
+
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
@@ -423,6 +446,10 @@ class Client(object):
     def update_collection(self, data=None, collection=None, bucket=None,
                           permissions=None, method='put',
                           safe=True, if_match=None):
+
+        if collection is None and data:
+            collection = data.get('id', None)
+
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
                                      collection=collection)
@@ -481,8 +508,7 @@ class Client(object):
 
     # Records
 
-    def get_records_timestamp(self, collection=None, bucket=None,
-                              **kwargs):
+    def get_records_timestamp(self, collection=None, bucket=None, **kwargs):
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)
@@ -516,6 +542,8 @@ class Client(object):
 
     def create_record(self, data, id=None, collection=None, permissions=None,
                       bucket=None, safe=True, if_not_exists=False):
+
+        id = id or data.get('id', None)
         if if_not_exists:
             return self._create_if_not_exists('record',
                                               data=data,
@@ -524,7 +552,7 @@ class Client(object):
                                               permissions=permissions,
                                               bucket=bucket,
                                               safe=safe)
-        id = id or data.get('id', None) or str(uuid.uuid4())
+        id = id or str(uuid.uuid4())
         # Make sure that no record already exists with this id.
         headers = DO_NOT_OVERWRITE if safe else None
 

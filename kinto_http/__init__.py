@@ -252,10 +252,9 @@ class Client(object):
             resp, _ = self.session.request('get', endpoint)
         except KintoException as e:
             error_resp_code = e.response.status_code
-            if error_resp_code == 401 or error_resp_code == 403:
+            if error_resp_code == 401:
                 msg = ("Unauthorized. Please check that the bucket exists and "
-                       "that you have the permission to create or write on "
-                       "this group.")
+                       "that you have the permission to read its content.")
                 e = KintoException(msg, e)
                 raise e
 

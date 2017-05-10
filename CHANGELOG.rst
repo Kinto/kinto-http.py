@@ -12,6 +12,8 @@ This document describes changes between each past release.
 - Keep tracks of Backoff headers and raise an ``BackoffException`` if
   we are not waiting enough between two calls. (#53)
 - Add ``--retry`` and ``--retry-after`` to CLI utils helpers (fixes #126)
+- Fetch only one page when ``_limit`` is specified and allow to override this
+  with a ``pages`` argument (fixes #136)
 
 **Bug fixes**
 

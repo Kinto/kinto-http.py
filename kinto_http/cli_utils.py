@@ -22,7 +22,9 @@ def create_client_from_args(args):
     return Client(server_url=args.server,
                   auth=args.auth,
                   bucket=getattr(args, 'bucket', None),
-                  collection=getattr(args, 'collection', None))
+                  collection=getattr(args, 'collection', None),
+                  retry=args.retry,
+                  retry_after=args.retry_after)
 
 
 class AuthAction(argparse.Action):
@@ -35,6 +37,8 @@ class AuthAction(argparse.Action):
 def add_parser_options(parser=None,
                        default_server=None,
                        default_auth=None,
+                       default_retry=0,
+                       default_retry_after=None,
                        default_bucket=None,
                        default_collection=None,
                        include_bucket=True,
@@ -61,6 +65,14 @@ def add_parser_options(parser=None,
         parser.add_argument('-c', '--collection',
                             help='Collection name.',
                             type=str, default=default_collection)
+
+    parser.add_argument('--retry',
+                        help='Number of retries when a request fails',
+                        type=int, default=default_retry)
+
+    parser.add_argument('--retry-after',
+                        help='Delay in seconds between retries when requests fail (default: provided by server)',
+                        type=int, default=default_retry_after)
 
     # Defaults
     parser.add_argument('-v', '--verbose', action='store_const',

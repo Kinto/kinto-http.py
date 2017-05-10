@@ -7,10 +7,11 @@ This document describes changes between each past release.
 7.3.0 (unreleased)
 ==================
 
-**New Feature**
+**New Features**
 
 - Keep tracks of Backoff headers and raise an ``BackoffException`` if
   we are not waiting enough between two calls. (#53)
+- Add ``--retry`` and ``--retry-after`` to CLI utils helpers (fixes #126)
 
 **Bug fixes**
 

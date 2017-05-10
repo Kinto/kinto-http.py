@@ -2,7 +2,7 @@ import mock
 from six import text_type
 from .support import unittest, mock_response, build_response, get_http_error
 
-from kinto_http import KintoException, BucketNotFound, Client, DO_NOT_OVERWRITE
+from kinto_http import KintoException, Client, DO_NOT_OVERWRITE
 from kinto_http.session import create_session
 
 
@@ -278,12 +278,14 @@ class BucketTest(unittest.TestCase):
         exception.request = mock.sentinel.request
         self.session.request.side_effect = exception
 
-        with self.assertRaises(BucketNotFound) as cm:
+        with self.assertRaises(KintoException) as cm:
             self.client.get_bucket('test')
         e = cm.exception
         self.assertEquals(e.response, exception.response)
         self.assertEquals(e.request, mock.sentinel.request)
-        self.assertEquals(e.message, 'test')
+        self.assertEquals(e.message, "Unauthorized. Please check that the bucket exists and "
+                                     "that you have the permission to create or write on "
+                                     "this group.")
 
     def test_http_500_raises_an_error(self):
         exception = KintoException()

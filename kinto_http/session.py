@@ -96,7 +96,11 @@ class Session(object):
                     continue
 
                 # Retries exhausted, raise expection.
-                message = '{0} - {1}'.format(resp.status_code, resp.json())
+                try:
+                    message = '{0} - {1}'.format(resp.status_code, resp.json())
+                except ValueError:
+                    # In case the response is not JSON, fallback to text.
+                    message = '{0} - {1}'.format(resp.status_code, resp.text)
                 exception = KintoException(message)
                 exception.request = resp.request
                 exception.response = resp

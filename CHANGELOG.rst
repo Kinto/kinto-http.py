@@ -17,6 +17,7 @@ This document describes changes between each past release.
 
 - Fix retry behaviour when responses are successful (fixes #129)
 - Fix Retry-After value to be read as integer rather than string. (#131)
+- Fix No JSON could be decoded ValueError (fixes #116)
 
 **Internal changes**
 

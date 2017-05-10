@@ -598,10 +598,14 @@ class Client(object):
         return resp['data']
 
     def __repr__(self):
-        endpoint = self.get_endpoint(
-            'collection',
-            bucket=self._bucket_name,
-            collection=self._collection_name
-        )
+        if self._collection_name:
+            endpoint = self.get_endpoint('collection',
+                                         bucket=self._bucket_name,
+                                         collection=self._collection_name)
+        elif self._bucket_name:
+            endpoint = self.get_endpoint('bucket', bucket=self._bucket_name)
+        else:
+            endpoint = self.get_endpoint('root')
+
         absolute_endpoint = utils.urljoin(self.session.server_url, endpoint)
         return "<KintoClient %s>" % absolute_endpoint

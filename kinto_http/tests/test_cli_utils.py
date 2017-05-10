@@ -10,6 +10,8 @@ ALL_PARAMETERS = [
     ['-a', '--auth'],
     ['-b', '--bucket'],
     ['-c', '--collection'],
+    ['--retry'],
+    ['--retry-after'],
     ['-v', '--verbose'],
     ['-q', '--quiet'],
     ['-D', '--debug'],
@@ -26,7 +28,7 @@ class ParserServerOptionsTest(unittest.TestCase):
     def test_add_parser_options_create_a_parser_if_needed(self):
         parser = cli_utils.add_parser_options()
         self.assert_option_strings(parser, *ALL_PARAMETERS)
-        assert len(parser._actions) == 8
+        assert len(parser._actions) == 10
 
     def test_add_parser_options_adds_arguments_on_existing_parser(self):
         parser = argparse.ArgumentParser(prog="importer")
@@ -36,7 +38,7 @@ class ParserServerOptionsTest(unittest.TestCase):
         parser = cli_utils.add_parser_options(parser)
         self.assert_option_strings(parser, ['-t', '--type'],
                                    *ALL_PARAMETERS)
-        assert len(parser._actions) == 9
+        assert len(parser._actions) == 11
 
     def test_add_parser_options_can_ignore_bucket_and_collection(self):
         parser = cli_utils.add_parser_options(
@@ -45,12 +47,14 @@ class ParserServerOptionsTest(unittest.TestCase):
             ['-h', '--help'],
             ['-s', '--server'],
             ['-a', '--auth'],
+            ['--retry'],
+            ['--retry-after'],
             ['-v', '--verbose'],
             ['-q', '--quiet'],
             ['-D', '--debug'],
         ]
         self.assert_option_strings(parser, *parameters)
-        assert len(parser._actions) == 6
+        assert len(parser._actions) == 8
 
     def test_can_change_default_values(self):
         parser = cli_utils.add_parser_options(
@@ -67,6 +71,8 @@ class ParserServerOptionsTest(unittest.TestCase):
             'auth': 'user:password',
             'bucket': 'blocklists',
             'collection': 'certificates',
+            'retry': 0,
+            'retry_after': None,
             'verbosity': None
         }
 
@@ -96,7 +102,7 @@ class GetAuthTest(unittest.TestCase):
 class ClientFromArgsTest(unittest.TestCase):
 
     @mock.patch('kinto_http.cli_utils.Client')
-    def test_create_client_from_args_build_a_client(self, mocked_client):
+    def test_create_client_from_default_args_build_a_client(self, mocked_client):
         parser = cli_utils.add_parser_options(
             default_server="https://firefox.settings.services.mozilla.com/",
             default_bucket="blocklists",
@@ -111,7 +117,29 @@ class ClientFromArgsTest(unittest.TestCase):
             server_url='https://firefox.settings.services.mozilla.com/',
             auth=('user', 'password'),
             bucket='blocklists',
-            collection='certificates')
+            collection='certificates',
+            retry=0,
+            retry_after=None)
+
+    @mock.patch('kinto_http.cli_utils.Client')
+    def test_create_client_from_args_build_a_client(self, mocked_client):
+        parser = cli_utils.add_parser_options(
+            default_server="https://firefox.settings.services.mozilla.com/",
+        )
+
+        args = parser.parse_args(['--auth', 'user:password',
+                                  '--bucket', 'blocklists',
+                                  '--collection', 'certificates',
+                                  '--retry', '3'])
+
+        cli_utils.create_client_from_args(args)
+        mocked_client.assert_called_with(
+            server_url='https://firefox.settings.services.mozilla.com/',
+            auth=('user', 'password'),
+            bucket='blocklists',
+            collection='certificates',
+            retry=3,
+            retry_after=None)
 
     @mock.patch('kinto_http.cli_utils.Client')
     def test_create_client_from_args_default_bucket_and_collection_to_none(
@@ -129,4 +157,6 @@ class ClientFromArgsTest(unittest.TestCase):
             server_url='https://firefox.settings.services.mozilla.com/',
             auth=('user', 'password'),
             bucket=None,
-            collection=None)
+            collection=None,
+            retry=0,
+            retry_after=None)

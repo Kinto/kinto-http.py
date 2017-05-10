@@ -138,7 +138,7 @@ If no specific bucket name is provided, the "default" bucket is used.
     # To create a bucket.
     client.create_bucket('payments')
 
-    # To get an existing bucket 
+    # To get an existing bucket
     bucket = client.get_bucket('payments')
 
     # Or retrieve all readable buckets.
@@ -163,7 +163,7 @@ If no specific bucket name is provided, the "default" bucket is used.
 Groups
 ------
 
-A group associates a name to a list of principals. It is useful in order to handle permissions. 
+A group associates a name to a list of principals. It is useful in order to handle permissions.
 
 .. code-block:: python
 
@@ -436,9 +436,14 @@ The script now accepts basic options:
                           Bucket name.
     -c COLLECTION, --collection COLLECTION
                           Collection name.
+    --retry RETRY         Number of retries when a request fails
+    --retry-after RETRY_AFTER
+                          Delay in seconds between retries when requests fail
+                          (default: provided by server)
     -v, --verbose         Show all messages.
     -q, --quiet           Show only critical errors.
     -D, --debug           Show all messages, including debug messages.
+
 
 
 Run tests

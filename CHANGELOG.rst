@@ -4,11 +4,13 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-7.3.0 (unreleased)
+8.0.0 (2017-05-11)
 ==================
 
 **Breaking changes**
 
+- Fetch only one page when ``_limit`` is specified and allow to override this
+  with a ``pages`` argument (fixes #136)
 - Make client methods API consistent by forcing keyword parameters (#119)
 - Deduce the ``id`` of a resource with the value of ``id`` in ``data`` if present (#143)
 - Drop Python 2.7 support. Now supports Python 3.5+
@@ -18,8 +20,6 @@ This document describes changes between each past release.
 - Keep tracks of Backoff headers and raise an ``BackoffException`` if
   we are not waiting enough between two calls. (#53)
 - Add ``--retry`` and ``--retry-after`` to CLI utils helpers (fixes #126)
-- Fetch only one page when ``_limit`` is specified and allow to override this
-  with a ``pages`` argument (fixes #136)
 
 **Bug fixes**
 

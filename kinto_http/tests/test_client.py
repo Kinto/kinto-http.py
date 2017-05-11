@@ -342,9 +342,8 @@ class BucketTest(unittest.TestCase):
             get_http_error(status=412),
             (bucket_data, None)
         ]
-        returned_data = self.client.create_bucket(
-            bucket="buck",
-            if_not_exists=True)  # Should not raise.
+        # Should not raise.
+        returned_data = self.client.create_bucket(bucket="buck", if_not_exists=True)
         assert returned_data == bucket_data
 
     def test_get_or_create_raise_in_other_cases(self):
@@ -353,6 +352,18 @@ class BucketTest(unittest.TestCase):
             self.client.create_bucket(
                 bucket="buck",
                 if_not_exists=True)
+
+    def test_create_bucket_can_deduce_id_from_data(self):
+        self.client.create_bucket(data={'id': 'testbucket'})
+        self.session.request.assert_called_with(
+            'put', '/buckets/testbucket', data={'id': 'testbucket'}, permissions=None,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_update_bucket_can_deduce_id_from_data(self):
+        self.client.update_bucket({'id': 'testbucket'})
+        self.session.request.assert_called_with(
+            'put', '/buckets/testbucket', data={'id': 'testbucket'}, permissions=None,
+            headers=None)
 
 
 class CollectionTest(unittest.TestCase):
@@ -531,10 +542,23 @@ class CollectionTest(unittest.TestCase):
                         "on this collection.")
         assert e.exception.message == expected_msg
 
+    def test_create_collection_can_deduce_id_from_data(self):
+        self.client.create_collection(data={'id': 'coll'}, bucket='buck')
+        self.session.request.assert_called_with(
+            'put', '/buckets/buck/collections/coll', data={'id': 'coll'}, permissions=None,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_update_collection_can_deduce_id_from_data(self):
+        self.client.update_collection({'id': 'coll'}, bucket='buck')
+        self.session.request.assert_called_with(
+            'put', '/buckets/buck/collections/coll', data={'id': 'coll'}, permissions=None,
+            headers=None)
+
 
 class RecordTest(unittest.TestCase):
     def setUp(self):
         self.session = mock.MagicMock()
+        self.session.request.return_value = (mock.sentinel.response, mock.sentinel.count)
         self.client = Client(
             session=self.session, bucket='mybucket',
             collection='mycollection')
@@ -897,3 +921,15 @@ class RecordTest(unittest.TestCase):
                         " and that you have the permission to create or write "
                         "on this collection record.")
         assert e.exception.message == expected_msg
+
+    def test_create_record_can_deduce_id_from_data(self):
+        self.client.create_record(data={'id': 'record'}, bucket='buck', collection='coll')
+        self.session.request.assert_called_with(
+            'put', '/buckets/buck/collections/coll/records/record', data={'id': 'record'},
+            permissions=None, headers=DO_NOT_OVERWRITE)
+
+    def test_update_record_can_deduce_id_from_data(self):
+        self.client.update_record({'id': 'record'}, bucket='buck', collection='coll')
+        self.session.request.assert_called_with(
+            'put', '/buckets/buck/collections/coll/records/record', data={'id': 'record'},
+            permissions=None, headers=None)

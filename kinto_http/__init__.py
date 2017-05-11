@@ -538,8 +538,8 @@ class Client(object):
         resp, _ = self.session.request('get', endpoint)
         return resp
 
-    def create_record(self, id=None, collection=None, data=None, permissions=None,
-                      bucket=None, safe=True, if_not_exists=False):
+    def create_record(self, id=None, data=None, permissions=None,
+                      bucket=None, collection=None, safe=True, if_not_exists=False):
 
         id = id or data.get('id', None)
         if if_not_exists:
@@ -576,8 +576,8 @@ class Client(object):
 
         return resp
 
-    def update_record(self, id=None, collection=None, data=None, permissions=None,
-                      bucket=None, safe=True, method='put',
+    def update_record(self, data=None, id=None, collection=None, bucket=None,
+                      permissions=None, safe=True, method='put',
                       if_match=None):
         id = id or data.get('id')
         if id is None:

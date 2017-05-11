@@ -1,4 +1,5 @@
 import mock
+import pytest
 from six import text_type
 from .support import unittest, mock_response, build_response, get_http_error
 
@@ -364,6 +365,36 @@ class BucketTest(unittest.TestCase):
         self.session.request.assert_called_with(
             'put', '/buckets/testbucket', data={'id': 'testbucket'}, permissions=None,
             headers=None)
+
+
+class GroupTest(unittest.TestCase):
+
+    def setUp(self):
+        self.session = mock.MagicMock()
+        mock_response(self.session)
+        self.client = Client(session=self.session, bucket='mybucket')
+
+    def test_create_group_can_deduce_id_from_data(self):
+        self.client.create_group(data={'id': 'group'})
+        self.session.request.assert_called_with(
+            'put', '/buckets/mybucket/groups/group', data={'id': 'group'}, permissions=None,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_update_group_can_deduce_id_from_data(self):
+        self.client.update_group({'id': 'group'})
+        self.session.request.assert_called_with(
+            'put', '/buckets/mybucket/groups/group', data={'id': 'group'}, permissions=None,
+            headers=None)
+
+    def test_create_group_raises_if_group_id_is_missing(self):
+        with pytest.raises(KeyError) as e:
+            self.client.create_group()
+        self.assertEqual('%s' % e.value, "'Please provide a group id'")
+
+    def test_update_group_raises_if_group_id_is_missing(self):
+        with pytest.raises(KeyError) as e:
+            self.client.update_group()
+        self.assertEqual('%s' % e.value, "'Please provide a group id'")
 
 
 class CollectionTest(unittest.TestCase):

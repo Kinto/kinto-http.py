@@ -7,6 +7,11 @@ This document describes changes between each past release.
 7.3.0 (unreleased)
 ==================
 
+**Breaking changes**
+
+- Make ``update_*`` methods parameters consistents with each other (#119)
+- Deduce the ``id`` of a resource with the value of ``id`` in ``data`` if present (#143)
+
 **New Features**
 
 - Keep tracks of Backoff headers and raise an ``BackoffException`` if

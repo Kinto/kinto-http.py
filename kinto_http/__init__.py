@@ -169,7 +169,7 @@ class Client(object):
             # The exception contains the existing record in details.existing
             # but it's not enough as we also need to return the permissions.
             get_kwargs = {'id': kwargs['id']}
-            if resource in('group', 'collection', 'record'):
+            if resource in ('group', 'collection', 'record'):
                 get_kwargs['bucket'] = kwargs['bucket']
 
                 if resource == 'record':

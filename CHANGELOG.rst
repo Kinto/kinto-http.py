@@ -9,7 +9,7 @@ This document describes changes between each past release.
 
 **Breaking changes**
 
-- Make ``update_*`` methods parameters consistents with each other (#119)
+- Make client methods API consistent by forcing keyword parameters (#119)
 - Deduce the ``id`` of a resource with the value of ``id`` in ``data`` if present (#143)
 - Drop Python 2.7 support. Now supports Python 3.5+
 

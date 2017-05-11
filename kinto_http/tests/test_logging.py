@@ -11,22 +11,22 @@ class BucketLoggingTest(unittest.TestCase):
 
     def test_create_bucket_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.create_bucket("buck", data={'foo': 'bar'})
+            self.client.create_bucket(id="buck", data={'foo': 'bar'})
             mocked_logger.info.assert_called_with("Create bucket 'buck'")
 
     def test_update_bucket_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.update_bucket({'foo': 'bar'}, 'buck')
+            self.client.update_bucket(id='buck', data={'foo': 'bar'})
             mocked_logger.info.assert_called_with("Update bucket 'buck'")
 
     def test_get_bucket_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.get_bucket(bucket="buck")
+            self.client.get_bucket(id="buck")
             mocked_logger.info.assert_called_with("Get bucket 'buck'")
 
     def test_delete_bucket_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.delete_bucket(bucket="buck")
+            self.client.delete_bucket(id="buck")
             mocked_logger.info.assert_called_with("Delete bucket 'buck'")
 
     def test_delete_buckets_logs_info_message(self):
@@ -44,7 +44,7 @@ class GroupLoggingTest(unittest.TestCase):
     def test_create_group_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
             self.client.create_group(
-                bucket="buck", group='mozilla',
+                id='mozilla', bucket="buck",
                 data={'foo': 'bar'},
                 permissions={'write': ['blah', ]})
             mocked_logger.info.assert_called_with(
@@ -54,7 +54,7 @@ class GroupLoggingTest(unittest.TestCase):
         with mock.patch('kinto_http.logger') as mocked_logger:
             self.client.update_group(
                 data={'foo': 'bar'},
-                group='mozilla', bucket='buck',
+                id='mozilla', bucket='buck',
                 permissions={'write': ['blahblah', ]})
             mocked_logger.info.assert_called_with(
                 "Update group 'mozilla' in bucket 'buck'")
@@ -62,14 +62,14 @@ class GroupLoggingTest(unittest.TestCase):
     def test_get_group_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
             self.client.get_group(
-                'mozilla', bucket='buck')
+                id='mozilla', bucket='buck')
             mocked_logger.info.assert_called_with(
                 "Get group 'mozilla' in bucket 'buck'")
 
     def test_delete_group_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
             self.client.delete_group(
-                'mozilla', bucket="buck")
+                id='mozilla', bucket="buck")
             mocked_logger.info.assert_called_with(
                 "Delete group 'mozilla' in bucket 'buck'")
 
@@ -89,7 +89,7 @@ class CollectionLoggingTest(unittest.TestCase):
 
     def test_create_collection_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.create_collection('mozilla', bucket="buck",
+            self.client.create_collection(id='mozilla', bucket="buck",
                                           data={'foo': 'bar'},
                                           permissions={'write': ['blah', ]})
             mocked_logger.info.assert_called_with(
@@ -99,7 +99,7 @@ class CollectionLoggingTest(unittest.TestCase):
         with mock.patch('kinto_http.logger') as mocked_logger:
             self.client.update_collection(
                 data={'foo': 'bar'},
-                collection='mozilla', bucket='buck',
+                id='mozilla', bucket='buck',
                 permissions={'write': ['blahblah', ]})
             mocked_logger.info.assert_called_with(
                 "Update collection 'mozilla' in bucket 'buck'")
@@ -107,14 +107,14 @@ class CollectionLoggingTest(unittest.TestCase):
     def test_get_collection_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
             self.client.get_collection(
-                'mozilla', bucket='buck')
+                id='mozilla', bucket='buck')
             mocked_logger.info.assert_called_with(
                 "Get collection 'mozilla' in bucket 'buck'")
 
     def test_delete_collection_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
             self.client.delete_collection(
-                'mozilla', bucket="buck")
+                id='mozilla', bucket="buck")
             mocked_logger.info.assert_called_with(
                 "Delete collection 'mozilla' in bucket 'buck'")
 
@@ -134,8 +134,8 @@ class RecordLoggingTest(unittest.TestCase):
 
     def test_create_record_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.create_bucket(bucket='buck')
-            self.client.create_collection(collection='mozilla',
+            self.client.create_bucket(id='buck')
+            self.client.create_collection(id='mozilla',
                                           bucket='buck')
             self.client.create_record(
                 id='fake-record',
@@ -148,9 +148,9 @@ class RecordLoggingTest(unittest.TestCase):
 
     def test_update_record_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.create_bucket(bucket='buck')
+            self.client.create_bucket(id='buck')
             self.client.create_collection(bucket='buck',
-                                          collection='mozilla')
+                                          id='mozilla')
             self.client.update_record(
                 id='fake-record',
                 data={'ss': 'aa'},
@@ -161,8 +161,8 @@ class RecordLoggingTest(unittest.TestCase):
 
     def test_get_record_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.create_bucket(bucket='buck')
-            self.client.create_collection(collection='mozilla',
+            self.client.create_bucket(id='buck')
+            self.client.create_collection(id='mozilla',
                                           bucket='buck')
             self.client.get_record(
                 id='fake-record',
@@ -173,8 +173,8 @@ class RecordLoggingTest(unittest.TestCase):
 
     def test_delete_record_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.create_bucket(bucket='buck')
-            self.client.create_collection(collection='mozilla',
+            self.client.create_bucket(id='buck')
+            self.client.create_collection(id='mozilla',
                                           bucket='buck')
             self.client.delete_record(
                 id='fake-record',
@@ -185,8 +185,8 @@ class RecordLoggingTest(unittest.TestCase):
 
     def test_delete_records_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
-            self.client.create_bucket(bucket='buck')
-            self.client.create_collection(collection='mozilla',
+            self.client.create_bucket(id='buck')
+            self.client.create_collection(id='mozilla',
                                           bucket='buck')
             self.client.delete_records(
                 bucket='buck',

@@ -61,7 +61,7 @@ class Endpoints(object):
 
 class Client(object):
 
-    def __init__(self, server_url=None, session=None, auth=None,
+    def __init__(self, *, server_url=None, session=None, auth=None,
                  bucket="default", collection=None, retry=0, retry_after=None):
         self.endpoints = Endpoints()
         session_kwargs = dict(server_url=server_url,
@@ -101,7 +101,7 @@ class Client(object):
         batch_session.send()
         batch_session.reset()
 
-    def get_endpoint(self, name, bucket=None, group=None, collection=None, id=None):
+    def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None):
         """Return the endpoint with named parameters.
 
            Please always use the method as if it was defined like this:
@@ -121,7 +121,7 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
-    def _paginated(self, endpoint, records=None, if_none_match=None, pages=None, **kwargs):
+    def _paginated(self, endpoint, records=None, *, if_none_match=None, pages=None, **kwargs):
         if records is None:
             records = collections.OrderedDict()
         headers = {}
@@ -168,14 +168,12 @@ class Client(object):
                 raise e
             # The exception contains the existing record in details.existing
             # but it's not enough as we also need to return the permissions.
-            get_kwargs = {}
-            if resource in('bucket', 'group', 'collection', 'record'):
+            get_kwargs = {'id': kwargs['id']}
+            if resource in('group', 'collection', 'record'):
                 get_kwargs['bucket'] = kwargs['bucket']
-            if resource == 'group':
-                get_kwargs['group'] = kwargs['group']
-            elif resource in ('collection', 'record'):
-                get_kwargs['collection'] = kwargs['collection']
+
                 if resource == 'record':
+                    get_kwargs['collection'] = kwargs['collection']
                     _id = kwargs.get('id') or kwargs['data']['id']
                     get_kwargs['id'] = _id
 
@@ -209,56 +207,56 @@ class Client(object):
 
     # Buckets
 
-    def create_bucket(self, bucket=None, data=None, permissions=None,
+    def create_bucket(self, *, id=None, data=None, permissions=None,
                       safe=True, if_not_exists=False):
 
-        if bucket is None and data:
-            bucket = data.get('id', None)
+        if id is None and data:
+            id = data.get('id', None)
 
         if if_not_exists:
             return self._create_if_not_exists('bucket',
-                                              bucket=bucket,
+                                              id=id,
                                               data=data,
                                               permissions=permissions,
                                               safe=safe)
         headers = DO_NOT_OVERWRITE if safe else None
-        endpoint = self.get_endpoint('bucket', bucket=bucket)
+        endpoint = self.get_endpoint('bucket', bucket=id)
 
-        logger.info("Create bucket %r" % bucket or self._bucket_name)
+        logger.info("Create bucket %r" % id or self._bucket_name)
 
         resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
 
-    def update_bucket(self, data=None, bucket=None, permissions=None,
+    def update_bucket(self, *, id=None, data=None, permissions=None,
                       safe=True, if_match=None, method='put'):
 
-        if bucket is None and data:
-            bucket = data.get('id', None)
+        if id is None and data:
+            id = data.get('id', None)
 
-        endpoint = self.get_endpoint('bucket', bucket=bucket)
+        endpoint = self.get_endpoint('bucket', bucket=id)
         headers = self._get_cache_headers(safe, data, if_match)
 
-        logger.info("Update bucket %r" % bucket or self._bucket_name)
+        logger.info("Update bucket %r" % id or self._bucket_name)
 
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
 
-    def patch_bucket(self, *args, **kwargs):
+    def patch_bucket(self, **kwargs):
         kwargs['method'] = 'patch'
-        return self.update_bucket(*args, **kwargs)
+        return self.update_bucket(**kwargs)
 
     def get_buckets(self, **kwargs):
         endpoint = self.get_endpoint('buckets')
         return self._paginated(endpoint, **kwargs)
 
-    def get_bucket(self, bucket=None):
-        endpoint = self.get_endpoint('bucket', bucket=bucket)
+    def get_bucket(self, *, id=None):
+        endpoint = self.get_endpoint('bucket', bucket=id)
 
-        logger.info("Get bucket %r" % bucket or self._bucket_name)
+        logger.info("Get bucket %r" % id or self._bucket_name)
 
         try:
             resp, _ = self.session.request('get', endpoint)
@@ -270,24 +268,24 @@ class Client(object):
                 e = KintoException(msg, e)
                 raise e
 
-            raise BucketNotFound(bucket or self._bucket_name, e)
+            raise BucketNotFound(id or self._bucket_name, e)
         return resp
 
-    def delete_bucket(self, bucket=None, safe=True, if_match=None, if_exists=False):
+    def delete_bucket(self, *, id=None, safe=True, if_match=None, if_exists=False):
         if if_exists:
             return self._delete_if_exists('bucket',
-                                          bucket=bucket,
+                                          id=id,
                                           safe=safe,
                                           if_match=if_match)
-        endpoint = self.get_endpoint('bucket', bucket=bucket)
+        endpoint = self.get_endpoint('bucket', bucket=id)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
-        logger.info("Delete bucket %r" % bucket or self._bucket_name)
+        logger.info("Delete bucket %r" % id or self._bucket_name)
 
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_buckets(self, safe=True, if_match=None):
+    def delete_buckets(self, *, safe=True, if_match=None):
         endpoint = self.get_endpoint('buckets')
         headers = self._get_cache_headers(safe, if_match=if_match)
 
@@ -298,22 +296,22 @@ class Client(object):
 
     # Groups
 
-    def get_groups(self, bucket=None, **kwargs):
+    def get_groups(self, *, bucket=None, **kwargs):
         endpoint = self.get_endpoint('groups', bucket=bucket)
         return self._paginated(endpoint, **kwargs)
 
-    def create_group(self, group=None, bucket=None, data=None, permissions=None,
+    def create_group(self, *, id=None, bucket=None, data=None, permissions=None,
                      safe=True, if_not_exists=False):
 
-        if group is None and data:
-            group = data.get('id', None)
+        if id is None and data:
+            id = data.get('id', None)
 
-        if group is None:
+        if id is None:
             raise KeyError('Please provide a group id')
 
         if if_not_exists:
             return self._create_if_not_exists('group',
-                                              group=group,
+                                              id=id,
                                               bucket=bucket,
                                               data=data,
                                               permissions=permissions,
@@ -321,9 +319,9 @@ class Client(object):
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self.get_endpoint('group',
                                      bucket=bucket,
-                                     group=group)
+                                     group=id)
 
-        logger.info("Create group %r in bucket %r" % (group, bucket or self._bucket_name))
+        logger.info("Create group %r in bucket %r" % (id, bucket or self._bucket_name))
 
         try:
             resp, _ = self.session.request('put', endpoint, data=data,
@@ -339,59 +337,59 @@ class Client(object):
 
         return resp
 
-    def update_group(self, data=None, group=None, bucket=None, permissions=None,
+    def update_group(self, *, id=None, bucket=None, data=None, permissions=None,
                      method='put', safe=True, if_match=None):
 
-        if group is None and data:
-            group = data.get('id', None)
+        if id is None and data:
+            id = data.get('id', None)
 
-        if group is None:
+        if id is None:
             raise KeyError('Please provide a group id')
 
         endpoint = self.get_endpoint('group',
                                      bucket=bucket,
-                                     group=group)
+                                     group=id)
         headers = self._get_cache_headers(safe, data, if_match)
 
-        logger.info("Update group %r in bucket %r" % (group, bucket or self._bucket_name))
+        logger.info("Update group %r in bucket %r" % (id, bucket or self._bucket_name))
 
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
 
-    def patch_group(self, *args, **kwargs):
+    def patch_group(self, **kwargs):
         kwargs['method'] = 'patch'
-        return self.update_group(*args, **kwargs)
+        return self.update_group(**kwargs)
 
-    def get_group(self, group, bucket=None):
-        endpoint = self.get_endpoint('group', bucket=bucket, group=group)
+    def get_group(self, *, id, bucket=None):
+        endpoint = self.get_endpoint('group', bucket=bucket, group=id)
 
-        logger.info("Get group %r in bucket %r" % (group, bucket or self._bucket_name))
+        logger.info("Get group %r in bucket %r" % (id, bucket or self._bucket_name))
 
         resp, _ = self.session.request('get', endpoint)
         return resp
 
-    def delete_group(self, group, bucket=None,
+    def delete_group(self, *, id, bucket=None,
                      safe=True, if_match=None,
                      if_exists=False):
         if if_exists:
             return self._delete_if_exists('group',
-                                          group=group,
+                                          id=id,
                                           bucket=bucket,
                                           safe=safe,
                                           if_match=if_match)
         endpoint = self.get_endpoint('group',
                                      bucket=bucket,
-                                     group=group)
+                                     group=id)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
-        logger.info("Delete group %r in bucket %r" % (group, bucket or self._bucket_name))
+        logger.info("Delete group %r in bucket %r" % (id, bucket or self._bucket_name))
 
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_groups(self, bucket=None, safe=True, if_match=None):
+    def delete_groups(self, *, bucket=None, safe=True, if_match=None):
         endpoint = self.get_endpoint('groups', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
@@ -402,19 +400,20 @@ class Client(object):
 
     # Collections
 
-    def get_collections(self, bucket=None, **kwargs):
+    def get_collections(self, *, bucket=None, **kwargs):
         endpoint = self.get_endpoint('collections', bucket=bucket)
         return self._paginated(endpoint, **kwargs)
 
-    def create_collection(self, collection=None, bucket=None, data=None,
-                          permissions=None, safe=True, if_not_exists=False):
+    def create_collection(self, *, id=None, bucket=None,
+                          data=None, permissions=None,
+                          safe=True, if_not_exists=False):
 
-        if collection is None and data:
-            collection = data.get('id', None)
+        if id is None and data:
+            id = data.get('id', None)
 
         if if_not_exists:
             return self._create_if_not_exists('collection',
-                                              collection=collection,
+                                              id=id,
                                               bucket=bucket,
                                               data=data,
                                               permissions=permissions,
@@ -423,10 +422,10 @@ class Client(object):
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
-                                     collection=collection)
+                                     collection=id)
 
         logger.info("Create collection %r in bucket %r" %
-                    (collection or self._collection_name, bucket or self._bucket_name))
+                    (id or self._collection_name, bucket or self._bucket_name))
 
         try:
             resp, _ = self.session.request('put', endpoint, data=data,
@@ -442,60 +441,61 @@ class Client(object):
 
         return resp
 
-    def update_collection(self, data=None, collection=None, bucket=None,
-                          permissions=None, method='put', safe=True, if_match=None):
+    def update_collection(self, *, id=None, bucket=None, method='put',
+                          data=None, permissions=None,
+                          safe=True, if_match=None):
 
-        if collection is None and data:
-            collection = data.get('id', None)
+        if id is None and data:
+            id = data.get('id', None)
 
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
-                                     collection=collection)
+                                     collection=id)
         headers = self._get_cache_headers(safe, data, if_match)
 
         logger.info("Update collection %r in bucket %r" %
-                    (collection or self._collection_name, bucket or self._bucket_name))
+                    (id or self._collection_name, bucket or self._bucket_name))
 
         resp, _ = self.session.request(method, endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
 
-    def patch_collection(self, *args, **kwargs):
+    def patch_collection(self, **kwargs):
         kwargs['method'] = 'patch'
-        return self.update_collection(*args, **kwargs)
+        return self.update_collection(**kwargs)
 
-    def get_collection(self, collection=None, bucket=None):
+    def get_collection(self, *, id=None, bucket=None):
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
-                                     collection=collection)
+                                     collection=id)
 
         logger.info("Get collection %r in bucket %r" %
-                    (collection or self._collection_name, bucket or self._bucket_name))
+                    (id or self._collection_name, bucket or self._bucket_name))
 
         resp, _ = self.session.request('get', endpoint)
         return resp
 
-    def delete_collection(self, collection=None, bucket=None,
+    def delete_collection(self, *, id=None, bucket=None,
                           safe=True, if_match=None, if_exists=False):
         if if_exists:
             return self._delete_if_exists('collection',
-                                          collection=collection,
+                                          id=id,
                                           bucket=bucket,
                                           safe=safe,
                                           if_match=if_match)
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
-                                     collection=collection)
+                                     collection=id)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
         logger.info("Delete collection %r in bucket %r" %
-                    (collection or self._collection_name, bucket or self._bucket_name))
+                    (id or self._collection_name, bucket or self._bucket_name))
 
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_collections(self, bucket=None, safe=True, if_match=None):
+    def delete_collections(self, *, bucket=None, safe=True, if_match=None):
         endpoint = self.get_endpoint('collections', bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
@@ -506,7 +506,7 @@ class Client(object):
 
     # Records
 
-    def get_records_timestamp(self, collection=None, bucket=None, **kwargs):
+    def get_records_timestamp(self, *, collection=None, bucket=None, **kwargs):
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)
@@ -519,14 +519,14 @@ class Client(object):
 
         return self._records_timestamp[endpoint]
 
-    def get_records(self, collection=None, bucket=None, **kwargs):
+    def get_records(self, *, collection=None, bucket=None, **kwargs):
         """Returns all the records"""
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)
         return self._paginated(endpoint, **kwargs)
 
-    def get_record(self, id, collection=None, bucket=None):
+    def get_record(self, *, id, collection=None, bucket=None):
         endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,
                                      collection=collection)
@@ -538,8 +538,9 @@ class Client(object):
         resp, _ = self.session.request('get', endpoint)
         return resp
 
-    def create_record(self, id=None, data=None, permissions=None,
-                      bucket=None, collection=None, safe=True, if_not_exists=False):
+    def create_record(self, *, id=None, bucket=None, collection=None,
+                      data=None, permissions=None,
+                      safe=True, if_not_exists=False):
 
         id = id or data.get('id', None)
         if if_not_exists:
@@ -576,9 +577,9 @@ class Client(object):
 
         return resp
 
-    def update_record(self, data=None, id=None, collection=None, bucket=None,
-                      permissions=None, safe=True, method='put',
-                      if_match=None):
+    def update_record(self, *, id=None, collection=None, bucket=None, method='put',
+                      data=None, permissions=None,
+                      safe=True, if_match=None):
         id = id or data.get('id')
         if id is None:
             raise KeyError('Unable to update a record, need an id.')
@@ -596,11 +597,11 @@ class Client(object):
                                        permissions=permissions)
         return resp
 
-    def patch_record(self, *args, **kwargs):
+    def patch_record(self, **kwargs):
         kwargs['method'] = 'patch'
-        return self.update_record(*args, **kwargs)
+        return self.update_record(**kwargs)
 
-    def delete_record(self, id, collection=None, bucket=None,
+    def delete_record(self, *, id, collection=None, bucket=None,
                       safe=True, if_match=None, if_exists=False):
         if if_exists:
             return self._delete_if_exists('record',
@@ -621,8 +622,7 @@ class Client(object):
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def delete_records(self, collection=None, bucket=None,
-                       safe=True, if_match=None):
+    def delete_records(self, *, collection=None, bucket=None, safe=True, if_match=None):
         endpoint = self.get_endpoint('records',
                                      bucket=bucket,
                                      collection=collection)

@@ -11,6 +11,7 @@ This document describes changes between each past release.
 
 - Make ``update_*`` methods parameters consistents with each other (#119)
 - Deduce the ``id`` of a resource with the value of ``id`` in ``data`` if present (#143)
+- Drop Python 2.7 support. Now supports Python 3.5+
 
 **New Features**
 

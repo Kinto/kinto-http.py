@@ -7,6 +7,12 @@ This document describes changes between each past release.
 7.3.0 (unreleased)
 ==================
 
+**Breaking changes**
+
+- Make client methods API consistent by forcing keyword parameters (#119)
+- Deduce the ``id`` of a resource with the value of ``id`` in ``data`` if present (#143)
+- Drop Python 2.7 support. Now supports Python 3.5+
+
 **New Features**
 
 - Keep tracks of Backoff headers and raise an ``BackoffException`` if

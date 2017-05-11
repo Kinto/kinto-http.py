@@ -1,4 +1,5 @@
 import mock
+import pytest
 from six import text_type
 from .support import unittest, mock_response, build_response, get_http_error
 
@@ -208,16 +209,15 @@ class BucketTest(unittest.TestCase):
         mock_response(self.session)
 
     def test_put_is_issued_on_creation(self):
-        self.client.create_bucket('testbucket')
+        self.client.create_bucket(id='testbucket')
         self.session.request.assert_called_with(
             'put', '/buckets/testbucket', data=None, permissions=None,
             headers=DO_NOT_OVERWRITE)
 
     def test_put_is_issued_on_update(self):
-        self.client.update_bucket(
-            'testbucket',
-            data={'foo': 'bar', 'last_modified': '1234'},
-            permissions={'read': ['natim']})
+        self.client.update_bucket(id='testbucket',
+                                  data={'foo': 'bar', 'last_modified': '1234'},
+                                  permissions={'read': ['natim']})
         self.session.request.assert_called_with(
             'put',
             '/buckets/testbucket',
@@ -226,11 +226,10 @@ class BucketTest(unittest.TestCase):
             headers={'If-Match': '"1234"'})
 
     def test_patch_is_issued_on_patch(self):
-        self.client.create_bucket('testbucket')
-        self.client.patch_bucket(
-            'testbucket',
-            data={'foo': 'bar'},
-            permissions={'read': ['natim']})
+        self.client.create_bucket(id='testbucket')
+        self.client.patch_bucket(id='testbucket',
+                                 data={'foo': 'bar'},
+                                 permissions={'read': ['natim']})
         self.session.request.assert_called_with(
             'patch',
             '/buckets/testbucket',
@@ -239,10 +238,9 @@ class BucketTest(unittest.TestCase):
             headers=None)
 
     def test_update_bucket_handles_if_match(self):
-        self.client.update_bucket(
-            'testbucket',
-            data={'foo': 'bar'},
-            if_match=1234)
+        self.client.update_bucket(id='testbucket',
+                                  data={'foo': 'bar'},
+                                  if_match=1234)
         self.session.request.assert_called_with(
             'put',
             '/buckets/testbucket',
@@ -256,17 +254,17 @@ class BucketTest(unittest.TestCase):
                                                 headers={}, params={})
 
     def test_get_is_issued_on_retrieval(self):
-        self.client.get_bucket('testbucket')
+        self.client.get_bucket(id='testbucket')
         self.session.request.assert_called_with('get', '/buckets/testbucket')
 
     def test_bucket_names_are_slugified(self):
-        self.client.get_bucket('my bucket')
+        self.client.get_bucket(id='my bucket')
         url = '/buckets/my-bucket'
         self.session.request.assert_called_with('get', url)
 
     def test_permissions_are_retrieved(self):
         mock_response(self.session, permissions={'read': ['phrawzty', ]})
-        bucket = self.client.get_bucket('testbucket')
+        bucket = self.client.get_bucket(id='testbucket')
 
         self.assertIn('phrawzty', bucket['permissions']['read'])
 
@@ -279,7 +277,7 @@ class BucketTest(unittest.TestCase):
         self.session.request.side_effect = exception
 
         with self.assertRaises(BucketNotFound) as cm:
-            self.client.get_bucket('test')
+            self.client.get_bucket(id='test')
         e = cm.exception
         self.assertEquals(e.response, exception.response)
         self.assertEquals(e.request, mock.sentinel.request)
@@ -294,7 +292,7 @@ class BucketTest(unittest.TestCase):
         self.session.request.side_effect = exception
 
         with self.assertRaises(KintoException) as cm:
-            self.client.get_bucket('test')
+            self.client.get_bucket(id='test')
         e = cm.exception
         self.assertEquals(e.response, exception.response)
         self.assertEquals(e.request, mock.sentinel.request)
@@ -311,7 +309,7 @@ class BucketTest(unittest.TestCase):
         self.session.request.side_effect = exception
 
         try:
-            self.client.get_bucket('test')
+            self.client.get_bucket(id='test')
         except KintoException as e:
             self.assertEquals(e.response, exception.response)
             self.assertEquals(e.request, mock.sentinel.request)
@@ -320,10 +318,10 @@ class BucketTest(unittest.TestCase):
 
     def test_delete_bucket_returns_the_contained_data(self):
         mock_response(self.session, data={'deleted': True})
-        assert self.client.delete_bucket('bucket') == {'deleted': True}
+        assert self.client.delete_bucket(id='bucket') == {'deleted': True}
 
     def test_delete_bucket_handles_if_match(self):
-        self.client.delete_bucket('mybucket', if_match=1234)
+        self.client.delete_bucket(id='mybucket', if_match=1234)
         url = '/buckets/mybucket'
         headers = {'If-Match': '"1234"'}
         self.session.request.assert_called_with('delete', url, headers=headers)
@@ -342,17 +340,56 @@ class BucketTest(unittest.TestCase):
             get_http_error(status=412),
             (bucket_data, None)
         ]
-        returned_data = self.client.create_bucket(
-            "buck",
-            if_not_exists=True)  # Should not raise.
+        # Should not raise.
+        returned_data = self.client.create_bucket(id="buck", if_not_exists=True)
         assert returned_data == bucket_data
 
     def test_get_or_create_raise_in_other_cases(self):
         self.session.request.side_effect = get_http_error(status=500)
         with self.assertRaises(KintoException):
-            self.client.create_bucket(
-                bucket="buck",
-                if_not_exists=True)
+            self.client.create_bucket(id="buck", if_not_exists=True)
+
+    def test_create_bucket_can_deduce_id_from_data(self):
+        self.client.create_bucket(data={'id': 'testbucket'})
+        self.session.request.assert_called_with(
+            'put', '/buckets/testbucket', data={'id': 'testbucket'}, permissions=None,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_update_bucket_can_deduce_id_from_data(self):
+        self.client.update_bucket(data={'id': 'testbucket'})
+        self.session.request.assert_called_with(
+            'put', '/buckets/testbucket', data={'id': 'testbucket'}, permissions=None,
+            headers=None)
+
+
+class GroupTest(unittest.TestCase):
+
+    def setUp(self):
+        self.session = mock.MagicMock()
+        mock_response(self.session)
+        self.client = Client(session=self.session, bucket='mybucket')
+
+    def test_create_group_can_deduce_id_from_data(self):
+        self.client.create_group(data={'id': 'group'})
+        self.session.request.assert_called_with(
+            'put', '/buckets/mybucket/groups/group', data={'id': 'group'}, permissions=None,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_update_group_can_deduce_id_from_data(self):
+        self.client.update_group(data={'id': 'group'})
+        self.session.request.assert_called_with(
+            'put', '/buckets/mybucket/groups/group', data={'id': 'group'}, permissions=None,
+            headers=None)
+
+    def test_create_group_raises_if_group_id_is_missing(self):
+        with pytest.raises(KeyError) as e:
+            self.client.create_group()
+        self.assertEqual('%s' % e.value, "'Please provide a group id'")
+
+    def test_update_group_raises_if_group_id_is_missing(self):
+        with pytest.raises(KeyError) as e:
+            self.client.update_group()
+        self.assertEqual('%s' % e.value, "'Please provide a group id'")
 
 
 class CollectionTest(unittest.TestCase):
@@ -363,14 +400,13 @@ class CollectionTest(unittest.TestCase):
         self.client = Client(session=self.session, bucket='mybucket')
 
     def test_collection_names_are_slugified(self):
-        self.client.get_collection('my collection')
+        self.client.get_collection(id='my collection')
         url = '/buckets/mybucket/collections/my-collection'
         self.session.request.assert_called_with('get', url)
 
     def test_collection_creation_issues_an_http_put(self):
-        self.client.create_collection(
-            'mycollection',
-            permissions=mock.sentinel.permissions)
+        self.client.create_collection(id='mycollection',
+                                      permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
@@ -378,10 +414,9 @@ class CollectionTest(unittest.TestCase):
             headers=DO_NOT_OVERWRITE)
 
     def test_data_can_be_sent_on_creation(self):
-        self.client.create_collection(
-            'mycollection',
-            'testbucket',
-            data={'foo': 'bar'})
+        self.client.create_collection(id='mycollection',
+                                      bucket='testbucket',
+                                      data={'foo': 'bar'})
 
         self.session.request.assert_called_with(
             'put',
@@ -391,10 +426,9 @@ class CollectionTest(unittest.TestCase):
             headers=DO_NOT_OVERWRITE)
 
     def test_collection_update_issues_an_http_put(self):
-        self.client.update_collection(
-            {'foo': 'bar'},
-            collection='mycollection',
-            permissions=mock.sentinel.permissions)
+        self.client.update_collection(id='mycollection',
+                                      data={'foo': 'bar'},
+                                      permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
@@ -402,10 +436,9 @@ class CollectionTest(unittest.TestCase):
             permissions=mock.sentinel.permissions, headers=None)
 
     def test_update_handles_if_match(self):
-        self.client.update_collection(
-            {'foo': 'bar'},
-            collection='mycollection',
-            if_match=1234)
+        self.client.update_collection(id='mycollection',
+                                      data={'foo': 'bar'},
+                                      if_match=1234)
 
         url = '/buckets/mybucket/collections/mycollection'
         headers = {'If-Match': '"1234"'}
@@ -415,10 +448,8 @@ class CollectionTest(unittest.TestCase):
 
     def test_collection_update_use_an_if_match_header(self):
         data = {'foo': 'bar', 'last_modified': '1234'}
-        self.client.update_collection(
-            data,
-            collection='mycollection',
-            permissions=mock.sentinel.permissions)
+        self.client.update_collection(id='mycollection', data=data,
+                                      permissions=mock.sentinel.permissions)
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
@@ -427,9 +458,8 @@ class CollectionTest(unittest.TestCase):
             headers={'If-Match': '"1234"'})
 
     def test_patch_collection_issues_an_http_patch(self):
-        self.client.patch_collection(
-            collection='mycollection',
-            data={'key': 'secret'})
+        self.client.patch_collection(id='mycollection',
+                                     data={'key': 'secret'})
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
@@ -437,10 +467,9 @@ class CollectionTest(unittest.TestCase):
             permissions=None)
 
     def test_patch_collection_handles_if_match(self):
-        self.client.patch_collection(
-            collection='mycollection',
-            data={'key': 'secret'},
-            if_match=1234)
+        self.client.patch_collection(id='mycollection',
+                                     data={'key': 'secret'},
+                                     if_match=1234)
 
         url = '/buckets/mybucket/collections/mycollection'
         headers = {'If-Match': '"1234"'}
@@ -475,7 +504,7 @@ class CollectionTest(unittest.TestCase):
     def test_collection_can_be_deleted(self):
         data = {}
         mock_response(self.session, data=data)
-        deleted = self.client.delete_collection('mycollection')
+        deleted = self.client.delete_collection(id='mycollection')
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with('delete', url, headers=None)
@@ -483,9 +512,7 @@ class CollectionTest(unittest.TestCase):
     def test_collection_delete_if_match(self):
         data = {}
         mock_response(self.session, data=data)
-        deleted = self.client.delete_collection(
-            'mycollection',
-            if_match=1234)
+        deleted = self.client.delete_collection(id='mycollection', if_match=1234)
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
@@ -494,10 +521,9 @@ class CollectionTest(unittest.TestCase):
     def test_collection_delete_if_match_not_included_if_not_safe(self):
         data = {}
         mock_response(self.session, data=data)
-        deleted = self.client.delete_collection(
-            'mycollection',
-            if_match=1324,
-            safe=False)
+        deleted = self.client.delete_collection(id='mycollection',
+                                                if_match=1324,
+                                                safe=False)
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with('delete', url, headers=None)
@@ -511,47 +537,57 @@ class CollectionTest(unittest.TestCase):
             get_http_error(status=412),
             (data, None)
         ]
-        returned_data = self.client.create_collection(
-            bucket="buck",
-            collection="coll",
-            if_not_exists=True)  # Should not raise.
+        returned_data = self.client.create_collection(bucket="buck",
+                                                      id="coll",
+                                                      if_not_exists=True)  # Should not raise.
         assert returned_data == data
 
     def test_get_or_create_raise_in_other_cases(self):
         self.session.request.side_effect = get_http_error(status=500)
         with self.assertRaises(KintoException):
-            self.client.create_collection(
-                bucket="buck",
-                collection="coll",
-                if_not_exists=True)
+            self.client.create_collection(bucket="buck",
+                                          id="coll",
+                                          if_not_exists=True)
 
     def test_create_collection_raises_a_special_error_on_403(self):
         self.session.request.side_effect = get_http_error(status=403)
         with self.assertRaises(KintoException) as e:
-            self.client.create_collection(
-                bucket="buck",
-                collection="coll")
+            self.client.create_collection(bucket="buck",
+                                          id="coll")
         expected_msg = ("Unauthorized. Please check that the bucket exists "
                         "and that you have the permission to create or write "
                         "on this collection.")
         assert e.exception.message == expected_msg
 
+    def test_create_collection_can_deduce_id_from_data(self):
+        self.client.create_collection(data={'id': 'coll'}, bucket='buck')
+        self.session.request.assert_called_with(
+            'put', '/buckets/buck/collections/coll', data={'id': 'coll'}, permissions=None,
+            headers=DO_NOT_OVERWRITE)
+
+    def test_update_collection_can_deduce_id_from_data(self):
+        self.client.update_collection(data={'id': 'coll'}, bucket='buck')
+        self.session.request.assert_called_with(
+            'put', '/buckets/buck/collections/coll', data={'id': 'coll'}, permissions=None,
+            headers=None)
+
 
 class RecordTest(unittest.TestCase):
     def setUp(self):
         self.session = mock.MagicMock()
+        self.session.request.return_value = (mock.sentinel.response, mock.sentinel.count)
         self.client = Client(
             session=self.session, bucket='mybucket',
             collection='mycollection')
 
     def test_record_id_is_given_after_creation(self):
         mock_response(self.session, data={'id': 5678})
-        record = self.client.create_record({'foo': 'bar'})
+        record = self.client.create_record(data={'foo': 'bar'})
         assert 'id' in record['data'].keys()
 
     def test_generated_record_id_is_an_uuid(self):
         mock_response(self.session)
-        self.client.create_record({'foo': 'bar'})
+        self.client.create_record(data={'foo': 'bar'})
         id = self.session.request.mock_calls[0][1][1].split('/')[-1]
 
         uuid_regexp = r'[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12}'
@@ -559,9 +595,8 @@ class RecordTest(unittest.TestCase):
 
     def test_records_handles_permissions(self):
         mock_response(self.session)
-        self.client.create_record(
-            {'id': '1234', 'foo': 'bar'},
-            permissions=mock.sentinel.permissions)
+        self.client.create_record(data={'id': '1234', 'foo': 'bar'},
+                                  permissions=mock.sentinel.permissions)
         self.session.request.assert_called_with(
             'put',
             '/buckets/mybucket/collections/mycollection/records/1234',
@@ -601,10 +636,9 @@ class RecordTest(unittest.TestCase):
         data = {'foo': 'bar'}
         permissions = {'read': ['mle']}
 
-        self.client.create_record(
-            id='1234',
-            data=data,
-            permissions=permissions)
+        self.client.create_record(id='1234',
+                                  data=data,
+                                  permissions=permissions)
 
         url = '/buckets/mybucket/collections/mycollection/records/1234'
         self.session.request.assert_called_with(
@@ -615,9 +649,7 @@ class RecordTest(unittest.TestCase):
         mock_response(self.session)
         data = {'foo': 'bar'}
 
-        self.client.create_record(
-            id='1234',
-            data=data)
+        self.client.create_record(id='1234', data=data)
 
         url = '/buckets/mybucket/collections/mycollection/records/1234'
         self.session.request.assert_called_with(
@@ -635,13 +667,13 @@ class RecordTest(unittest.TestCase):
 
     def test_records_issues_a_request_on_delete(self):
         mock_response(self.session)
-        self.client.delete_record('1234')
+        self.client.delete_record(id='1234')
         url = '/buckets/mybucket/collections/mycollection/records/1234'
         self.session.request.assert_called_with('delete', url, headers=None)
 
     def test_record_issues_a_request_on_retrieval(self):
         mock_response(self.session, data={'foo': 'bar'})
-        record = self.client.get_record('1234')
+        record = self.client.get_record(id='1234')
 
         self.assertEquals(record['data'], {'foo': 'bar'})
         url = '/buckets/mybucket/collections/mycollection/records/1234'
@@ -674,10 +706,10 @@ class RecordTest(unittest.TestCase):
                       headers={"ETag": '"67890"'})
         self.client.get_records(collection="bar")
 
-        timestamp = self.client.get_records_timestamp("foo")
+        timestamp = self.client.get_records_timestamp(collection="foo")
         assert timestamp == '12345'
 
-        timestamp = self.client.get_records_timestamp("bar")
+        timestamp = self.client.get_records_timestamp(collection="bar")
         assert timestamp == '67890'
 
     def test_pagination_is_followed(self):
@@ -701,7 +733,7 @@ class RecordTest(unittest.TestCase):
                  {'id': '6', 'value': 'item6'}, ],
             ),
         ]
-        records = self.client.get_records('bucket', 'collection')
+        records = self.client.get_records(bucket='bucket', collection='collection')
 
         assert list(records) == [
             {'id': '1', 'value': 'item1'},
@@ -733,7 +765,7 @@ class RecordTest(unittest.TestCase):
                  {'id': '6', 'value': 'item6'}, ],
             ),
         ]
-        records = self.client.get_records('bucket', 'collection', pages=2)
+        records = self.client.get_records(bucket='bucket', collection='collection', pages=2)
 
         assert list(records) == [
             {'id': '1', 'value': 'item1'},
@@ -757,7 +789,7 @@ class RecordTest(unittest.TestCase):
                  {'id': '4', 'value': 'item4'}, ],
             ),
         ]
-        records = self.client.get_records('bucket', 'collection', _limit=2)
+        records = self.client.get_records(bucket='bucket', collection='collection', _limit=2)
 
         assert list(records) == [
             {'id': '1', 'value': 'item1'},
@@ -780,12 +812,12 @@ class RecordTest(unittest.TestCase):
                  {'id': '4', 'value': 'item4'}, ],
             ),
         ]
-        self.client.get_records('bucket', 'collection',
+        self.client.get_records(bucket='bucket', collection='collection',
                                 if_none_match="1234")
 
         # Check that the If-None-Match header is present in the requests.
         self.session.request.assert_any_call(
-            'get', '/buckets/collection/collections/bucket/records',
+            'get', '/buckets/bucket/collections/collection/records',
             headers={'If-None-Match': '"1234"'}, params={})
         self.session.request.assert_any_call(
             'get', link, headers={'If-None-Match': '"1234"'}, params={})
@@ -800,11 +832,10 @@ class RecordTest(unittest.TestCase):
     def test_record_delete_if_match(self):
         data = {}
         mock_response(self.session, data=data)
-        deleted = self.client.delete_record(
-            collection='mycollection',
-            bucket='mybucket',
-            id='1',
-            if_match=1234)
+        deleted = self.client.delete_record(collection='mycollection',
+                                            bucket='mybucket',
+                                            id='1',
+                                            if_match=1234)
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection/records/1'
         self.session.request.assert_called_with(
@@ -813,12 +844,11 @@ class RecordTest(unittest.TestCase):
     def test_record_delete_if_match_not_included_if_not_safe(self):
         data = {}
         mock_response(self.session, data=data)
-        deleted = self.client.delete_record(
-            collection='mycollection',
-            bucket='mybucket',
-            id='1',
-            if_match=1234,
-            safe=False)
+        deleted = self.client.delete_record(collection='mycollection',
+                                            bucket='mybucket',
+                                            id='1',
+                                            if_match=1234,
+                                            safe=False)
         assert deleted == data
         url = '/buckets/mybucket/collections/mycollection/records/1'
         self.session.request.assert_called_with(
@@ -826,9 +856,8 @@ class RecordTest(unittest.TestCase):
 
     def test_update_record_gets_the_id_from_data_if_exists(self):
         mock_response(self.session)
-        self.client.update_record(
-            bucket='mybucket', collection='mycollection',
-            data={'id': 1, 'foo': 'bar'})
+        self.client.update_record(bucket='mybucket', collection='mycollection',
+                                  data={'id': 1, 'foo': 'bar'})
 
         self.session.request.assert_called_with(
             'put', '/buckets/mybucket/collections/mycollection/records/1',
@@ -836,9 +865,8 @@ class RecordTest(unittest.TestCase):
 
     def test_update_record_handles_if_match(self):
         mock_response(self.session)
-        self.client.update_record(
-            bucket='mybucket', collection='mycollection',
-            data={'id': 1, 'foo': 'bar'}, if_match=1234)
+        self.client.update_record(bucket='mybucket', collection='mycollection',
+                                  data={'id': 1, 'foo': 'bar'}, if_match=1234)
 
         headers = {'If-Match': '"1234"'}
         self.session.request.assert_called_with(
@@ -847,9 +875,8 @@ class RecordTest(unittest.TestCase):
 
     def test_patch_record_uses_the_patch_method(self):
         mock_response(self.session)
-        self.client.patch_record(
-            bucket='mybucket', collection='mycollection',
-            data={'id': 1, 'foo': 'bar'})
+        self.client.patch_record(bucket='mybucket', collection='mycollection',
+                                 data={'id': 1, 'foo': 'bar'})
 
         self.session.request.assert_called_with(
             'patch', '/buckets/mybucket/collections/mycollection/records/1',
@@ -857,11 +884,9 @@ class RecordTest(unittest.TestCase):
 
     def test_update_record_raises_if_no_id_is_given(self):
         with self.assertRaises(KeyError) as cm:
-            self.client.update_record(
-                data={'foo': 'bar'},  # Omit the id on purpose here.
-                bucket='mybucket',
-                collection='mycollection'
-            )
+            self.client.update_record(data={'foo': 'bar'},  # Omit the id on purpose here.
+                                      bucket='mybucket',
+                                      collection='mycollection')
         assert text_type(cm.exception) == (
             "'Unable to update a record, need an id.'")
 
@@ -874,31 +899,41 @@ class RecordTest(unittest.TestCase):
             get_http_error(status=412),
             (data, None)
         ]
-        returned_data = self.client.create_record(
-            bucket="buck",
-            collection="coll",
-            data={'id': 1234,
-                  'foo': 'bar'},
-            if_not_exists=True)  # Should not raise.
+        returned_data = self.client.create_record(bucket="buck",
+                                                  collection="coll",
+                                                  data={'id': 1234,
+                                                        'foo': 'bar'},
+                                                  if_not_exists=True)  # Should not raise.
         assert returned_data == data
 
     def test_get_or_create_raise_in_other_cases(self):
         self.session.request.side_effect = get_http_error(status=500)
         with self.assertRaises(KintoException):
-            self.client.create_record(
-                bucket="buck",
-                collection="coll",
-                data={'foo': 'bar'},
-                if_not_exists=True)
+            self.client.create_record(bucket="buck",
+                                      collection="coll",
+                                      data={'foo': 'bar'},
+                                      id='record',
+                                      if_not_exists=True)
 
     def test_create_record_raises_a_special_error_on_403(self):
         self.session.request.side_effect = get_http_error(status=403)
         with self.assertRaises(KintoException) as e:
-            self.client.create_record(
-                bucket="buck",
-                collection="coll",
-                data={'foo': 'bar'})
+            self.client.create_record(bucket="buck",
+                                      collection="coll",
+                                      data={'foo': 'bar'})
         expected_msg = ("Unauthorized. Please check that the collection exists"
                         " and that you have the permission to create or write "
                         "on this collection record.")
         assert e.exception.message == expected_msg
+
+    def test_create_record_can_deduce_id_from_data(self):
+        self.client.create_record(data={'id': 'record'}, bucket='buck', collection='coll')
+        self.session.request.assert_called_with(
+            'put', '/buckets/buck/collections/coll/records/record', data={'id': 'record'},
+            permissions=None, headers=DO_NOT_OVERWRITE)
+
+    def test_update_record_can_deduce_id_from_data(self):
+        self.client.update_record(data={'id': 'record'}, bucket='buck', collection='coll')
+        self.session.request.assert_called_with(
+            'put', '/buckets/buck/collections/coll/records/record', data={'id': 'record'},
+            permissions=None, headers=None)

@@ -685,8 +685,7 @@ class RecordTest(unittest.TestCase):
         assert list(records) == [{'id': 'foo'}, {'id': 'bar'}]
 
     def test_collection_can_retrieve_records_timestamp(self):
-        mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}],
-                      headers={"ETag": '"12345"'})
+        mock_response(self.session, headers={"ETag": '"12345"'})
         timestamp = self.client.get_records_timestamp()
         assert timestamp == '12345'
 

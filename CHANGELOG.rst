@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-8.0.1 (unreleased)
+8.0.1 (2017-05-16)
 ==================
 
 **Bug fixes**

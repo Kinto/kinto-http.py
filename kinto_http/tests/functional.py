@@ -272,6 +272,16 @@ class FunctionalTest(unittest2.TestCase):
         records = client.get_records()
         assert len(records) == 1
 
+    def test_records_timestamp_retrieval(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        record = client.create_record(data={'foo': 'bar'},
+                                      permissions={'read': ['alexis']})
+        etag = client.get_records_timestamp()
+        assert str(etag) == str(record["data"]["last_modified"])
+
     def test_records_paginated_list_retrieval(self):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla', collection='payments')

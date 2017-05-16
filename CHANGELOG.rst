@@ -4,10 +4,13 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-8.1.0 (unreleased)
+8.0.1 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Bug fixes**
+
+- Fix get_records_timestamp JSONDecode error while trying to decode
+  the body of a HEAD response. (#144)
 
 
 8.0.0 (2017-05-11)

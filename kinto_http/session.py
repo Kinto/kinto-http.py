@@ -81,27 +81,33 @@ class Session(object):
                 self.backoff = None
 
             retry = retry - 1
-            if not (200 <= resp.status_code < 400):
+            if 200 <= resp.status_code < 400:
+                # Success
+                break
+            else:
                 if resp.status_code >= 500 and retry >= 0:
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.
                     if self.retry_after is None:
-                        retry_after = resp.headers.get("Retry-After", 0)
+                        retry_after = int(resp.headers.get("Retry-After", 0))
                     else:
                         retry_after = self.retry_after
                     time.sleep(retry_after)
                     continue
 
                 # Retries exhausted, raise expection.
-                message = '{0} - {1}'.format(resp.status_code, resp.json())
+                try:
+                    message = '{0} - {1}'.format(resp.status_code, resp.json())
+                except ValueError:
+                    # In case the response is not JSON, fallback to text.
+                    message = '{0} - {1}'.format(resp.status_code, resp.text)
                 exception = KintoException(message)
                 exception.request = resp.request
                 exception.response = resp
                 raise exception
 
-        if resp.status_code == 304:
+        if resp.status_code == 304 or method == 'head':
             body = None
         else:
             body = resp.json()
-        # XXX Add the status code.
         return body, resp.headers

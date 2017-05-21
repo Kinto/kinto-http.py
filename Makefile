@@ -6,7 +6,7 @@ INSTALL_STAMP = $(VENV)/.install.stamp
 TEMPDIR := $(shell mktemp -d)
 
 .IGNORE: clean distclean maintainer-clean
-.PHONY: all install virtualenv tests
+.PHONY: all install virtualenv tests tests-once
 
 OBJECTS = .venv .coverage
 
@@ -33,8 +33,8 @@ runkinto: install-dev
 	$(VENV)/bin/kinto migrate --ini kinto_http/tests/config/kinto.ini
 	$(VENV)/bin/kinto start --ini kinto_http/tests/config/kinto.ini
 
-tests-once: install-dev
-	$(VENV)/bin/py.test --cov-report term-missing --cov-fail-under 100 --cov kinto_http
+tests-once: install-dev need-kinto-running
+	$(VENV)/bin/py.test kinto_http/tests/functional.py kinto_http/tests --cov-report term-missing --cov-fail-under 100 --cov kinto_http
 
 functional: install-dev need-kinto-running
 	$(VENV)/bin/py.test kinto_http/tests/functional.py

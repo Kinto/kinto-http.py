@@ -462,8 +462,12 @@ class FunctionalTest(unittest2.TestCase):
             batch.create_record(data={'bar': 'baz'},
                                 permissions={'read': ['alexis']})
 
+        _, _, r1, r2 = batch.parse_results()
         records = self.client.get_records(bucket='mozilla', collection='fonts')
+
         assert len(records) == 2
+        assert records[0] == r2['data']
+        assert records[1] == r1['data']
 
     def test_replication(self):
         # First, create a few records on the first kinto collection.

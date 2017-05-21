@@ -11,6 +11,7 @@ class BatchSession(object):
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
         self.requests = []
+        self.results = []
 
     def request(self, method, endpoint, data=None, permissions=None,
                 headers=None):
@@ -21,7 +22,7 @@ class BatchSession(object):
         return defaultdict(dict), defaultdict(dict)
 
     def reset(self):
-        # Reinitialize the batch.
+        # Reinitialize the batch request queue.
         self.requests = []
 
     def _build_requests(self):
@@ -43,7 +44,6 @@ class BatchSession(object):
         return requests
 
     def send(self):
-        result = []
         requests = self._build_requests()
         for chunk in utils.chunks(requests, self.batch_max_requests):
             kwargs = dict(method='POST',
@@ -58,5 +58,15 @@ class BatchSession(object):
                     exception.request = chunk[i]
                     exception.response = response
                     raise exception
-            result.append((resp, headers))
-        return result
+            self.results.append((resp, headers))
+        return self.results
+
+    def parse_results(self):
+        # Get each batch block response
+        block_responses = [resp for resp, _ in self.results]
+
+        responses = []
+        for block in block_responses:
+            responses += block['responses']
+
+        return [resp['body'] for resp in responses]

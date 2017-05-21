@@ -97,6 +97,11 @@ class Client(object):
         batch_session = BatchSession(self,
                                      batch_max_requests=batch_max_requests)
         batch_client = self.clone(session=batch_session, **kwargs)
+
+        # set a reference for parsing results from the context
+        batch_client.results = batch_session.results
+        batch_client.parse_results = batch_session.parse_results
+
         yield batch_client
         batch_session.send()
         batch_session.reset()

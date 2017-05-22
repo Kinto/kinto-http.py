@@ -11,7 +11,7 @@ class BatchSession(object):
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
         self.requests = []
-        self.results = []
+        self._results = []
 
     def request(self, method, endpoint, data=None, permissions=None,
                 headers=None):
@@ -58,15 +58,15 @@ class BatchSession(object):
                     exception.request = chunk[i]
                     exception.response = response
                     raise exception
-            self.results.append((resp, headers))
-        return self.results
+            self._results.append((resp, headers))
+        return self._results
 
-    def parse_results(self):
+    def results(self):
         # Get each batch block response
-        block_responses = [resp for resp, _ in self.results]
+        chunks = [resp for resp, _ in self._results]
 
         responses = []
-        for block in block_responses:
-            responses += block['responses']
+        for chunk in chunks:
+            responses += chunk['responses']
 
         return [resp['body'] for resp in responses]

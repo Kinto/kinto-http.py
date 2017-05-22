@@ -333,7 +333,7 @@ It is possible to do batch requests using a Python context manager (``with``):
       for idx in range(0, 100):
           batch.update_record(data={'id': idx})
 
-Reading data from batch operations is achived by using the ``parse_results`` method
+Reading data from batch operations is achived by using the ``results()`` method
 available ater a batch context is closed.
 
 .. code-block:: python

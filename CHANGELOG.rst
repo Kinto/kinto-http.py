@@ -7,7 +7,7 @@ This document describes changes between each past release.
 8.1.0 (unreleased)
 ==================
 
-- Allow reading from batch contexts using the ``parse_results`` method. (#146)
+- Allow reading responses from batch requests with the ``results()`` method. (#146)
 
 
 8.0.1 (2017-05-16)

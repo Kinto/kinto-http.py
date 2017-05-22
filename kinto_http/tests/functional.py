@@ -462,7 +462,7 @@ class FunctionalTest(unittest2.TestCase):
             batch.create_record(data={'bar': 'baz'},
                                 permissions={'read': ['alexis']})
 
-        _, _, r1, r2 = batch.parse_results()
+        _, _, r1, r2 = batch.results()
         records = self.client.get_records(bucket='mozilla', collection='fonts')
 
         assert len(records) == 2

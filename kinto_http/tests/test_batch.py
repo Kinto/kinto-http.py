@@ -113,12 +113,6 @@ class BatchRequestsTest(unittest.TestCase):
             batch.send()
         assert self.client.session.request.call_count == 1
 
-    def test_results_attribute_is_available(self):
-        batch = BatchSession(self.client)
-        batch.request('GET', '/v1/foobar')
-        batch.send()
-        assert len(batch.results) == 1
-
     def test_parse_results_retrieves_response_data(self):
         batch_response = {
             "body": {"data": {"id": "hey"}},
@@ -131,6 +125,6 @@ class BatchRequestsTest(unittest.TestCase):
         batch.request('GET', '/v1/foobar')
         batch.send()
 
-        results = batch.parse_results()
+        results = batch.results()
         assert len(results) == 1
         assert results[0] == batch_response["body"]

@@ -7,7 +7,7 @@ This document describes changes between each past release.
 8.1.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Allow reading from batch contexts using the ``parse_results`` method. (#146)
 
 
 8.0.1 (2017-05-16)

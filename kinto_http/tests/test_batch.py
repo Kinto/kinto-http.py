@@ -112,3 +112,25 @@ class BatchRequestsTest(unittest.TestCase):
         with self.assertRaises(KintoException):
             batch.send()
         assert self.client.session.request.call_count == 1
+
+    def test_results_attribute_is_available(self):
+        batch = BatchSession(self.client)
+        batch.request('GET', '/v1/foobar')
+        batch.send()
+        assert len(batch.results) == 1
+
+    def test_parse_results_retrieves_response_data(self):
+        batch_response = {
+            "body": {"data": {"id": "hey"}},
+            "status": 200,
+        }
+        mock.sentinel.resp = {"responses": [batch_response]}
+        self.client.session.request.return_value = (mock.sentinel.resp,
+                                                    mock.sentinel.headers)
+        batch = BatchSession(self.client)
+        batch.request('GET', '/v1/foobar')
+        batch.send()
+
+        results = batch.parse_results()
+        assert len(results) == 1
+        assert results[0] == batch_response["body"]

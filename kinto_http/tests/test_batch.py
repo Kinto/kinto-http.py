@@ -96,10 +96,11 @@ class BatchRequestsTest(unittest.TestCase):
         _, kwargs1 = calls[0]
         assert kwargs1['payload']['requests'][0]['path'] == '/foobar'
 
-    def test_batch_raises_exception_as_soon_as_subrequest_fails(self):
+    def test_batch_raises_exception_as_soon_as_subrequest_fails_with_status_code_5xx(self):
         self.client.session.request.side_effect = [
             ({"responses": [
-                {"status": 404, "path": "/url2", "body": {}, "headers": {}}
+                {"status": 502, "path": "/url2", "body": {"message": "Host not reachable"},
+                 "headers": {}}
             ]}, mock.sentinel.headers),
             ({"responses": [
                 {"status": 200, "path": "/url1", "body": {}, "headers": {}},

@@ -333,8 +333,8 @@ It is possible to do batch requests using a Python context manager (``with``):
       for idx in range(0, 100):
           batch.update_record(data={'id': idx})
 
-Reading data from batch operations is achived by using the ``results()`` method
-available ater a batch context is closed.
+Reading data from batch operations is achieved by using the ``results()`` method
+available after a batch context is closed.
 
 .. code-block:: python
 
@@ -343,9 +343,9 @@ available ater a batch context is closed.
       batch.get_record('r2')
       batch.get_record('r3')
 
-  r1, r2, r3 = batch.parse_results()
+  r1, r2, r3 = batch.results()
 
-Besides the ``parse_results`` method, a batch object shares all the same methods as
+Besides the ``results()`` method, a batch object shares all the same methods as
 another client.
 
 Retry on error

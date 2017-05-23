@@ -44,6 +44,7 @@ class BatchSession(object):
         return requests
 
     def send(self):
+        self._results = []
         requests = self._build_requests()
         for chunk in utils.chunks(requests, self.batch_max_requests):
             kwargs = dict(method='POST',

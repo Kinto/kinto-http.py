@@ -1,7 +1,12 @@
-from . import utils
+import json
+import logging
 from collections import defaultdict
 
 from kinto_http.exceptions import KintoException
+
+from . import utils
+
+logger = logging.getLogger(__name__)
 
 
 class BatchSession(object):
@@ -52,6 +57,8 @@ class BatchSession(object):
                           payload={'requests': chunk})
             resp, headers = self.session.request(**kwargs)
             for i, response in enumerate(resp['responses']):
+                logger.debug("\nBatch #{}: \n\tRequest: {}\n\tResponse: {}\n".format(
+                    i, json.dumps(chunk[i]), json.dumps(response)))
                 status_code = response['status']
                 if not (200 <= status_code < 400):
                     message = '{0} - {1}'.format(status_code, response['body'])

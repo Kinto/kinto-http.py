@@ -58,26 +58,27 @@ class BatchSession(object):
                           payload={'requests': chunk})
             resp, headers = self.session.request(**kwargs)
             for i, response in enumerate(resp['responses']):
-                logger.debug("\nBatch #{}: \n\tRequest: {}\n\tResponse: {}\n".format(
-                    id_request, json.dumps(chunk[i]), json.dumps(response)))
                 status_code = response['status']
                 if not (200 <= status_code < 400):
                     message = '{0} - {1}'.format(status_code, response['body'])
                     exception = KintoException(message)
                     exception.request = chunk[i]
                     exception.response = response
-                if status_code > 499:
+
+                level = logging.WARN if status_code < 400 else logging.ERROR
+                message = response["body"].get("message", "")
+                logger.log(level, "Batch #{}: {} {} - {} {}".format(
+                    id_request, chunk[i]["method"], chunk[i]["path"],
+                    status_code, message))
+
+                # Full log in DEBUG mode
+                logger.debug("\nBatch #{}: \n\tRequest: {}\n\tResponse: {}\n".format(
+                    id_request, json.dumps(chunk[i]), json.dumps(response)))
+
+                # Raise in case of a 500
+                if status_code >= 500:
                     raise exception
-                else:
-                    if status_code < 400:
-                        log = logger.warn
-                        message = response["body"].get("message", "")
-                    else:
-                        log = logger.error
-                        message = response["body"]["message"]
-                    log("Batch #{}: {} {} - {} {}".format(
-                        id_request, chunk[i]["method"], chunk[i]["path"],
-                        status_code, message))
+
                 id_request += 1
 
             self._results.append((resp, headers))

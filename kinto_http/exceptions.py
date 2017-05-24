@@ -12,6 +12,12 @@ class KintoException(Exception):
             self.request = None
             self.response = None
 
+    def __str__(self):
+        if self.request is not None and self.response is not None:
+            return '{} {} - {} {}'.format(self.request.method, self.request.path_url,
+                                          self.response.status_code, self.message)
+        return self.message
+
 
 class BucketNotFound(KintoException):
     pass

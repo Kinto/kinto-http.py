@@ -4,9 +4,17 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-8.1.0 (unreleased)
+9.0.0 (unreleased)
 ==================
 
+**Breaking changes**
+
+- The client will fail a batch only when a 5XX error occurs (#148)
+
+**New Features**
+
+- Log all the batch responses (#148)
+- Log the request and the batch responses in debug (#148)
 - Allow reading responses from batch requests with the ``results()`` method. (#146)
 
 

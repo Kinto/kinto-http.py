@@ -1,7 +1,12 @@
-from . import utils
+import json
+import logging
 from collections import defaultdict
 
 from kinto_http.exceptions import KintoException
+
+from . import utils
+
+logger = logging.getLogger(__name__)
 
 
 class BatchSession(object):
@@ -46,6 +51,7 @@ class BatchSession(object):
     def send(self):
         self._results = []
         requests = self._build_requests()
+        id_request = 0
         for chunk in utils.chunks(requests, self.batch_max_requests):
             kwargs = dict(method='POST',
                           endpoint=self.endpoints.get('batch'),
@@ -58,8 +64,25 @@ class BatchSession(object):
                     exception = KintoException(message)
                     exception.request = chunk[i]
                     exception.response = response
+
+                level = logging.WARN if status_code < 400 else logging.ERROR
+                message = response["body"].get("message", "")
+                logger.log(level, "Batch #{}: {} {} - {} {}".format(
+                    id_request, chunk[i]["method"], chunk[i]["path"],
+                    status_code, message))
+
+                # Full log in DEBUG mode
+                logger.debug("\nBatch #{}: \n\tRequest: {}\n\tResponse: {}\n".format(
+                    id_request, json.dumps(chunk[i]), json.dumps(response)))
+
+                # Raise in case of a 500
+                if status_code >= 500:
                     raise exception
+
+                id_request += 1
+
             self._results.append((resp, headers))
+
         return self._results
 
     def results(self):

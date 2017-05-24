@@ -51,24 +51,42 @@ class ClientTest(unittest.TestCase):
             with self.client.batch(bucket='moz', collection='test') as batch:
                 batch.create_record(id=1234, data={'foo': 'bar'})
 
-    def test_batch_raises_exception_if_subrequest_failed(self):
+    def test_batch_raises_exception_if_subrequest_failed_with_code_5xx(self):
         error = {
             "errno": 121,
             "message": "This user cannot access this resource.",
-            "code": 403,
-            "error": "Forbidden"
+            "code": 500,
+            "error": "Server Internal Error"
         }
         self.session.request.side_effect = [
             ({"settings": {"batch_max_requests": 25}}, []),
             ({"responses": [
                 {"status": 200, "path": "/url1", "body": {}, "headers": {}},
-                {"status": 404, "path": "/url2", "body": error, "headers": {}}
+                {"status": 500, "path": "/url2", "body": error, "headers": {}}
             ]}, [])]
 
         with self.assertRaises(KintoException):
             with self.client.batch(bucket='moz', collection='test') as batch:
                 batch.create_record(id=1234, data={'foo': 'bar'})
                 batch.create_record(id=5678, data={'tutu': 'toto'})
+
+    def test_batch_dont_raise_exception_if_subrequest_failed_with_code_4xx(self):
+        error = {
+            "errno": 121,
+            "message": "Forbidden",
+            "code": 403,
+            "error": "This user cannot access this resource."
+        }
+        self.session.request.side_effect = [
+            ({"settings": {"batch_max_requests": 25}}, []),
+            ({"responses": [
+                {"status": 200, "path": "/url1", "body": {}, "headers": {}},
+                {"status": 403, "path": "/url2", "body": error, "headers": {}}
+            ]}, [])]
+
+        with self.client.batch(bucket='moz', collection='test') as batch:  # Do not raise
+            batch.create_record(id=1234, data={'foo': 'bar'})
+            batch.create_record(id=5678, data={'tutu': 'toto'})
 
     def test_batch_options_are_transmitted(self):
         settings = {"batch_max_requests": 25}

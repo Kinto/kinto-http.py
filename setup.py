@@ -35,15 +35,15 @@ test_requirements = [
 ]
 
 setup(name='kinto-http',
-      version='8.1.0.dev0',
+      version='9.0.0',
       description='Kinto client',
       long_description=README,
       license='Apache License (2.0)',
       classifiers=[
           "Programming Language :: Python",
-          "Programming Language :: Python :: 2",
-          "Programming Language :: Python :: 2.7",
-          "Programming Language :: Python :: 3.4",
+          "Programming Language :: Python :: 3",
+          "Programming Language :: Python :: 3.5",
+          "Programming Language :: Python :: 3.6",
           "Programming Language :: Python :: Implementation :: CPython",
           "Topic :: Internet :: WWW/HTTP",
           "License :: OSI Approved :: Apache Software License"

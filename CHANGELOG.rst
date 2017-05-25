@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-9.0.0 (unreleased)
+9.0.0 (2017-05-25)
 ==================
 
 **Breaking changes**

@@ -62,7 +62,8 @@ class Endpoints(object):
 class Client(object):
 
     def __init__(self, *, server_url=None, session=None, auth=None,
-                 bucket="default", collection=None, retry=0, retry_after=None):
+                 bucket="default", collection=None, retry=0, retry_after=None,
+                 strict=False):
         self.endpoints = Endpoints()
         session_kwargs = dict(server_url=server_url,
                               auth=auth,
@@ -74,6 +75,7 @@ class Client(object):
         self._collection_name = collection
         self._server_settings = None
         self._records_timestamp = {}
+        self._strict = strict
 
     def clone(self, **kwargs):
         if 'server_url' in kwargs or 'auth' in kwargs:
@@ -95,7 +97,8 @@ class Client(object):
 
         batch_max_requests = self._server_settings['batch_max_requests']
         batch_session = BatchSession(self,
-                                     batch_max_requests=batch_max_requests)
+                                     batch_max_requests=batch_max_requests,
+                                     strict=self._strict)
         batch_client = self.clone(session=batch_session, **kwargs)
 
         # Set a reference for reading results from the context.

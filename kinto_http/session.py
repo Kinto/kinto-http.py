@@ -17,8 +17,7 @@ USER_AGENT = 'kinto_http/{} requests/{} python/{}'.format(kinto_http_version,
                                                           requests_version, python_version)
 
 
-def create_session(server_url=None, auth=None, session=None, retry=0, retry_after=None):
-
+def create_session(server_url=None, auth=None, session=None, **kwargs):
     """Returns a session from the passed arguments.
 
     :param server_url:
@@ -39,8 +38,7 @@ def create_session(server_url=None, auth=None, session=None, retry=0, retry_afte
         msg = ("You need to either set session or auth + server_url")
         raise AttributeError(msg)
     if session is None:
-        session = Session(server_url=server_url, auth=auth, retry=retry,
-                          retry_after=retry_after)
+        session = Session(server_url=server_url, auth=auth, **kwargs)
     return session
 
 

@@ -11,10 +11,11 @@ logger = logging.getLogger(__name__)
 
 class BatchSession(object):
 
-    def __init__(self, client, batch_max_requests=0):
+    def __init__(self, client, batch_max_requests=0, strict=False):
         self.session = client.session
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
+        self._strict = strict
         self.requests = []
         self._results = []
 
@@ -61,11 +62,6 @@ class BatchSession(object):
             resp, headers = self.session.request(**kwargs)
             for i, response in enumerate(resp['responses']):
                 status_code = response['status']
-                if not (200 <= status_code < 400):
-                    message = '{0} - {1}'.format(status_code, response['body'])
-                    exception = KintoException(message)
-                    exception.request = chunk[i]
-                    exception.response = response
 
                 level = logging.WARN if status_code < 400 else logging.ERROR
                 message = response["body"].get("message", "")
@@ -77,9 +73,14 @@ class BatchSession(object):
                 logger.debug("\nBatch #{}: \n\tRequest: {}\n\tResponse: {}\n".format(
                     id_request, json.dumps(chunk[i]), json.dumps(response)))
 
-                # Raise in case of a 500
-                if status_code >= 500:
-                    raise exception
+                if not (200 <= status_code < 400):
+                    message = '{0} - {1}'.format(status_code, response['body'])
+                    exception = KintoException(message)
+                    exception.request = chunk[i]
+                    exception.response = response
+                    # Raise in case of a 500
+                    if status_code >= 500 or self._strict:
+                        raise exception
 
                 id_request += 1
 

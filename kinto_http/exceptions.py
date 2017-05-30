@@ -3,8 +3,9 @@ class KintoException(Exception):
     response = None
 
     def __init__(self, message=None, exception=None):
-        super(KintoException, self).__init__(self, message)
+        super().__init__(message)
         self.message = message
+
         if exception is not None:
             self.request = exception.request
             self.response = exception.response

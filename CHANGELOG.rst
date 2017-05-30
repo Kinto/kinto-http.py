@@ -7,8 +7,9 @@ This document describes changes between each past release.
 9.1.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Bug fixes**
 
+- Fix exception rendering (fixes #153)
 
 9.0.0 (2017-05-25)
 ==================

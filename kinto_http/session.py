@@ -106,6 +106,8 @@ class Session(object):
                 exception.response = resp
                 raise exception
 
+        resp.headers['User-Agent'] = 'kinto-http.py/2.1.1 requests/2.3.2 python/3.6.1'
+
         if resp.status_code == 304 or method == 'head':
             body = None
         else:

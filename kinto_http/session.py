@@ -9,8 +9,8 @@ from kinto_http.exceptions import KintoException, BackoffException
 
 kinto_http_version = pkg_resources.get_distribution("kinto_http").version
 requests_version = pkg_resources.get_distribution("requests").version
-python_ver = [ str(i) for i in sys.version_info[:3] ] 
-python_version = '.'.join(python_ver)
+python_version = '.'.join(map(str, sys.version_info[:3]))
+
 
 
 def create_session(server_url=None, auth=None, session=None, retry=0,
@@ -112,8 +112,7 @@ class Session(object):
                 exception.response = resp
                 raise exception
 
-        resp.headers['User-Agent'] = 'kinto-http.py/'+kinto_http_version +' requests/'+ requests_version +' python/' + python_version
-        
+        resp.headers['User-Agent'] = 'kinto-http.py/{} requests/{} python/{}'.format(kinto_http_version , requests_version, python_version)
         if resp.status_code == 304 or method == 'head':
             body = None
         else:

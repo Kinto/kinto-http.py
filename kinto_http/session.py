@@ -49,6 +49,7 @@ class Session(object):
         self.auth = auth
         self.nb_retry = retry
         self.retry_after = retry_after
+        self.headers = 'kinto-http.py/{} requests/{} python/{}'.format(kinto_http_version , requests_version, python_version)
 
     def request(self, method, endpoint, data=None, permissions=None,
                 payload=None, **kwargs):
@@ -112,7 +113,8 @@ class Session(object):
                 exception.response = resp
                 raise exception
 
-        resp.headers['User-Agent'] = 'kinto-http.py/{} requests/{} python/{}'.format(kinto_http_version , requests_version, python_version)
+        resp.headers['User-Agent'] = self.headers
+        
         if resp.status_code == 304 or method == 'head':
             body = None
         else:

@@ -83,10 +83,10 @@ class Session(object):
             payload_kwarg = 'data' if 'files' in kwargs else 'json'
             kwargs.setdefault(payload_kwarg, payload)
 
-
+        kwargs.setdefault('headers', {}).setdefault('User-Agent', USER_AGENT)
         retry = self.nb_retry
         while retry >= 0:
-            kwargs['headers']={'User-Agent':USER_AGENT}
+            
             resp = requests.request(method, actual_url, **kwargs)
             backoff_seconds = resp.headers.get("Backoff")
             if backoff_seconds:

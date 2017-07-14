@@ -4,7 +4,7 @@ import time
 
 from kinto_http.session import Session, create_session
 from kinto_http.exceptions import KintoException, BackoffException
-
+from kinto_http.session import USER_AGENT
 from .support import unittest, get_200, get_503, get_403
 
 
@@ -13,13 +13,6 @@ def fake_response(status_code):
     response.headers = {}
     response.status_code = status_code
     return response
-
-def find_headers():
-    kinto_http_version = pkg_resources.get_distribution("kinto_http").version
-    requests_version = pkg_resources.get_distribution("requests").version
-    python_version = '.'.join(map(str, sys.version_info[:3]))
-    header_info  = 'kinto-http.py/{} requests/{} python/{}'.format(kinto_http_version , requests_version, python_version)
-    return header_info
 
 
 class SessionTest(unittest.TestCase):
@@ -173,14 +166,14 @@ class SessionTest(unittest.TestCase):
             'put', 'https://example.org/anothertest', json={})
 
 
-    def test_user_agent_check(self):
+    def test_user_agent_is_sent_on_requests(self):
         response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
-        self.assertEquals(session.headers,find_headers())
+        expected = {'User-Agent' : USER_AGENT}
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/test')
+            'get', 'https://example.org/test' , headers = expected )
 
 
 
@@ -299,5 +292,3 @@ class RetryRequestTest(unittest.TestCase):
         session.request('get', '/test')  # The second call reset the backoff
         self.assertIsNone(session.backoff)
 
-
-        

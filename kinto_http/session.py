@@ -11,10 +11,14 @@ kinto_http_version = pkg_resources.get_distribution("kinto_http").version
 requests_version = pkg_resources.get_distribution("requests").version
 python_version = '.'.join(map(str, sys.version_info[:3]))
 
+USER_AGENT = 'kinto-http.py/{} requests/{} python/{}'.format(kinto_http_version , requests_version, python_version)
+
+
 
 
 def create_session(server_url=None, auth=None, session=None, retry=0,
                    retry_after=None):
+
     """Returns a session from the passed arguments.
 
     :param server_url:
@@ -37,6 +41,7 @@ def create_session(server_url=None, auth=None, session=None, retry=0,
     if session is None:
         session = Session(server_url=server_url, auth=auth, retry=retry,
                           retry_after=retry_after)
+    
     return session
 
 
@@ -49,10 +54,10 @@ class Session(object):
         self.auth = auth
         self.nb_retry = retry
         self.retry_after = retry_after
-        self.headers = 'kinto-http.py/{} requests/{} python/{}'.format(kinto_http_version , requests_version, python_version)
 
     def request(self, method, endpoint, data=None, permissions=None,
-                payload=None, **kwargs):
+                payload=None,**kwargs):
+      
         current_time = time.time()
         if self.backoff and self.backoff > current_time:
             seconds = int(self.backoff - current_time)
@@ -78,8 +83,10 @@ class Session(object):
             payload_kwarg = 'data' if 'files' in kwargs else 'json'
             kwargs.setdefault(payload_kwarg, payload)
 
+
         retry = self.nb_retry
         while retry >= 0:
+            kwargs['headers']={'User-Agent':USER_AGENT}
             resp = requests.request(method, actual_url, **kwargs)
             backoff_seconds = resp.headers.get("Backoff")
             if backoff_seconds:
@@ -113,7 +120,6 @@ class Session(object):
                 exception.response = resp
                 raise exception
 
-        resp.headers['User-Agent'] = self.headers
         
         if resp.status_code == 304 or method == 'head':
             body = None

@@ -10,7 +10,7 @@ from .support import unittest, get_200, get_503, get_403
 
 def fake_response(status_code):
     response = mock.MagicMock()
-    response.headers = {'User-Agent':USER_AGENT}
+    response.headers = {'User-Agent': USER_AGENT}
     response.status_code = status_code
     return response
 
@@ -32,14 +32,16 @@ class SessionTest(unittest.TestCase):
         self.assertEquals(session.auth, None)
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/test',headers=self.requests_mock.request.return_value.headers)
+            'get', 'https://example.org/test',
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_bad_http_status_raises_exception(self):
         response = fake_response(400)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
 
-        self.assertRaises(KintoException, session.request, 'get', '/test',headers=self.requests_mock.request.return_value.headers)
+        self.assertRaises(KintoException, session.request, 'get', '/test',
+                          headers=self.requests_mock.request.return_value.headers)
 
     def test_bad_http_status_raises_exception_even_in_case_of_invalid_json_response(self):
         response = fake_response(502)
@@ -60,7 +62,7 @@ class SessionTest(unittest.TestCase):
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            auth=mock.sentinel.auth,headers=self.requests_mock.request.return_value.headers)
+            auth=mock.sentinel.auth, headers=self.requests_mock.request.return_value.headers)
 
     def test_requests_arguments_are_forwarded(self):
         response = fake_response(200)
@@ -70,7 +72,7 @@ class SessionTest(unittest.TestCase):
                         foo=mock.sentinel.bar)
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            foo=mock.sentinel.bar,headers=self.requests_mock.request.return_value.headers)
+            foo=mock.sentinel.bar, headers=self.requests_mock.request.return_value.headers)
 
     def test_passed_data_is_encoded_to_json(self):
         response = fake_response(200)
@@ -80,7 +82,7 @@ class SessionTest(unittest.TestCase):
                         data={'foo': 'bar'})
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
-            json={"data": {'foo': 'bar'}},headers=self.requests_mock.request.return_value.headers)
+            json={"data": {'foo': 'bar'}}, headers=self.requests_mock.request.return_value.headers)
 
     def test_passed_data_is_passed_as_is_when_files_are_posted(self):
         response = fake_response(200)
@@ -92,7 +94,8 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
             data={"data": '{"foo": "bar"}'},
-            files={"attachment": {"filename"}},headers=self.requests_mock.request.return_value.headers)
+            files={"attachment": {"filename"}},
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_passed_permissions_is_added_in_the_payload(self):
         response = fake_response(200)
@@ -104,7 +107,8 @@ class SessionTest(unittest.TestCase):
                         permissions=permissions)
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
-            json={'permissions': {'foo': 'bar'}},headers=self.requests_mock.request.return_value.headers)
+            json={'permissions': {'foo': 'bar'}},
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_url_is_used_if_schema_is_present(self):
         response = fake_response(200)
@@ -114,7 +118,8 @@ class SessionTest(unittest.TestCase):
         permissions.as_dict.return_value = {'foo': 'bar'}
         session.request('get', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/anothertest',headers=self.requests_mock.request.return_value.headers)
+            'get', 'https://example.org/anothertest',
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(
@@ -155,7 +160,8 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         session.request('get', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/anothertest',headers=self.requests_mock.request.return_value.headers)
+            'get', 'https://example.org/anothertest',
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_payload_is_sent_on_put_requests(self):
         response = fake_response(200)
@@ -163,18 +169,17 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         session.request('put', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'put', 'https://example.org/anothertest', json={},headers=self.requests_mock.request.return_value.headers)
-
+            'put', 'https://example.org/anothertest', json={},
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_user_agent_is_sent_on_requests(self):
         response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
-        expected = {'User-Agent' : USER_AGENT}
+        expected = {'User-Agent': USER_AGENT}
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/test' , headers = expected )
-
+            'get', 'https://example.org/test', headers=expected)
 
 
 class RetryRequestTest(unittest.TestCase):
@@ -291,4 +296,3 @@ class RetryRequestTest(unittest.TestCase):
         time.sleep(1)  # Spend the backoff
         session.request('get', '/test')  # The second call reset the backoff
         self.assertIsNone(session.backoff)
-

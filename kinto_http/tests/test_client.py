@@ -2,7 +2,7 @@ import mock
 import pytest
 from six import text_type
 from .support import unittest, mock_response, build_response, get_http_error
-
+from kinto_http.session import USER_AGENT
 from kinto_http import KintoException, BucketNotFound, Client, DO_NOT_OVERWRITE
 from kinto_http.session import create_session
 
@@ -33,11 +33,11 @@ class ClientTest(unittest.TestCase):
                 {'body': {'data': {'foo': 'bar'}},
                  'path': '/buckets/mozilla/collections/test/records/1234',
                  'method': 'PUT',
-                 'headers': {'If-None-Match': '*'}},
+                 'headers': {'If-None-Match': '*','User-Agent': USER_AGENT}},
                 {'body': {'data': {'bar': 'baz'}},
                  'path': '/buckets/mozilla/collections/test/records/5678',
                  'method': 'PUT',
-                 'headers': {'If-None-Match': '*'}}]})
+                 'headers': {'If-None-Match': '*','User-Agent': USER_AGENT }}]})
 
     def test_batch_raises_exception(self):
         # Make the next call to sess.request raise a 403.

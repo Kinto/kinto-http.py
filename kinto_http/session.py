@@ -83,7 +83,11 @@ class Session(object):
             payload_kwarg = 'data' if 'files' in kwargs else 'json'
             kwargs.setdefault(payload_kwarg, payload)
 
-        kwargs.setdefault('headers', {}).setdefault('User-Agent', USER_AGENT)
+        try:
+            kwargs.setdefault('headers',{}).setdefault('User-Agent',USER_AGENT)
+        except :
+            pass 
+
         retry = self.nb_retry
         while retry >= 0:
             

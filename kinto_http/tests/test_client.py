@@ -33,11 +33,11 @@ class ClientTest(unittest.TestCase):
                 {'body': {'data': {'foo': 'bar'}},
                  'path': '/buckets/mozilla/collections/test/records/1234',
                  'method': 'PUT',
-                 'headers': {'If-None-Match': '*','User-Agent': USER_AGENT}},
+                 'headers': {'If-None-Match': '*', 'User-Agent': USER_AGENT}},
                 {'body': {'data': {'bar': 'baz'}},
                  'path': '/buckets/mozilla/collections/test/records/5678',
                  'method': 'PUT',
-                 'headers': {'If-None-Match': '*','User-Agent': USER_AGENT }}]})
+                 'headers': {'If-None-Match': '*', 'User-Agent': USER_AGENT}}]})
 
     def test_batch_raises_exception(self):
         # Make the next call to sess.request raise a 403.

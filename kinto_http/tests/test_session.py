@@ -183,7 +183,7 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test', headers=expected)
 
-    def test_user_agent_contains_kinto_http_requests_and_python_version(self):
+    def test_user_agent_contains_kinto_http_as_well_as_requests_and_python_versions(self):
         kinto_http_info, requests_info, python_info = USER_AGENT.split()
         kinto_http_version = pkg_resources.get_distribution("kinto_http").version
         requests_version = pkg_resources.get_distribution("requests").version

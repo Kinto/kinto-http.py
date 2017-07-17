@@ -78,10 +78,12 @@ class Session(object):
         if method not in ('get', 'head'):
             payload_kwarg = 'data' if 'files' in kwargs else 'json'
             kwargs.setdefault(payload_kwarg, payload)
-        try:
-            kwargs.setdefault('headers', {}).setdefault('User-Agent', USER_AGENT)
-        except:
-            pass
+
+        # Set the default User-Agent if not already defined.
+        if not isinstance(kwargs.get('headers'), dict):
+            kwargs['headers'] = {}
+        kwargs['headers'].setdefault('User-Agent', USER_AGENT)
+
         retry = self.nb_retry
         while retry >= 0:
             resp = requests.request(method, actual_url, **kwargs)

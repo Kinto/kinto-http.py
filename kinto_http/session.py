@@ -11,8 +11,8 @@ kinto_http_version = pkg_resources.get_distribution("kinto_http").version
 requests_version = pkg_resources.get_distribution("requests").version
 python_version = '.'.join(map(str, sys.version_info[:3]))
 
-USER_AGENT = 'kinto-http.py/{} requests/{} python/{}'.format(kinto_http_version,
-                                                             requests_version, python_version)
+USER_AGENT = 'kinto_http/{} requests/{} python/{}'.format(kinto_http_version,
+                                                          requests_version, python_version)
 
 
 def create_session(server_url=None, auth=None, session=None, retry=0, retry_after=None):

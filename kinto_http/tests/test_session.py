@@ -1,5 +1,7 @@
 import mock
+import pkg_resources
 import pytest
+import sys
 import time
 
 from kinto_http.session import Session, create_session
@@ -180,6 +182,15 @@ class SessionTest(unittest.TestCase):
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test', headers=expected)
+
+    def test_user_agent_contains_kinto_http_requests_and_python_version(self):
+        kinto_http_info, requests_info, python_info = USER_AGENT.split()
+        kinto_http_version = pkg_resources.get_distribution("kinto_http").version
+        requests_version = pkg_resources.get_distribution("requests").version
+        python_version = '.'.join(map(str, sys.version_info[:3]))
+        assert kinto_http_info == 'kinto_http/{}'.format(kinto_http_version)
+        assert requests_info == 'requests/{}'.format(requests_version)
+        assert python_info == 'python/{}'.format(python_version)
 
 
 class RetryRequestTest(unittest.TestCase):

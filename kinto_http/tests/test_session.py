@@ -1,16 +1,18 @@
 import mock
+import pkg_resources
 import pytest
+import sys
 import time
 
 from kinto_http.session import Session, create_session
 from kinto_http.exceptions import KintoException, BackoffException
-
+from kinto_http.session import USER_AGENT
 from .support import unittest, get_200, get_503, get_403
 
 
 def fake_response(status_code):
     response = mock.MagicMock()
-    response.headers = {}
+    response.headers = {'User-Agent': USER_AGENT}
     response.status_code = status_code
     return response
 
@@ -32,14 +34,16 @@ class SessionTest(unittest.TestCase):
         self.assertEquals(session.auth, None)
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/test')
+            'get', 'https://example.org/test',
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_bad_http_status_raises_exception(self):
         response = fake_response(400)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
 
-        self.assertRaises(KintoException, session.request, 'get', '/test')
+        self.assertRaises(KintoException, session.request, 'get', '/test',
+                          headers=self.requests_mock.request.return_value.headers)
 
     def test_bad_http_status_raises_exception_even_in_case_of_invalid_json_response(self):
         response = fake_response(502)
@@ -60,7 +64,7 @@ class SessionTest(unittest.TestCase):
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            auth=mock.sentinel.auth)
+            auth=mock.sentinel.auth, headers=self.requests_mock.request.return_value.headers)
 
     def test_requests_arguments_are_forwarded(self):
         response = fake_response(200)
@@ -70,7 +74,7 @@ class SessionTest(unittest.TestCase):
                         foo=mock.sentinel.bar)
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            foo=mock.sentinel.bar)
+            foo=mock.sentinel.bar, headers=self.requests_mock.request.return_value.headers)
 
     def test_passed_data_is_encoded_to_json(self):
         response = fake_response(200)
@@ -80,7 +84,7 @@ class SessionTest(unittest.TestCase):
                         data={'foo': 'bar'})
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
-            json={"data": {'foo': 'bar'}})
+            json={"data": {'foo': 'bar'}}, headers=self.requests_mock.request.return_value.headers)
 
     def test_passed_data_is_passed_as_is_when_files_are_posted(self):
         response = fake_response(200)
@@ -92,7 +96,8 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
             data={"data": '{"foo": "bar"}'},
-            files={"attachment": {"filename"}})
+            files={"attachment": {"filename"}},
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_passed_permissions_is_added_in_the_payload(self):
         response = fake_response(200)
@@ -104,7 +109,8 @@ class SessionTest(unittest.TestCase):
                         permissions=permissions)
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
-            json={'permissions': {'foo': 'bar'}})
+            json={'permissions': {'foo': 'bar'}},
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_url_is_used_if_schema_is_present(self):
         response = fake_response(200)
@@ -114,7 +120,8 @@ class SessionTest(unittest.TestCase):
         permissions.as_dict.return_value = {'foo': 'bar'}
         session.request('get', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/anothertest')
+            'get', 'https://example.org/anothertest',
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(
@@ -155,7 +162,8 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         session.request('get', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'get', 'https://example.org/anothertest')
+            'get', 'https://example.org/anothertest',
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_payload_is_sent_on_put_requests(self):
         response = fake_response(200)
@@ -163,7 +171,26 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         session.request('put', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'put', 'https://example.org/anothertest', json={})
+            'put', 'https://example.org/anothertest', json={},
+            headers=self.requests_mock.request.return_value.headers)
+
+    def test_user_agent_is_sent_on_requests(self):
+        response = fake_response(200)
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        expected = {'User-Agent': USER_AGENT}
+        session.request('get', '/test')
+        self.requests_mock.request.assert_called_with(
+            'get', 'https://example.org/test', headers=expected)
+
+    def test_user_agent_contains_kinto_http_as_well_as_requests_and_python_versions(self):
+        kinto_http_info, requests_info, python_info = USER_AGENT.split()
+        kinto_http_version = pkg_resources.get_distribution("kinto_http").version
+        requests_version = pkg_resources.get_distribution("requests").version
+        python_version = '.'.join(map(str, sys.version_info[:3]))
+        assert kinto_http_info == 'kinto_http/{}'.format(kinto_http_version)
+        assert requests_info == 'requests/{}'.format(requests_version)
+        assert python_info == 'python/{}'.format(python_version)
 
 
 class RetryRequestTest(unittest.TestCase):

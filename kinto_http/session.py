@@ -1,14 +1,22 @@
 import time
-
+import sys
 import requests
 from six.moves.urllib.parse import urlparse
-
+import pkg_resources
 from kinto_http import utils
 from kinto_http.exceptions import KintoException, BackoffException
 
 
-def create_session(server_url=None, auth=None, session=None, retry=0,
-                   retry_after=None):
+kinto_http_version = pkg_resources.get_distribution("kinto_http").version
+requests_version = pkg_resources.get_distribution("requests").version
+python_version = '.'.join(map(str, sys.version_info[:3]))
+
+USER_AGENT = 'kinto_http/{} requests/{} python/{}'.format(kinto_http_version,
+                                                          requests_version, python_version)
+
+
+def create_session(server_url=None, auth=None, session=None, retry=0, retry_after=None):
+
     """Returns a session from the passed arguments.
 
     :param server_url:
@@ -71,6 +79,11 @@ class Session(object):
             payload_kwarg = 'data' if 'files' in kwargs else 'json'
             kwargs.setdefault(payload_kwarg, payload)
 
+        # Set the default User-Agent if not already defined.
+        if not isinstance(kwargs.get('headers'), dict):
+            kwargs['headers'] = {}
+        kwargs['headers'].setdefault('User-Agent', USER_AGENT)
+
         retry = self.nb_retry
         while retry >= 0:
             resp = requests.request(method, actual_url, **kwargs)
@@ -105,7 +118,6 @@ class Session(object):
                 exception.request = resp.request
                 exception.response = resp
                 raise exception
-
         if resp.status_code == 304 or method == 'head':
             body = None
         else:

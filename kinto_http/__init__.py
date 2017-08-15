@@ -10,6 +10,7 @@ from kinto_http import utils
 from kinto_http.session import create_session, Session
 from kinto_http.batch import BatchSession
 from kinto_http.exceptions import BucketNotFound, KintoException
+from kinto_http.patch_type import PatchType, BasicPatch
 
 logger = logging.getLogger('kinto_http')
 
@@ -601,9 +602,54 @@ class Client(object):
                                        permissions=permissions)
         return resp
 
-    def patch_record(self, **kwargs):
-        kwargs['method'] = 'patch'
-        return self.update_record(**kwargs)
+    def patch_record(self, *, id=None, collection=None, bucket=None,
+                     data=None, original=None, permissions=None,
+                     safe=True, if_match=None):
+        """Issue a PATCH request on a record.
+
+        :param data: the patch to apply
+        :type data: PatchType or dict
+        :param original: the original record, from which the ID and
+            last_modified can be taken
+        :type original: dict
+        """
+        # Backwards compatibility: a dict is both a BasicPatch and a
+        # possible record (this was the behavior in 9.0.1 and
+        # earlier).  In other words, we consider the data as a
+        # possible record, even though PATCH data probably shouldn't
+        # also contain an ID or a last_modified, as these shouldn't be
+        # modified by a user.
+        if isinstance(data, dict):
+            original = original or data
+            data = BasicPatch(data)
+
+        if not isinstance(data, PatchType):
+            raise ValueError("couldn't understand patch body {}".format(data))
+
+        if original:
+            id = id or original.get('id')
+            if_match = if_match or original.get('last_modified')
+
+        if id is None:
+            raise KeyError('Unable to patch record, need an id.')
+
+        body = data.body
+        content_type = data.content_type
+        headers = self._get_cache_headers(safe, if_match=if_match) or {}
+        headers['Content-Type'] = content_type
+
+        endpoint = self.get_endpoint('record', id=id,
+                                     bucket=bucket,
+                                     collection=collection)
+
+        logger.info(
+          "Patch record with id %r in collection %r in bucket %r"
+          % (id, collection or self._collection_name, bucket or self._bucket_name))
+
+        resp, _ = self.session.request('patch', endpoint, data=body,
+                                       headers=headers,
+                                       permissions=permissions)
+        return resp
 
     def delete_record(self, *, id, collection=None, bucket=None,
                       safe=True, if_match=None, if_exists=False):

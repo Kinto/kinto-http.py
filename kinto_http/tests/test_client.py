@@ -5,7 +5,7 @@ from .support import unittest, mock_response, build_response, get_http_error
 from kinto_http.session import USER_AGENT
 from kinto_http import KintoException, BucketNotFound, Client, DO_NOT_OVERWRITE
 from kinto_http.session import create_session
-
+from kinto_http.patch_type import MergePatch
 
 class ClientTest(unittest.TestCase):
     def setUp(self):
@@ -897,7 +897,20 @@ class RecordTest(unittest.TestCase):
 
         self.session.request.assert_called_with(
             'patch', '/buckets/mybucket/collections/mycollection/records/1',
-            data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
+            data={'id': 1, 'foo': 'bar'},
+            headers={"Content-Type": "application/json"},
+            permissions=None)
+
+    def test_patch_record_recognizes_patchtype(self):
+        mock_response(self.session)
+        self.client.patch_record(bucket='mybucket', collection='mycollection',
+                                 data=MergePatch({'foo': 'bar'}), id=1)
+
+        self.session.request.assert_called_with(
+            'patch', '/buckets/mybucket/collections/mycollection/records/1',
+            data={'foo': 'bar'},
+            headers={"Content-Type": "application/merge-patch+json"},
+            permissions=None)
 
     def test_update_record_raises_if_no_id_is_given(self):
         with self.assertRaises(KeyError) as cm:

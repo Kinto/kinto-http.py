@@ -399,6 +399,12 @@ class GroupTest(unittest.TestCase):
             'put', '/buckets/mybucket/groups/group', data={'id': 'group'}, permissions=None,
             headers=None)
 
+    def test_patch_group_makes_request(self):
+        self.client.patch_group(id='group', data={'foo': 'bar'})
+        self.session.request.assert_called_with(
+            'patch', '/buckets/mybucket/groups/group', data={'foo': 'bar'}, permissions=None,
+            headers={'Content-Type': 'application/json'})
+
     def test_create_group_raises_if_group_id_is_missing(self):
         with pytest.raises(KeyError) as e:
             self.client.create_group()

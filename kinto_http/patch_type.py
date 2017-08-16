@@ -6,6 +6,7 @@ class PatchType(object):
     """
     pass
 
+
 class BasicPatch(PatchType):
     """Class representing a default "attribute merge" PATCH.
 

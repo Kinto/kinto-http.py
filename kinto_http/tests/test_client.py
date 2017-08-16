@@ -7,6 +7,7 @@ from kinto_http import KintoException, BucketNotFound, Client, DO_NOT_OVERWRITE
 from kinto_http.session import create_session
 from kinto_http.patch_type import MergePatch, JSONPatch
 
+
 class ClientTest(unittest.TestCase):
     def setUp(self):
         self.session = mock.MagicMock()

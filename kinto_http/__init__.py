@@ -181,6 +181,18 @@ class Client(object):
 
         return (id, if_match)
 
+    def _patch_method(self, endpoint, patch, safe=True, if_match=None, permissions=None):
+        """Utility method for implementing PATCH methods."""
+        body = patch.body
+        content_type = patch.content_type
+        headers = self._get_cache_headers(safe, if_match=if_match) or {}
+        headers['Content-Type'] = content_type
+
+        resp, _ = self.session.request('patch', endpoint, data=body,
+                                       headers=headers,
+                                       permissions=permissions)
+        return resp
+
     def _create_if_not_exists(self, resource, **kwargs):
         try:
             create_method = getattr(self, 'create_%s' % resource)
@@ -647,11 +659,6 @@ class Client(object):
         if id is None:
             raise KeyError('Unable to patch record, need an id.')
 
-        body = data.body
-        content_type = data.content_type
-        headers = self._get_cache_headers(safe, if_match=if_match) or {}
-        headers['Content-Type'] = content_type
-
         endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,
                                      collection=collection)
@@ -660,10 +667,13 @@ class Client(object):
           "Patch record with id %r in collection %r in bucket %r"
           % (id, collection or self._collection_name, bucket or self._bucket_name))
 
-        resp, _ = self.session.request('patch', endpoint, data=body,
-                                       headers=headers,
-                                       permissions=permissions)
-        return resp
+        return self._patch_method(
+            endpoint,
+            data,
+            safe=safe,
+            if_match=if_match,
+            permissions=permissions
+        )
 
     def delete_record(self, *, id, collection=None, bucket=None,
                       safe=True, if_match=None, if_exists=False):

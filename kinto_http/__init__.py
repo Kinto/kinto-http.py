@@ -254,7 +254,7 @@ class Client(object):
         return resp
 
     def update_bucket(self, *, id=None, data=None, permissions=None,
-                      safe=True, if_match=None, method='put'):
+                      safe=True, if_match=None):
 
         if id is None and data:
             id = data.get('id', None)
@@ -264,7 +264,7 @@ class Client(object):
 
         logger.info("Update bucket %r" % id or self._bucket_name)
 
-        resp, _ = self.session.request(method, endpoint, data=data,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
@@ -394,7 +394,7 @@ class Client(object):
         return resp
 
     def update_group(self, *, id=None, bucket=None, data=None, permissions=None,
-                     method='put', safe=True, if_match=None):
+                     safe=True, if_match=None):
 
         if id is None and data:
             id = data.get('id', None)
@@ -409,7 +409,7 @@ class Client(object):
 
         logger.info("Update group %r in bucket %r" % (id, bucket or self._bucket_name))
 
-        resp, _ = self.session.request(method, endpoint, data=data,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
@@ -529,7 +529,7 @@ class Client(object):
 
         return resp
 
-    def update_collection(self, *, id=None, bucket=None, method='put',
+    def update_collection(self, *, id=None, bucket=None,
                           data=None, permissions=None,
                           safe=True, if_match=None):
 
@@ -544,7 +544,7 @@ class Client(object):
         logger.info("Update collection %r in bucket %r" %
                     (id or self._collection_name, bucket or self._bucket_name))
 
-        resp, _ = self.session.request(method, endpoint, data=data,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
@@ -698,7 +698,7 @@ class Client(object):
 
         return resp
 
-    def update_record(self, *, id=None, collection=None, bucket=None, method='put',
+    def update_record(self, *, id=None, collection=None, bucket=None,
                       data=None, permissions=None,
                       safe=True, if_match=None):
         id = id or data.get('id')
@@ -713,7 +713,7 @@ class Client(object):
           "Update record with id %r in collection %r in bucket %r"
           % (id, collection or self._collection_name, bucket or self._bucket_name))
 
-        resp, _ = self.session.request(method, endpoint, data=data,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        headers=headers,
                                        permissions=permissions)
         return resp

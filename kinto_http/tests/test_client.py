@@ -253,7 +253,7 @@ class BucketTest(unittest.TestCase):
             '/buckets/testbucket',
             data={'foo': 'bar'},
             permissions={'read': ['natim']},
-            headers=None)
+            headers={'Content-Type': 'application/json'})
 
     def test_update_bucket_handles_if_match(self):
         self.client.update_bucket(id='testbucket',

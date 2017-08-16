@@ -279,9 +279,41 @@ class Client(object):
                                        headers=headers)
         return resp
 
-    def patch_bucket(self, **kwargs):
-        kwargs['method'] = 'patch'
-        return self.update_bucket(**kwargs)
+    def patch_bucket(self, *, id=None,
+                     data=None, original=None, permissions=None,
+                     safe=True, if_match=None):
+        """Issue a PATCH request on a bucket.
+
+        :param data: the patch to apply
+        :type data: PatchType or dict
+        :param original: the original bucket, from which the ID and
+            last_modified can be taken
+        :type original: dict
+        """
+        # Backwards compatibility: a dict is both a BasicPatch and a
+        # possible bucket (this was the behavior in 9.0.1 and
+        # earlier).  In other words, we consider the data as a
+        # possible bucket, even though PATCH data probably shouldn't
+        # also contain an ID or a last_modified, as these shouldn't be
+        # modified by a user.
+        if isinstance(data, dict):
+            original = original or data
+            data = BasicPatch(data)
+
+        if not isinstance(data, PatchType):
+            raise ValueError("couldn't understand patch body {}".format(data))
+
+        (id, if_match) = self._extract_original_info(original, id, if_match)
+        endpoint = self.get_endpoint('bucket', bucket=id)
+        logger.info("Patch bucket %r" % (id or self._bucket_name,))
+
+        return self._patch_method(
+            endpoint,
+            data,
+            safe=safe,
+            if_match=if_match,
+            permissions=permissions
+        )
 
     def get_buckets(self, **kwargs):
         endpoint = self.get_endpoint('buckets')

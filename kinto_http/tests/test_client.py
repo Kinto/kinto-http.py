@@ -481,7 +481,8 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'patch', url, data={'key': 'secret'}, headers=None,
+            'patch', url, data={'key': 'secret'},
+            headers={'Content-Type': 'application/json'},
             permissions=None)
 
     def test_patch_collection_handles_if_match(self):
@@ -490,7 +491,7 @@ class CollectionTest(unittest.TestCase):
                                      if_match=1234)
 
         url = '/buckets/mybucket/collections/mycollection'
-        headers = {'If-Match': '"1234"'}
+        headers = {'If-Match': '"1234"', 'Content-Type': 'application/json'}
         self.session.request.assert_called_with(
             'patch', url, data={'key': 'secret'}, headers=headers,
             permissions=None)

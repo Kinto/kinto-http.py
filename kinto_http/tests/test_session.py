@@ -76,6 +76,12 @@ class SessionTest(unittest.TestCase):
             'get', 'https://example.org/test',
             foo=mock.sentinel.bar, headers=self.requests_mock.request.return_value.headers)
 
+    def test_raises_exception_if_headers_not_dict(self):
+        session = Session('https://example.org')
+
+        with pytest.raises(TypeError) as e:
+            session.request('get', '/test', headers=4)
+
     def test_passed_data_is_encoded_to_json(self):
         response = fake_response(200)
         self.requests_mock.request.return_value = response

@@ -80,9 +80,12 @@ class Session(object):
             kwargs.setdefault(payload_kwarg, payload)
 
         # Set the default User-Agent if not already defined.
-        if not isinstance(kwargs.get('headers'), dict):
+        if 'headers' not in kwargs or kwargs['headers'] is None:
             kwargs['headers'] = {}
-        kwargs['headers'].setdefault('User-Agent', USER_AGENT)
+        if not isinstance(kwargs['headers'], dict):
+            raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))
+
+        kwargs['headers'] = {"User-Agent": USER_AGENT, **kwargs['headers']}
 
         retry = self.nb_retry
         while retry >= 0:

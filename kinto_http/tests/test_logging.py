@@ -19,6 +19,11 @@ class BucketLoggingTest(unittest.TestCase):
             self.client.update_bucket(id='buck', data={'foo': 'bar'})
             mocked_logger.info.assert_called_with("Update bucket 'buck'")
 
+    def test_patch_bucket_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.patch_bucket(id="buck", data={'foo': 'bar'})
+            mocked_logger.info.assert_called_with("Patch bucket 'buck'")
+
     def test_get_bucket_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
             self.client.get_bucket(id="buck")
@@ -58,6 +63,15 @@ class GroupLoggingTest(unittest.TestCase):
                 permissions={'write': ['blahblah', ]})
             mocked_logger.info.assert_called_with(
                 "Update group 'mozilla' in bucket 'buck'")
+
+    def test_patch_group_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.patch_group(
+                data={'foo': 'bar'},
+                id='mozilla', bucket='buck',
+                permissions={'write': ['blahblah', ]})
+            mocked_logger.info.assert_called_with(
+                "Patch group 'mozilla' in bucket 'buck'")
 
     def test_get_group_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
@@ -103,6 +117,15 @@ class CollectionLoggingTest(unittest.TestCase):
                 permissions={'write': ['blahblah', ]})
             mocked_logger.info.assert_called_with(
                 "Update collection 'mozilla' in bucket 'buck'")
+
+    def test_patch_collection_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.patch_collection(
+                data={'foo': 'bar'},
+                id='mozilla', bucket='buck',
+                permissions={'write': ['blahblah', ]})
+            mocked_logger.info.assert_called_with(
+                "Patch collection 'mozilla' in bucket 'buck'")
 
     def test_get_collection_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:
@@ -158,6 +181,19 @@ class RecordLoggingTest(unittest.TestCase):
                 collection='mozilla')
             mocked_logger.info.assert_called_with(
                 "Update record with id 'fake-record' in collection 'mozilla' in bucket 'buck'")
+
+    def test_patch_record_logs_info_message(self):
+        with mock.patch('kinto_http.logger') as mocked_logger:
+            self.client.create_bucket(id='buck')
+            self.client.create_collection(bucket='buck',
+                                          id='mozilla')
+            self.client.patch_record(
+                id='fake-record',
+                data={'ss': 'aa'},
+                bucket='buck',
+                collection='mozilla')
+            mocked_logger.info.assert_called_with(
+                "Patch record with id 'fake-record' in collection 'mozilla' in bucket 'buck'")
 
     def test_get_record_logs_info_message(self):
         with mock.patch('kinto_http.logger') as mocked_logger:

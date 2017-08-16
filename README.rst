@@ -50,7 +50,7 @@ Here is an overview of what the API provides:
 
     records = client.get_records(bucket='default', collection='todos')
     for i, record in enumerate(records):
-        record['title'] = 'Todo #%d' %i
+        record['title'] = 'Todo {}'.format(i)
 
     for record in records:
         client.update_record(record)
@@ -441,7 +441,7 @@ to ease configuration and initialization of client from command-line arguments.
 
       logger.info("Fetch records.")
       records = client.get_records()
-      logger.warn("%s records." % len(records))
+      logger.warn("{} records.".format(len(records)))
 
 The script now accepts basic options:
 

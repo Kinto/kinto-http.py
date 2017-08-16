@@ -291,7 +291,7 @@ class Client(object):
             data = BasicPatch(data)
 
         if not isinstance(data, PatchType):
-            raise ValueError("couldn't understand patch body {}".format(data))
+            raise TypeError("couldn't understand patch body {}".format(data))
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         endpoint = self.get_endpoint('bucket', bucket=id)
@@ -436,7 +436,7 @@ class Client(object):
             data = BasicPatch(data)
 
         if not isinstance(data, PatchType):
-            raise ValueError("couldn't understand patch body {}".format(data))
+            raise TypeError("couldn't understand patch body {}".format(data))
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         endpoint = self.get_endpoint('group', bucket=bucket, group=id)
@@ -571,7 +571,7 @@ class Client(object):
             data = BasicPatch(data)
 
         if not isinstance(data, PatchType):
-            raise ValueError("couldn't understand patch body {}".format(data))
+            raise TypeError("couldn't understand patch body {}".format(data))
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         endpoint = self.get_endpoint('collection', bucket=bucket, collection=id)
@@ -740,7 +740,7 @@ class Client(object):
             data = BasicPatch(data)
 
         if not isinstance(data, PatchType):
-            raise ValueError("couldn't understand patch body {}".format(data))
+            raise TypeError("couldn't understand patch body {}".format(data))
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         if id is None:

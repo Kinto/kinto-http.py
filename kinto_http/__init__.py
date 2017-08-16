@@ -164,6 +164,23 @@ class Client(object):
             return {'If-Match': utils.quote(if_match)}
         # else return None
 
+    def _extract_original_info(self, original, id, if_match):
+        """Utility method to extract ID and last_modified.
+
+        Many update methods require the ID of a resource (to generate
+        a URL) and the last_modified to generate safe cache headers
+        (If-Match).  As a convenience, we allow users to pass the
+        original record retrieved from a get_* method, which also
+        contains those values.  This utility method lets methods
+        support both explicit arguments for ``id`` and ``if_match`` as
+        well as implicitly reading them from an original resource.
+        """
+        if original:
+            id = id or original.get('id')
+            if_match = if_match or original.get('last_modified')
+
+        return (id, if_match)
+
     def _create_if_not_exists(self, resource, **kwargs):
         try:
             create_method = getattr(self, 'create_%s' % resource)
@@ -626,10 +643,7 @@ class Client(object):
         if not isinstance(data, PatchType):
             raise ValueError("couldn't understand patch body {}".format(data))
 
-        if original:
-            id = id or original.get('id')
-            if_match = if_match or original.get('last_modified')
-
+        (id, if_match) = self._extract_original_info(original, id, if_match)
         if id is None:
             raise KeyError('Unable to patch record, need an id.')
 

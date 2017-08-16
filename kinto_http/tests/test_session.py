@@ -79,7 +79,7 @@ class SessionTest(unittest.TestCase):
     def test_raises_exception_if_headers_not_dict(self):
         session = Session('https://example.org')
 
-        with pytest.raises(TypeError) as e:
+        with pytest.raises(TypeError):
             session.request('get', '/test', headers=4)
 
     def test_passed_data_is_encoded_to_json(self):

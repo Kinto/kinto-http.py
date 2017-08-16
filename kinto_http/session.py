@@ -80,7 +80,7 @@ class Session(object):
             kwargs.setdefault(payload_kwarg, payload)
 
         # Set the default User-Agent if not already defined.
-        if 'headers' not in kwargs or kwargs['headers'] == None:
+        if 'headers' not in kwargs or kwargs['headers'] is None:
             kwargs['headers'] = {}
         if not isinstance(kwargs['headers'], dict):
             raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))

@@ -171,16 +171,26 @@ class Client(object):
 
         return (id, if_match)
 
-    def _patch_method(self, endpoint, patch, safe=True, if_match=None, permissions=None):
+    def _patch_method(self, endpoint, patch, safe=True, if_match=None,
+                      data=None, permissions=None):
         """Utility method for implementing PATCH methods."""
+        if not patch:
+            # Backwards compatibility: the changes argument was
+            # introduced in 9.1.0, and covers both ``data`` and
+            # ``permissions`` arguments. Support the old style of
+            # passing dicts by casting them into a BasicPatch.
+            patch = BasicPatch(data=data, permissions=permissions)
+
+        if not isinstance(patch, PatchType):
+            raise TypeError("couldn't understand patch body {}".format(patch))
+
         body = patch.body
         content_type = patch.content_type
         headers = self._get_cache_headers(safe, if_match=if_match) or {}
         headers['Content-Type'] = content_type
 
-        resp, _ = self.session.request('patch', endpoint, data=body,
-                                       headers=headers,
-                                       permissions=permissions)
+        resp, _ = self.session.request('patch', endpoint, payload=body,
+                                       headers=headers)
         return resp
 
     def _create_if_not_exists(self, resource, **kwargs):
@@ -270,12 +280,12 @@ class Client(object):
         return resp
 
     def patch_bucket(self, *, id=None,
-                     data=None, original=None, permissions=None,
+                     changes=None, data=None, original=None, permissions=None,
                      safe=True, if_match=None):
         """Issue a PATCH request on a bucket.
 
-        :param data: the patch to apply
-        :type data: PatchType or dict
+        :param changes: the patch to apply
+        :type changes: PatchType
         :param original: the original bucket, from which the ID and
             last_modified can be taken
         :type original: dict
@@ -286,12 +296,7 @@ class Client(object):
         # possible bucket, even though PATCH data probably shouldn't
         # also contain an ID or a last_modified, as these shouldn't be
         # modified by a user.
-        if isinstance(data, dict):
-            original = original or data
-            data = BasicPatch(data)
-
-        if not isinstance(data, PatchType):
-            raise TypeError("couldn't understand patch body {}".format(data))
+        original = original or data
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         endpoint = self.get_endpoint('bucket', bucket=id)
@@ -299,10 +304,11 @@ class Client(object):
 
         return self._patch_method(
             endpoint,
-            data,
+            changes,
+            data=data,
+            permissions=permissions,
             safe=safe,
             if_match=if_match,
-            permissions=permissions
         )
 
     def get_buckets(self, **kwargs):
@@ -415,12 +421,12 @@ class Client(object):
         return resp
 
     def patch_group(self, *, id=None, bucket=None,
-                    data=None, original=None, permissions=None,
+                    changes=None, data=None, original=None, permissions=None,
                     safe=True, if_match=None):
         """Issue a PATCH request on a bucket.
 
-        :param data: the patch to apply
-        :type data: PatchType or dict
+        :param changes: the patch to apply
+        :type changes: PatchType
         :param original: the original bucket, from which the ID and
             last_modified can be taken
         :type original: dict
@@ -431,12 +437,7 @@ class Client(object):
         # possible bucket, even though PATCH data probably shouldn't
         # also contain an ID or a last_modified, as these shouldn't be
         # modified by a user.
-        if isinstance(data, dict):
-            original = original or data
-            data = BasicPatch(data)
-
-        if not isinstance(data, PatchType):
-            raise TypeError("couldn't understand patch body {}".format(data))
+        original = original or data
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         endpoint = self.get_endpoint('group', bucket=bucket, group=id)
@@ -444,10 +445,11 @@ class Client(object):
 
         return self._patch_method(
             endpoint,
-            data,
+            changes,
+            data=data,
+            permissions=permissions,
             safe=safe,
             if_match=if_match,
-            permissions=permissions
         )
 
     def get_group(self, *, id, bucket=None):
@@ -550,12 +552,12 @@ class Client(object):
         return resp
 
     def patch_collection(self, *, id=None, bucket=None,
-                         data=None, original=None, permissions=None,
+                         changes=None, data=None, original=None, permissions=None,
                          safe=True, if_match=None):
         """Issue a PATCH request on a collection.
 
-        :param data: the patch to apply
-        :type data: PatchType or dict
+        :param changes: the patch to apply
+        :type changes: PatchType
         :param original: the original collection, from which the ID and
             last_modified can be taken
         :type original: dict
@@ -566,12 +568,7 @@ class Client(object):
         # possible collection, even though PATCH data probably shouldn't
         # also contain an ID or a last_modified, as these shouldn't be
         # modified by a user.
-        if isinstance(data, dict):
-            original = original or data
-            data = BasicPatch(data)
-
-        if not isinstance(data, PatchType):
-            raise TypeError("couldn't understand patch body {}".format(data))
+        original = original or data
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         endpoint = self.get_endpoint('collection', bucket=bucket, collection=id)
@@ -580,10 +577,11 @@ class Client(object):
 
         return self._patch_method(
             endpoint,
-            data,
+            changes,
+            data=data,
+            permissions=permissions,
             safe=safe,
             if_match=if_match,
-            permissions=permissions
         )
 
     def get_collection(self, *, id=None, bucket=None):
@@ -719,28 +717,23 @@ class Client(object):
         return resp
 
     def patch_record(self, *, id=None, collection=None, bucket=None,
-                     data=None, original=None, permissions=None,
+                     changes=None, data=None, original=None, permissions=None,
                      safe=True, if_match=None):
         """Issue a PATCH request on a record.
 
-        :param data: the patch to apply
-        :type data: PatchType or dict
+        :param changes: the patch to apply
+        :type changes: PatchType
         :param original: the original record, from which the ID and
             last_modified can be taken
         :type original: dict
         """
-        # Backwards compatibility: a dict is both a BasicPatch and a
-        # possible record (this was the behavior in 9.0.1 and
-        # earlier).  In other words, we consider the data as a
-        # possible record, even though PATCH data probably shouldn't
-        # also contain an ID or a last_modified, as these shouldn't be
-        # modified by a user.
-        if isinstance(data, dict):
-            original = original or data
-            data = BasicPatch(data)
-
-        if not isinstance(data, PatchType):
-            raise TypeError("couldn't understand patch body {}".format(data))
+        # Backwards compatibility: the data argument specifies both
+        # changes to make to data, and a possible record (this was the
+        # behavior in 9.0.1 and earlier).  In other words, we consider
+        # the data as a possible record, even though PATCH data
+        # probably shouldn't also contain an ID or a last_modified, as
+        # these shouldn't be modified by a user.
+        original = original or data
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         if id is None:
@@ -756,10 +749,11 @@ class Client(object):
 
         return self._patch_method(
             endpoint,
-            data,
+            changes,
+            data=data,
+            permissions=permissions,
             safe=safe,
             if_match=if_match,
-            permissions=permissions
         )
 
     def delete_record(self, *, id, collection=None, bucket=None,

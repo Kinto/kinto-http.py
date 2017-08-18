@@ -152,6 +152,9 @@ If no specific bucket name is provided, the "default" bucket is used.
     # The Kinto server supports different types of patches, which can be used from kinto_http.patch_type.
     client.patch_bucket(id='payments', data=BasicPatch({'status': 'updated'}))
 
+    # It is also possible to manipulate bucket permissions (see later)
+    client.patch_bucket(id='payments', data=BasicPatch(permissions={}))
+
     # Or delete a bucket and everything under.
     client.delete_bucket(id='payment')
 

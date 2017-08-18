@@ -944,9 +944,17 @@ class RecordTest(unittest.TestCase):
             headers={"Content-Type": "application/json-patch+json"},
             permissions=None)
 
+    def test_patch_record_requires_data_to_be_patch_type(self):
+        with pytest.raises(TypeError, match="couldn't understand patch body 5"):
+            self.client.patch_record(id=1, collection='testcoll', bucket='testbucket', data=5)
+
+    def test_patch_record_requires_id(self):
+        with pytest.raises(KeyError, match="Unable to patch record, need an id."):
+            self.client.patch_record(collection='testcoll', bucket='testbucket', data={})
+
     def test_patch_requires_data_to_be_patch_type(self):
-        with pytest.raises(TypeError):
-            self.client.patch_collection(id=1, collection='testcoll', bucket='testbucket', data=5)
+        with pytest.raises(TypeError, match="couldn't understand patch body 5"):
+            self.client.patch_collection(id=1, bucket='testbucket', data=5)
 
     def test_update_record_raises_if_no_id_is_given(self):
         with self.assertRaises(KeyError) as cm:

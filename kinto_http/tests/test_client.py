@@ -922,11 +922,11 @@ class RecordTest(unittest.TestCase):
     def test_patch_record_recognizes_patchtype(self):
         mock_response(self.session)
         self.client.patch_record(bucket='mybucket', collection='mycollection',
-                                 changes=MergePatch({'foo': 'bar'}), id=1)
+                                 changes=MergePatch({'foo': 'bar'}, {'read': ['alice']}), id=1)
 
         self.session.request.assert_called_with(
             'patch', '/buckets/mybucket/collections/mycollection/records/1',
-            payload={'data': {'foo': 'bar'}},
+            payload={'data': {'foo': 'bar'}, 'permissions': {'read': ['alice']}},
             headers={"Content-Type": "application/merge-patch+json"},
         )
 

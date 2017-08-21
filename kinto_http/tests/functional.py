@@ -10,6 +10,7 @@ from six.moves.urllib.parse import urljoin
 
 from kinto_http import Client, BucketNotFound, KintoException
 from kinto_http import replication
+from kinto_http.patch_type import JSONPatch
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 
@@ -472,6 +473,22 @@ class FunctionalTest(unittest2.TestCase):
         assert len(records) == 2
         assert records[0] == r2['data']
         assert records[1] == r1['data']
+
+    def test_patch_record_jsonpatch(self):
+        self.client.create_bucket(id='b1')
+        self.client.create_collection(id='c1', bucket='b1')
+        self.client.create_record(id='r1', collection='c1', bucket='b1',
+                                  data={"hello": "world"})
+        patch = JSONPatch([
+            {'op': 'add', 'path': '/data/goodnight', 'value': 'moon'},
+            {'op': 'add', 'path': '/permissions/read/alice'}
+        ])
+        self.client.patch_record(id='r1', collection='c1', bucket='b1',
+                                 changes=patch)
+        record = self.client.get_record(bucket='b1', collection='c1', id='r1')
+        assert record['data']['hello'] == 'world'
+        assert record['data']['goodnight'] == 'moon'
+        assert record['permissions']['read'] == ['alice']
 
     def test_replication(self):
         # First, create a few records on the first kinto collection.

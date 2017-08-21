@@ -4,6 +4,7 @@ from six import text_type
 from .support import unittest, mock_response, build_response, get_http_error
 from kinto_http import KintoException, BucketNotFound, Client, DO_NOT_OVERWRITE
 from kinto_http.session import create_session
+from kinto_http.patch_type import MergePatch, JSONPatch
 
 
 class ClientTest(unittest.TestCase):
@@ -250,9 +251,12 @@ class BucketTest(unittest.TestCase):
         self.session.request.assert_called_with(
             'patch',
             '/buckets/testbucket',
-            data={'foo': 'bar'},
-            permissions={'read': ['natim']},
-            headers=None)
+            payload={'data': {'foo': 'bar'}, 'permissions': {'read': ['natim']}},
+            headers={'Content-Type': 'application/json'})
+
+    def test_patch_requires_patch_to_be_patch_type(self):
+        with pytest.raises(TypeError):
+            self.client.patch_bucket(id='testbucket', changes=5)
 
     def test_update_bucket_handles_if_match(self):
         self.client.update_bucket(id='testbucket',
@@ -398,6 +402,16 @@ class GroupTest(unittest.TestCase):
             'put', '/buckets/mybucket/groups/group', data={'id': 'group'}, permissions=None,
             headers=None)
 
+    def test_patch_group_makes_request(self):
+        self.client.patch_group(id='group', data={'foo': 'bar'})
+        self.session.request.assert_called_with(
+            'patch', '/buckets/mybucket/groups/group', payload={'data': {'foo': 'bar'}},
+            headers={'Content-Type': 'application/json'})
+
+    def test_patch_requires_patch_to_be_patch_type(self):
+        with pytest.raises(TypeError):
+            self.client.patch_group(id='testgroup', bucket='testbucket', changes=5)
+
     def test_create_group_raises_if_group_id_is_missing(self):
         with pytest.raises(KeyError) as e:
             self.client.create_group()
@@ -480,8 +494,9 @@ class CollectionTest(unittest.TestCase):
 
         url = '/buckets/mybucket/collections/mycollection'
         self.session.request.assert_called_with(
-            'patch', url, data={'key': 'secret'}, headers=None,
-            permissions=None)
+            'patch', url, payload={'data': {'key': 'secret'}},
+            headers={'Content-Type': 'application/json'},
+        )
 
     def test_patch_collection_handles_if_match(self):
         self.client.patch_collection(id='mycollection',
@@ -489,10 +504,14 @@ class CollectionTest(unittest.TestCase):
                                      if_match=1234)
 
         url = '/buckets/mybucket/collections/mycollection'
-        headers = {'If-Match': '"1234"'}
+        headers = {'If-Match': '"1234"', 'Content-Type': 'application/json'}
         self.session.request.assert_called_with(
-            'patch', url, data={'key': 'secret'}, headers=headers,
-            permissions=None)
+            'patch', url, payload={'data': {'key': 'secret'}}, headers=headers,
+        )
+
+    def test_patch_requires_patch_to_be_patch_type(self):
+        with pytest.raises(TypeError):
+            self.client.patch_collection(id='testcoll', bucket='testbucket', changes=5)
 
     def test_get_collections_returns_the_list_of_collections(self):
         mock_response(
@@ -896,7 +915,39 @@ class RecordTest(unittest.TestCase):
 
         self.session.request.assert_called_with(
             'patch', '/buckets/mybucket/collections/mycollection/records/1',
-            data={'id': 1, 'foo': 'bar'}, headers=None, permissions=None)
+            payload={'data': {'id': 1, 'foo': 'bar'}},
+            headers={"Content-Type": "application/json"})
+
+    def test_patch_record_recognizes_patchtype(self):
+        mock_response(self.session)
+        self.client.patch_record(bucket='mybucket', collection='mycollection',
+                                 changes=MergePatch({'foo': 'bar'}, {'read': ['alice']}), id=1)
+
+        self.session.request.assert_called_with(
+            'patch', '/buckets/mybucket/collections/mycollection/records/1',
+            payload={'data': {'foo': 'bar'}, 'permissions': {'read': ['alice']}},
+            headers={"Content-Type": "application/merge-patch+json"},
+        )
+
+    def test_patch_record_understands_jsonpatch(self):
+        mock_response(self.session)
+        self.client.patch_record(
+            bucket='mybucket', collection='mycollection',
+            changes=JSONPatch([{'op': 'add', 'patch': '/baz', 'value': 'qux'}]), id=1)
+
+        self.session.request.assert_called_with(
+            'patch', '/buckets/mybucket/collections/mycollection/records/1',
+            payload=[{'op': 'add', 'patch': '/baz', 'value': 'qux'}],
+            headers={"Content-Type": "application/json-patch+json"},
+        )
+
+    def test_patch_record_requires_data_to_be_patch_type(self):
+        with pytest.raises(TypeError, match="couldn't understand patch body 5"):
+            self.client.patch_record(id=1, collection='testcoll', bucket='testbucket', changes=5)
+
+    def test_patch_record_requires_id(self):
+        with pytest.raises(KeyError, match="Unable to patch record, need an id."):
+            self.client.patch_record(collection='testcoll', bucket='testbucket', data={})
 
     def test_update_record_raises_if_no_id_is_given(self):
         with self.assertRaises(KeyError) as cm:

@@ -130,6 +130,7 @@ If no specific bucket name is provided, the "default" bucket is used.
 .. code-block:: python
 
     from kinto_http import Client
+    from kinto_http.patch_type import BasicPatch, MergePatch, JSONPatch
     credentials = ('alexis', 'p4ssw0rd')
 
     client = Client(server_url='http://localhost:8888/v1',
@@ -148,10 +149,11 @@ If no specific bucket name is provided, the "default" bucket is used.
     client.update_bucket(id='payments', data={'description': 'My payments data.'})
 
     # Or modify some fields in an existing bucket.
-    client.patch_bucket(id='payments', data={'status': 'updated'})
+    # The Kinto server supports different types of patches, which can be used from kinto_http.patch_type.
+    client.patch_bucket(id='payments', data=BasicPatch({'status': 'updated'}))
 
     # It is also possible to manipulate bucket permissions (see later)
-    client.patch_bucket(id='payments', permissions={})
+    client.patch_bucket(id='payments', data=BasicPatch(permissions={}))
 
     # Or delete a bucket and everything under.
     client.delete_bucket(id='payment')
@@ -177,10 +179,12 @@ A group associates a name to a list of principals. It is useful in order to hand
     groups = client.get_groups(bucket='payments')
 
     # To create or replace an existing bucket.
-    client.update_group(id='receipts', bucket='payments', data={'members': ['foo']})
+    client.update_group(id='receipts', bucket='payments', 'data'={'members':['foo']})
 
     # Or modify some fields in an existing group.
-    client.patch_group(id='receipts', bucket='payments', data={'description': 'my group'})
+    # This uses the server's support for JSON patch, but any patch_type is accepted.
+    client.patch_group(id='receipts', bucket='payments',
+        data=JSONPatch([{'op': 'add', 'location': 'description', 'value': 'my group'}]))
 
     # To delete an existing group.
     client.delete_group(id='receipts', bucket='payments')
@@ -209,7 +213,7 @@ A collection is where records are stored.
     client.update_collection(id='receipts', bucket='payments', data={'description':'bleeh'})
 
     # Or modify some fields of an existing collection.
-    client.patch_collection(id='receipts', bucket='payments', data={'status':'updated'})
+    client.patch_collection(id='receipts', bucket='payments', data=MergePatch({'status':'updated'}))
 
     # To delete an existing collection.
     client.delete_collection(id='receipts', bucket='payments')
@@ -251,7 +255,7 @@ A record is a dict with the "permissions" and "data" keys.
     client.update_record(data={'status': 'unknown'}, id='todo2', collection='todos', bucket='default')
 
     # Or modify some fields in an existing record.
-    client.patch_record(data={'assignee': 'bob'}, id='todo2', collection='todos', bucket='default')
+    client.patch_record(data=MergePatch({'assignee': 'bob'}), id='todo2', collection='todos', bucket='default')
 
     # To delete an existing record.
     client.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352',

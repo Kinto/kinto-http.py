@@ -10,6 +10,7 @@ from kinto_http import utils
 from kinto_http.session import create_session, Session
 from kinto_http.batch import BatchSession
 from kinto_http.exceptions import BucketNotFound, KintoException
+from kinto_http.patch_type import PatchType, BasicPatch
 
 logger = logging.getLogger('kinto_http')
 
@@ -106,17 +107,7 @@ class Client(object):
         batch_session.reset()
 
     def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None):
-        """Return the endpoint with named parameters.
-
-           Please always use the method as if it was defined like this:
-
-               get_endpoint(self, name, *,
-                            bucket=None, collection=None, id=None)
-
-           Meaning that bucket, collection and id should always be
-           named parameters.
-
-        """
+        """Return the endpoint with named parameters."""
         kwargs = {
             'bucket': bucket or self._bucket_name,
             'collection': collection or self._collection_name,
@@ -162,6 +153,45 @@ class Client(object):
         if safe and if_match is not None:
             return {'If-Match': utils.quote(if_match)}
         # else return None
+
+    def _extract_original_info(self, original, id, if_match):
+        """Utility method to extract ID and last_modified.
+
+        Many update methods require the ID of a resource (to generate
+        a URL) and the last_modified to generate safe cache headers
+        (If-Match).  As a convenience, we allow users to pass the
+        original record retrieved from a get_* method, which also
+        contains those values.  This utility method lets methods
+        support both explicit arguments for ``id`` and ``if_match`` as
+        well as implicitly reading them from an original resource.
+        """
+        if original:
+            id = id or original.get('id')
+            if_match = if_match or original.get('last_modified')
+
+        return (id, if_match)
+
+    def _patch_method(self, endpoint, patch, safe=True, if_match=None,
+                      data=None, permissions=None):
+        """Utility method for implementing PATCH methods."""
+        if not patch:
+            # Backwards compatibility: the changes argument was
+            # introduced in 9.1.0, and covers both ``data`` and
+            # ``permissions`` arguments. Support the old style of
+            # passing dicts by casting them into a BasicPatch.
+            patch = BasicPatch(data=data, permissions=permissions)
+
+        if not isinstance(patch, PatchType):
+            raise TypeError("couldn't understand patch body {}".format(patch))
+
+        body = patch.body
+        content_type = patch.content_type
+        headers = self._get_cache_headers(safe, if_match=if_match) or {}
+        headers['Content-Type'] = content_type
+
+        resp, _ = self.session.request('patch', endpoint, payload=body,
+                                       headers=headers)
+        return resp
 
     def _create_if_not_exists(self, resource, **kwargs):
         try:
@@ -234,7 +264,7 @@ class Client(object):
         return resp
 
     def update_bucket(self, *, id=None, data=None, permissions=None,
-                      safe=True, if_match=None, method='put'):
+                      safe=True, if_match=None):
 
         if id is None and data:
             id = data.get('id', None)
@@ -244,14 +274,42 @@ class Client(object):
 
         logger.info("Update bucket %r" % id or self._bucket_name)
 
-        resp, _ = self.session.request(method, endpoint, data=data,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
 
-    def patch_bucket(self, **kwargs):
-        kwargs['method'] = 'patch'
-        return self.update_bucket(**kwargs)
+    def patch_bucket(self, *, id=None,
+                     changes=None, data=None, original=None, permissions=None,
+                     safe=True, if_match=None):
+        """Issue a PATCH request on a bucket.
+
+        :param changes: the patch to apply
+        :type changes: PatchType
+        :param original: the original bucket, from which the ID and
+            last_modified can be taken
+        :type original: dict
+        """
+        # Backwards compatibility: a dict is both a BasicPatch and a
+        # possible bucket (this was the behavior in 9.0.1 and
+        # earlier).  In other words, we consider the data as a
+        # possible bucket, even though PATCH data probably shouldn't
+        # also contain an ID or a last_modified, as these shouldn't be
+        # modified by a user.
+        original = original or data
+
+        (id, if_match) = self._extract_original_info(original, id, if_match)
+        endpoint = self.get_endpoint('bucket', bucket=id)
+        logger.info("Patch bucket %r" % (id or self._bucket_name,))
+
+        return self._patch_method(
+            endpoint,
+            changes,
+            data=data,
+            permissions=permissions,
+            safe=safe,
+            if_match=if_match,
+        )
 
     def get_buckets(self, **kwargs):
         endpoint = self.get_endpoint('buckets')
@@ -342,7 +400,7 @@ class Client(object):
         return resp
 
     def update_group(self, *, id=None, bucket=None, data=None, permissions=None,
-                     method='put', safe=True, if_match=None):
+                     safe=True, if_match=None):
 
         if id is None and data:
             id = data.get('id', None)
@@ -357,14 +415,42 @@ class Client(object):
 
         logger.info("Update group %r in bucket %r" % (id, bucket or self._bucket_name))
 
-        resp, _ = self.session.request(method, endpoint, data=data,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
 
-    def patch_group(self, **kwargs):
-        kwargs['method'] = 'patch'
-        return self.update_group(**kwargs)
+    def patch_group(self, *, id=None, bucket=None,
+                    changes=None, data=None, original=None, permissions=None,
+                    safe=True, if_match=None):
+        """Issue a PATCH request on a bucket.
+
+        :param changes: the patch to apply
+        :type changes: PatchType
+        :param original: the original bucket, from which the ID and
+            last_modified can be taken
+        :type original: dict
+        """
+        # Backwards compatibility: a dict is both a BasicPatch and a
+        # possible bucket (this was the behavior in 9.0.1 and
+        # earlier).  In other words, we consider the data as a
+        # possible bucket, even though PATCH data probably shouldn't
+        # also contain an ID or a last_modified, as these shouldn't be
+        # modified by a user.
+        original = original or data
+
+        (id, if_match) = self._extract_original_info(original, id, if_match)
+        endpoint = self.get_endpoint('group', bucket=bucket, group=id)
+        logger.info("Patch group %r in bucket %r" % (id, bucket or self._bucket_name))
+
+        return self._patch_method(
+            endpoint,
+            changes,
+            data=data,
+            permissions=permissions,
+            safe=safe,
+            if_match=if_match,
+        )
 
     def get_group(self, *, id, bucket=None):
         endpoint = self.get_endpoint('group', bucket=bucket, group=id)
@@ -445,7 +531,7 @@ class Client(object):
 
         return resp
 
-    def update_collection(self, *, id=None, bucket=None, method='put',
+    def update_collection(self, *, id=None, bucket=None,
                           data=None, permissions=None,
                           safe=True, if_match=None):
 
@@ -460,14 +546,43 @@ class Client(object):
         logger.info("Update collection %r in bucket %r" %
                     (id or self._collection_name, bucket or self._bucket_name))
 
-        resp, _ = self.session.request(method, endpoint, data=data,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        permissions=permissions,
                                        headers=headers)
         return resp
 
-    def patch_collection(self, **kwargs):
-        kwargs['method'] = 'patch'
-        return self.update_collection(**kwargs)
+    def patch_collection(self, *, id=None, bucket=None,
+                         changes=None, data=None, original=None, permissions=None,
+                         safe=True, if_match=None):
+        """Issue a PATCH request on a collection.
+
+        :param changes: the patch to apply
+        :type changes: PatchType
+        :param original: the original collection, from which the ID and
+            last_modified can be taken
+        :type original: dict
+        """
+        # Backwards compatibility: a dict is both a BasicPatch and a
+        # possible collection (this was the behavior in 9.0.1 and
+        # earlier).  In other words, we consider the data as a
+        # possible collection, even though PATCH data probably shouldn't
+        # also contain an ID or a last_modified, as these shouldn't be
+        # modified by a user.
+        original = original or data
+
+        (id, if_match) = self._extract_original_info(original, id, if_match)
+        endpoint = self.get_endpoint('collection', bucket=bucket, collection=id)
+        logger.info("Patch collection %r in bucket %r" %
+                    (id or self._collection_name, bucket or self._bucket_name))
+
+        return self._patch_method(
+            endpoint,
+            changes,
+            data=data,
+            permissions=permissions,
+            safe=safe,
+            if_match=if_match,
+        )
 
     def get_collection(self, *, id=None, bucket=None):
         endpoint = self.get_endpoint('collection',
@@ -581,7 +696,7 @@ class Client(object):
 
         return resp
 
-    def update_record(self, *, id=None, collection=None, bucket=None, method='put',
+    def update_record(self, *, id=None, collection=None, bucket=None,
                       data=None, permissions=None,
                       safe=True, if_match=None):
         id = id or data.get('id')
@@ -596,14 +711,50 @@ class Client(object):
           "Update record with id %r in collection %r in bucket %r"
           % (id, collection or self._collection_name, bucket or self._bucket_name))
 
-        resp, _ = self.session.request(method, endpoint, data=data,
+        resp, _ = self.session.request('put', endpoint, data=data,
                                        headers=headers,
                                        permissions=permissions)
         return resp
 
-    def patch_record(self, **kwargs):
-        kwargs['method'] = 'patch'
-        return self.update_record(**kwargs)
+    def patch_record(self, *, id=None, collection=None, bucket=None,
+                     changes=None, data=None, original=None, permissions=None,
+                     safe=True, if_match=None):
+        """Issue a PATCH request on a record.
+
+        :param changes: the patch to apply
+        :type changes: PatchType
+        :param original: the original record, from which the ID and
+            last_modified can be taken
+        :type original: dict
+        """
+        # Backwards compatibility: the data argument specifies both
+        # changes to make to data, and a possible record (this was the
+        # behavior in 9.0.1 and earlier).  In other words, we consider
+        # the data as a possible record, even though PATCH data
+        # probably shouldn't also contain an ID or a last_modified, as
+        # these shouldn't be modified by a user.
+        original = original or data
+
+        (id, if_match) = self._extract_original_info(original, id, if_match)
+        if id is None:
+            raise KeyError('Unable to patch record, need an id.')
+
+        endpoint = self.get_endpoint('record', id=id,
+                                     bucket=bucket,
+                                     collection=collection)
+
+        logger.info(
+          "Patch record with id %r in collection %r in bucket %r"
+          % (id, collection or self._collection_name, bucket or self._bucket_name))
+
+        return self._patch_method(
+            endpoint,
+            changes,
+            data=data,
+            permissions=permissions,
+            safe=safe,
+            if_match=if_match,
+        )
 
     def delete_record(self, *, id, collection=None, bucket=None,
                       safe=True, if_match=None, if_exists=False):

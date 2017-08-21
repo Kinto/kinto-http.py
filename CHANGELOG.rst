@@ -10,7 +10,16 @@ This document describes changes between each past release.
 **New Features**
 
 - Expose kinto-http and Python module version in the User-Agent (#157)
+- Support different PATCH types. Now, instead of settling for the
+  "default" patch method offered by the Kinto server, you can choose
+  by importing a PatchType subclass from ``kinto_http.patch_type``. (Fixes #125.)
 
+**Bug fixes**
+
+- No longer support ``method`` arguments on the ``update_bucket``,
+  ``update_group``, ``update_collection``, and ``update_record``
+  methods. This argument only existed to support the ``patch_*``
+  methods and was never intended to be part of the public API.
 
 9.0.1 (2017-05-30)
 ==================

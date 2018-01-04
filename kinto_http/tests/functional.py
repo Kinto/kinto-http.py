@@ -14,7 +14,7 @@ from kinto_http.patch_type import JSONPatch
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 
-SERVER_URL = "http://localhost:8888/v1"
+SERVER_URL = "http://localhost:8890/v1"
 DEFAULT_AUTH = ('user', 'p4ssw0rd')
 
 

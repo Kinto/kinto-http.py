@@ -7,7 +7,7 @@ before_install:
     - make install-dev
     - if [[ $SERVER == development ]]; then pip install https://github.com/Kinto/kinto/tarball/master; fi
     - make runkinto &
-    - curl http://localhost:8890
+    - sleep 5 && curl http://localhost:8890
 install:
     - pip install tox
 script:

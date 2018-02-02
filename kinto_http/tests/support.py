@@ -42,6 +42,13 @@ def get_http_error(status):
     return exception
 
 
+def get_http_response(status):
+    resp = mock.MagicMock()
+    resp.headers = {}
+    resp.status_code = status
+    return resp
+
+
 def get_200():
     response_200 = mock.MagicMock()
     response_200.status_code = 200
@@ -69,7 +76,4 @@ def get_503():
 
 
 def get_403():
-    response_403 = mock.MagicMock()
-    response_403.headers = {}
-    response_403.status_code = 403
-    return response_403
+    return get_http_response(403)

@@ -101,7 +101,7 @@ class Session(object):
                 # Success
                 break
             else:
-                if resp.status_code >= 500 and retry >= 0:
+                if retry >= 0 and (resp.status_code >= 500 or resp.status_code == 409):
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.
                     if self.retry_after is None:

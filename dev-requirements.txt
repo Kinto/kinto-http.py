@@ -1,7 +1,6 @@
 pytest
 pytest-cache
 pytest-cover
-pytest-sugar
 pytest-xdist
 mock
 kinto

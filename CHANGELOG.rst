@@ -7,6 +7,11 @@ This document describes changes between each past release.
 9.1.0 (unreleased)
 ==================
 
+**Significant changes**
+
+- When the server returns a ``409 Conflict`` error response, the request will
+  be retried if the ``retry`` parameter is superior to zero (fixes #167)
+
 **New Features**
 
 - Expose kinto-http and Python module version in the User-Agent (#157)

@@ -42,12 +42,24 @@ def get_http_error(status):
     return exception
 
 
+def get_http_response(status, body=None, headers=None):
+    if body is None:
+        body = mock.sentinel.resp
+    if headers is None:
+        headers = {}
+    resp = mock.MagicMock()
+    resp.headers = headers
+    resp.status_code = status
+    resp.json().return_value = body
+    return resp
+
+
 def get_200():
-    response_200 = mock.MagicMock()
-    response_200.status_code = 200
-    response_200.json().return_value = mock.sentinel.resp,
-    response_200.headers = {}
-    return response_200
+    return get_http_response(200)
+
+
+def get_403():
+    return get_http_response(403)
 
 
 def get_503():
@@ -61,15 +73,4 @@ def get_503():
         "Content-Type": "application/json; charset=UTF-8",
         "Content-Length": 151
     }
-    response_503 = mock.MagicMock()
-    response_503.status_code = 503
-    response_503.json.return_value = body_503
-    response_503.headers = headers_503
-    return response_503
-
-
-def get_403():
-    response_403 = mock.MagicMock()
-    response_403.headers = {}
-    response_403.status_code = 403
-    return response_403
+    return get_http_response(503, body=body_503, headers=headers_503)

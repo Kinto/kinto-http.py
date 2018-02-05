@@ -7,7 +7,7 @@ import time
 from kinto_http.session import Session, create_session
 from kinto_http.exceptions import KintoException, BackoffException
 from kinto_http.session import USER_AGENT
-from .support import unittest, get_200, get_503, get_403
+from .support import unittest, get_200, get_503, get_403, get_http_response
 
 
 def fake_response(status_code):
@@ -207,6 +207,7 @@ class RetryRequestTest(unittest.TestCase):
         self.addCleanup(p.stop)
 
         self.response_200 = get_200()
+        self.response_409 = get_http_response(409)
         self.response_503 = get_503()
         self.response_403 = get_403()
 
@@ -245,11 +246,17 @@ class RetryRequestTest(unittest.TestCase):
         with self.assertRaises(KintoException):
             session.request('GET', '/v1/foobar')
 
-    def test_does_not_retry_on_400_errors(self):
+    def test_does_not_retry_on_4XX_errors(self):
         self.requests_mock.request.side_effect = [self.response_403]
         session = Session('https://example.org', retry=1)
         with self.assertRaises(KintoException):
             session.request('GET', '/v1/foobar')
+
+    def test_retries_on_409_errors(self):
+        self.requests_mock.request.side_effect = [self.response_409,
+                                                  self.response_200]
+        session = Session('https://example.org', retry=1)
+        session.request('GET', '/v1/foobar')  # Not raising.
 
     def test_does_not_wait_if_retry_after_header_is_not_present(self):
         self.requests_mock.request.side_effect = [self.response_503,

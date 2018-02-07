@@ -7,8 +7,9 @@ This document describes changes between each past release.
 9.2.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Bug fixes**
 
+- Fix patch methods in batch requests (fixes #171)
 
 9.1.0 (2018-02-05)
 ==================

@@ -19,10 +19,17 @@ class BatchSession(object):
         self._results = []
 
     def request(self, method, endpoint, data=None, permissions=None,
-                headers=None):
+                payload=None, headers=None):
         # Store all the requests in a dict, to be read later when .send()
         # is called.
-        self.requests.append((method, endpoint, data, permissions, headers))
+        payload = payload or {}
+        if data is not None:
+            payload['data'] = data
+        if permissions is not None:
+            payload['permissions'] = permissions
+
+        self.requests.append((method, endpoint, payload.get("data"),
+                              payload.get("permissions"), headers))
         # This is the signature of the session request.
         return defaultdict(dict), defaultdict(dict)
 

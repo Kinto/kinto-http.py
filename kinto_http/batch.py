@@ -28,8 +28,7 @@ class BatchSession(object):
         if permissions is not None:
             payload['permissions'] = permissions
 
-        self.requests.append((method, endpoint, payload.get("data"),
-                              payload.get("permissions"), headers))
+        self.requests.append((method, endpoint, payload, headers))
         # This is the signature of the session request.
         return defaultdict(dict), defaultdict(dict)
 
@@ -39,17 +38,13 @@ class BatchSession(object):
 
     def _build_requests(self):
         requests = []
-        for (method, url, data, permissions, headers) in self.requests:
+        for (method, url, payload, headers) in self.requests:
             # Strip the prefix in batch requests.
             request = {
                 'method': method.upper(),
                 'path': url.replace('v1/', '')}
 
-            request['body'] = {}
-            if data is not None:
-                request['body']['data'] = data
-            if permissions is not None:
-                request['body']['permissions'] = permissions
+            request['body'] = payload
             if headers is not None:
                 request['headers'] = headers
             requests.append(request)

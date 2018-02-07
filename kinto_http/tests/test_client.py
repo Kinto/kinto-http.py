@@ -26,6 +26,8 @@ class ClientTest(unittest.TestCase):
             batch.create_record(id=1234, data={'foo': 'bar'})
             batch.create_record(id=5678, data={'bar': 'baz'})
             batch.patch_record(id=5678, data={'bar': 'biz'})
+            changes = JSONPatch([{'op': 'add', 'location': 'foo', 'value': 'bar'}])
+            batch.patch_record(id=5678, changes=changes)
 
         self.session.request.assert_called_with(
             method='POST',
@@ -42,7 +44,11 @@ class ClientTest(unittest.TestCase):
                 {'body': {'data': {'bar': 'biz'}},
                  'path': '/buckets/mozilla/collections/test/records/5678',
                  'method': 'PATCH',
-                 'headers': {'Content-Type': 'application/json'}}]})
+                 'headers': {'Content-Type': 'application/json'}},
+                {'body': [{'op': 'add', 'location': 'foo', 'value': 'bar'}],
+                 'path': '/buckets/mozilla/collections/test/records/5678',
+                 'method': 'PATCH',
+                 'headers': {'Content-Type': 'application/json-patch+json'}}]})
 
     def test_batch_raises_exception(self):
         # Make the next call to sess.request raise a 403.

@@ -85,7 +85,7 @@ def add_parser_options(parser=None,
                         help='Show only critical errors.')
 
     parser.add_argument('-D', '--debug', action='store_const',
-                        const=logging.DEBUGq, dest='verbosity',
+                        const=logging.DEBUG, dest='verbosity',
                         help='Show all messages, including debug messages.')
 
     return parser

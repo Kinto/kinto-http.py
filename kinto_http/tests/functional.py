@@ -1,3 +1,4 @@
+import configparser
 import hashlib
 import hmac
 import mock
@@ -5,8 +6,7 @@ import os.path
 import pytest
 import requests
 import unittest2
-from six.moves import configparser
-from six.moves.urllib.parse import urljoin
+from urllib.parse import urljoin
 
 from kinto_http import Client, BucketNotFound, KintoException
 from kinto_http import replication

@@ -1,10 +1,11 @@
 import mock
 import pytest
-from six import text_type
-from .support import unittest, mock_response, build_response, get_http_error
+
 from kinto_http import KintoException, BucketNotFound, Client, DO_NOT_OVERWRITE
 from kinto_http.session import create_session
 from kinto_http.patch_type import MergePatch, JSONPatch
+
+from .support import unittest, mock_response, build_response, get_http_error
 
 
 class ClientTest(unittest.TestCase):
@@ -965,8 +966,7 @@ class RecordTest(unittest.TestCase):
             self.client.update_record(data={'foo': 'bar'},  # Omit the id on purpose here.
                                       bucket='mybucket',
                                       collection='mycollection')
-        assert text_type(cm.exception) == (
-            "'Unable to update a record, need an id.'")
+        assert str(cm.exception) == "'Unable to update a record, need an id.'"
 
     def test_get_or_create_doesnt_raise_in_case_of_conflict(self):
         data = {

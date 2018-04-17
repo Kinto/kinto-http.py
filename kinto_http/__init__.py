@@ -1,6 +1,5 @@
 import collections
 import uuid
-from six import iteritems
 
 from contextlib import contextmanager
 
@@ -49,7 +48,7 @@ class Endpoints(object):
     def get(self, endpoint, **kwargs):
         # Remove nullable values from the kwargs, and slugify the values.
         kwargs = dict((k, utils.slugify(v))
-                      for k, v in iteritems(kwargs) if v)
+                      for k, v in kwargs.items() if v)
 
         try:
             pattern = self.endpoints[endpoint]

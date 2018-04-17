@@ -11,7 +11,6 @@ with codecs.open(os.path.join(here, 'README.rst'), encoding='utf-8') as f:
 REQUIREMENTS = [
     'requests>=2.8.1',
     'unidecode',
-    'six'
 ]
 
 
@@ -29,9 +28,7 @@ test_requirements = [
     'pytest-xdist',
     'mock',
     'kinto',
-    'unittest2',
     'unidecode',
-    'six',
 ]
 
 setup(name='kinto-http',

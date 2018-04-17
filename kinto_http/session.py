@@ -1,8 +1,10 @@
-import time
-import sys
-import requests
-from six.moves.urllib.parse import urlparse
 import pkg_resources
+import sys
+import time
+from urllib.parse import urlparse
+
+import requests
+
 from kinto_http import utils
 from kinto_http.exceptions import KintoException, BackoffException
 

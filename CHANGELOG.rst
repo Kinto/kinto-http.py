@@ -7,7 +7,9 @@ This document describes changes between each past release.
 9.2.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Internal changes**
+
+- Get rid of ``six``
 
 
 9.1.1 (2018-02-07)

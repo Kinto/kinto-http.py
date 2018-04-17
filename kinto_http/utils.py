@@ -1,7 +1,7 @@
 import re
 import unicodedata
 from unidecode import unidecode
-import six
+
 
 VALID_SLUG_REGEXP = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
 
@@ -10,13 +10,13 @@ def slugify(value):
     """Normalizes string, converts to lowercase, removes non-alpha characters
     and converts spaces to hyphens.
     """
-    value = six.text_type(value)
+    value = str(value)
     # Do not slugify valid values.
     if VALID_SLUG_REGEXP.match(value):
         return value
 
     value = unidecode(value)
-    if isinstance(value, six.binary_type):
+    if isinstance(value, bytes):
         value = value.decode('ascii')  # pragma: nocover
     value = unicodedata.normalize('NFKD', value).lower()
     value = re.sub('[^\w\s-]', '', value.lower()).strip()

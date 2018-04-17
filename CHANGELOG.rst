@@ -4,6 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
+9.2.0 (unreleased)
+==================
+
+- Nothing changed yet.
+
+
 9.1.2 (2018-04-17)
 ==================
 

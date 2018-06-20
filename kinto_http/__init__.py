@@ -30,16 +30,17 @@ DO_NOT_OVERWRITE = {'If-None-Match': '*'}
 
 class Endpoints(object):
     endpoints = {
-        'root':         '{root}/',
-        'batch':        '{root}/batch',
-        'buckets':      '{root}/buckets',
-        'bucket':       '{root}/buckets/{bucket}',
-        'groups':       '{root}/buckets/{bucket}/groups',
-        'group':        '{root}/buckets/{bucket}/groups/{group}',
-        'collections':  '{root}/buckets/{bucket}/collections',
-        'collection':   '{root}/buckets/{bucket}/collections/{collection}',
-        'records':      '{root}/buckets/{bucket}/collections/{collection}/records',      # NOQA
-        'record':       '{root}/buckets/{bucket}/collections/{collection}/records/{id}'  # NOQA
+        'root':                  '{root}/',
+        'batch':                 '{root}/batch',
+        'buckets':               '{root}/buckets',
+        'bucket':                '{root}/buckets/{bucket}',
+        'groups':                '{root}/buckets/{bucket}/groups',
+        'group':                 '{root}/buckets/{bucket}/groups/{group}',
+        'collections':           '{root}/buckets/{bucket}/collections',
+        'collection':            '{root}/buckets/{bucket}/collections/{collection}',
+        'records':               '{root}/buckets/{bucket}/collections/{collection}/records',      # NOQA
+        'record':                '{root}/buckets/{bucket}/collections/{collection}/records/{id}',  # NOQA
+        'record_revision':       '{root}/buckets/{bucket}/history?uri=/buckets/{bucket_id}/collections/{collection}/records/{id}'
     }
 
     def __init__(self, root=''):
@@ -105,10 +106,11 @@ class Client(object):
         batch_session.send()
         batch_session.reset()
 
-    def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None):
+    def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None, bucket_id=None):
         """Return the endpoint with named parameters."""
         kwargs = {
             'bucket': bucket or self._bucket_name,
+            'bucket_id': bucket_id,
             'collection': collection or self._collection_name,
             'group': group,
             'id': id
@@ -644,17 +646,34 @@ class Client(object):
                                      collection=collection)
         return self._paginated(endpoint, **kwargs)
 
-    def get_record(self, *, id, collection=None, bucket=None):
-        endpoint = self.get_endpoint('record', id=id,
+    def get_record(self, *, id, collection=None, bucket=None, history_revision=None):
+        if history_revision is not None:
+            bucket_details = self.get_bucket(id=bucket)
+            bucket_id = bucket_details.get('data',None).get('id',None)
+            
+            endpoint = self.get_endpoint('record_revision', id=id,
+                                     bucket=bucket,
+                                     bucket_id=bucket_id,
+                                     collection=collection)
+            logger.info(
+              "Get record with id %r from collection %r in bucket %r by revision %r"
+              % (id, collection or self._collection_name, bucket or self._bucket_name, history_revision))
+
+            resp, _ = self.session.request('get', endpoint)
+            for rev in resp.get('data', None):
+                if rev.get('id') == history_revision:
+                    return rev
+        else:
+            endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,
                                      collection=collection)
 
-        logger.info(
-          "Get record with id %r from collection %r in bucket %r"
-          % (id, collection or self._collection_name, bucket or self._bucket_name))
+            logger.info(
+              "Get record with id %r from collection %r in bucket %r"
+              % (id, collection or self._collection_name, bucket or self._bucket_name))
 
-        resp, _ = self.session.request('get', endpoint)
-        return resp
+            resp, _ = self.session.request('get', endpoint)
+            return resp
 
     def create_record(self, *, id=None, bucket=None, collection=None,
                       data=None, permissions=None,

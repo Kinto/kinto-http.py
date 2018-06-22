@@ -4,6 +4,7 @@ import sys
 import time
 import unittest
 from unittest import mock
+from datetime import date, datetime
 
 from kinto_http.session import Session, create_session
 from kinto_http.exceptions import KintoException, BackoffException
@@ -13,7 +14,6 @@ from .support import get_200, get_503, get_403, get_http_response
 
 def fake_response(status_code):
     response = mock.MagicMock()
-    response.headers = {'User-Agent': USER_AGENT}
     response.status_code = status_code
     return response
 
@@ -23,6 +23,9 @@ class SessionTest(unittest.TestCase):
         p = mock.patch('kinto_http.session.requests')
         self.requests_mock = p.start()
         self.addCleanup(p.stop)
+        self.requests_mock.request.headers = {'User-Agent': USER_AGENT}
+        self.requests_mock.request.post_headers = {'User-Agent': USER_AGENT,
+                                                   'Content-Type': 'application/json'}
 
     def test_uses_specified_server_url(self):
         session = Session(mock.sentinel.server_url)
@@ -36,15 +39,14 @@ class SessionTest(unittest.TestCase):
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            headers=self.requests_mock.request.return_value.headers)
+            headers=self.requests_mock.request.headers)
 
     def test_bad_http_status_raises_exception(self):
         response = fake_response(400)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
 
-        self.assertRaises(KintoException, session.request, 'get', '/test',
-                          headers=self.requests_mock.request.return_value.headers)
+        self.assertRaises(KintoException, session.request, 'get', '/test')
 
     def test_bad_http_status_raises_exception_even_in_case_of_invalid_json_response(self):
         response = fake_response(502)
@@ -65,7 +67,7 @@ class SessionTest(unittest.TestCase):
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            auth=mock.sentinel.auth, headers=self.requests_mock.request.return_value.headers)
+            auth=mock.sentinel.auth, headers=self.requests_mock.request.headers)
 
     def test_requests_arguments_are_forwarded(self):
         response = fake_response(200)
@@ -75,7 +77,7 @@ class SessionTest(unittest.TestCase):
                         foo=mock.sentinel.bar)
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
-            foo=mock.sentinel.bar, headers=self.requests_mock.request.return_value.headers)
+            foo=mock.sentinel.bar, headers=self.requests_mock.request.headers)
 
     def test_raises_exception_if_headers_not_dict(self):
         session = Session('https://example.org')
@@ -92,7 +94,38 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
             data='{"data": {"foo": "bar"}}',
-            headers=self.requests_mock.request.return_value.headers)
+            headers=self.requests_mock.request.post_headers)
+
+    def test_passed_datetime_data_is_encoded_to_json(self):
+        response = fake_response(200)
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        session.request('post', '/test',
+                        data={'foo': datetime(2018, 6, 22, 18, 00)})
+        self.requests_mock.request.assert_called_with(
+            'post', 'https://example.org/test',
+            data='{"data": {"foo": "2018-06-22T18:00:00"}}',
+            headers=self.requests_mock.request.post_headers)
+
+    def test_passed_random_python_data_fails_to_be_encoded_to_json(self):
+        response = fake_response(200)
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        with pytest.raises(TypeError) as exc:
+            session.request('post', '/test',
+                            data={'foo': object()})
+        assert str(exc.value) == "Type <class 'object'> is not serializable"
+
+    def test_passed_date_data_is_encoded_to_json(self):
+        response = fake_response(200)
+        self.requests_mock.request.return_value = response
+        session = Session('https://example.org')
+        session.request('post', '/test',
+                        data={'foo': date(2018, 6, 22)})
+        self.requests_mock.request.assert_called_with(
+            'post', 'https://example.org/test',
+            data='{"data": {"foo": "2018-06-22"}}',
+            headers=self.requests_mock.request.post_headers)
 
     def test_passed_data_is_passed_as_is_when_files_are_posted(self):
         response = fake_response(200)
@@ -105,7 +138,7 @@ class SessionTest(unittest.TestCase):
             'post', 'https://example.org/test',
             data={"data": '{"foo": "bar"}'},
             files={"attachment": {"filename"}},
-            headers=self.requests_mock.request.return_value.headers)
+            headers=self.requests_mock.request.headers)
 
     def test_passed_permissions_is_added_in_the_payload(self):
         response = fake_response(200)
@@ -118,7 +151,7 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
             data='{"permissions": {"foo": "bar"}}',
-            headers=self.requests_mock.request.return_value.headers)
+            headers=self.requests_mock.request.post_headers)
 
     def test_url_is_used_if_schema_is_present(self):
         response = fake_response(200)
@@ -129,7 +162,7 @@ class SessionTest(unittest.TestCase):
         session.request('get', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/anothertest',
-            headers=self.requests_mock.request.return_value.headers)
+            headers=self.requests_mock.request.headers)
 
     def test_creation_fails_if_session_and_server_url(self):
         self.assertRaises(
@@ -171,7 +204,7 @@ class SessionTest(unittest.TestCase):
         session.request('get', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/anothertest',
-            headers=self.requests_mock.request.return_value.headers)
+            headers=self.requests_mock.request.headers)
 
     def test_payload_is_sent_on_put_requests(self):
         response = fake_response(200)
@@ -180,7 +213,7 @@ class SessionTest(unittest.TestCase):
         session.request('put', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
             'put', 'https://example.org/anothertest', data='{}',
-            headers=self.requests_mock.request.return_value.headers)
+            headers=self.requests_mock.request.post_headers)
 
     def test_user_agent_is_sent_on_requests(self):
         response = fake_response(200)

@@ -216,6 +216,7 @@ class FunctionalTest(unittest.TestCase):
 
     def test_collection_not_found(self):
         self.client.create_bucket(id='mozilla')
+
         with pytest.raises(CollectionNotFound):
             self.client.get_collection(id='payments', bucket='mozilla')
 

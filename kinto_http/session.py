@@ -70,6 +70,13 @@ class Session(object):
         if self.auth is not None:
             kwargs.setdefault('auth', self.auth)
 
+        # Set the default User-Agent if not already defined.
+        if 'headers' not in kwargs or kwargs['headers'] is None:
+            kwargs['headers'] = {}
+        if not isinstance(kwargs['headers'], dict):
+            raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))
+        kwargs['headers'] = {"User-Agent": USER_AGENT, **kwargs['headers']}
+
         payload = payload or {}
         if data is not None:
             payload['data'] = data
@@ -82,14 +89,7 @@ class Session(object):
                 kwargs.setdefault('data', payload)
             else:
                 kwargs.setdefault('data', utils.json_dumps(payload))
-
-        # Set the default User-Agent if not already defined.
-        if 'headers' not in kwargs or kwargs['headers'] is None:
-            kwargs['headers'] = {}
-        if not isinstance(kwargs['headers'], dict):
-            raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))
-
-        kwargs['headers'] = {"User-Agent": USER_AGENT, **kwargs['headers']}
+                kwargs['headers'].setdefault('Content-Type', 'application/json')
 
         retry = self.nb_retry
         while retry >= 0:

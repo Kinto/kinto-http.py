@@ -24,8 +24,8 @@ class SessionTest(unittest.TestCase):
         self.requests_mock = p.start()
         self.addCleanup(p.stop)
         self.requests_mock.request.headers = {'User-Agent': USER_AGENT}
-        self.requests_mock.request.post_headers = {'User-Agent': USER_AGENT,
-                                                   'Content-Type': 'application/json'}
+        self.requests_mock.request.post_json_headers = {'User-Agent': USER_AGENT,
+                                                        'Content-Type': 'application/json'}
 
     def test_uses_specified_server_url(self):
         session = Session(mock.sentinel.server_url)
@@ -94,7 +94,7 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
             data='{"data": {"foo": "bar"}}',
-            headers=self.requests_mock.request.post_headers)
+            headers=self.requests_mock.request.post_json_headers)
 
     def test_passed_datetime_data_is_encoded_to_json(self):
         response = fake_response(200)
@@ -105,7 +105,7 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
             data='{"data": {"foo": "2018-06-22T18:00:00"}}',
-            headers=self.requests_mock.request.post_headers)
+            headers=self.requests_mock.request.post_json_headers)
 
     def test_passed_random_python_data_fails_to_be_encoded_to_json(self):
         response = fake_response(200)
@@ -125,7 +125,7 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
             data='{"data": {"foo": "2018-06-22"}}',
-            headers=self.requests_mock.request.post_headers)
+            headers=self.requests_mock.request.post_json_headers)
 
     def test_passed_data_is_passed_as_is_when_files_are_posted(self):
         response = fake_response(200)
@@ -151,7 +151,7 @@ class SessionTest(unittest.TestCase):
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
             data='{"permissions": {"foo": "bar"}}',
-            headers=self.requests_mock.request.post_headers)
+            headers=self.requests_mock.request.post_json_headers)
 
     def test_url_is_used_if_schema_is_present(self):
         response = fake_response(200)
@@ -213,7 +213,7 @@ class SessionTest(unittest.TestCase):
         session.request('put', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
             'put', 'https://example.org/anothertest', data='{}',
-            headers=self.requests_mock.request.post_headers)
+            headers=self.requests_mock.request.post_json_headers)
 
     def test_user_agent_is_sent_on_requests(self):
         response = fake_response(200)

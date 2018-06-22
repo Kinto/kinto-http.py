@@ -11,6 +11,10 @@ This document describes changes between each past release.
 
 - Raise a specific `CollectionNotFound` exception rather than a generic `KintoException`.
 
+**Bug fixes**
+
+- Handle json date and datetime object dumps.
+
 **Internal changes**
 
 - Update tests to work with Kinto 11.0.0

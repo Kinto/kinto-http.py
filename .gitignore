@@ -4,3 +4,4 @@ kinto_http.egg-info/
 .coverage
 .venv/
 .tox
+.pytest_cache/

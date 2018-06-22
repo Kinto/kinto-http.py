@@ -78,8 +78,10 @@ class Session(object):
                 permissions = permissions.as_dict()
             payload['permissions'] = permissions
         if method not in ('get', 'head'):
-            payload_kwarg = 'data' if 'files' in kwargs else 'json'
-            kwargs.setdefault(payload_kwarg, payload)
+            if 'files' in kwargs:
+                kwargs.setdefault('data', payload)
+            else:
+                kwargs.setdefault('data', utils.json_dumps(payload))
 
         # Set the default User-Agent if not already defined.
         if 'headers' not in kwargs or kwargs['headers'] is None:

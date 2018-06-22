@@ -1,4 +1,3 @@
-import json
 import logging
 from collections import defaultdict
 
@@ -75,7 +74,7 @@ class BatchSession(object):
 
                 # Full log in DEBUG mode
                 logger.debug("\nBatch #{}: \n\tRequest: {}\n\tResponse: {}\n".format(
-                    id_request, json.dumps(chunk[i]), json.dumps(response)))
+                    id_request, utils.json_dumps(chunk[i]), utils.json_dumps(response)))
 
                 # Raise in case of a 500
                 if status_code >= 500:

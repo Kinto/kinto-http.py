@@ -91,7 +91,8 @@ class SessionTest(unittest.TestCase):
                         data={'foo': 'bar'})
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
-            json={"data": {'foo': 'bar'}}, headers=self.requests_mock.request.return_value.headers)
+            data='{"data": {"foo": "bar"}}',
+            headers=self.requests_mock.request.return_value.headers)
 
     def test_passed_data_is_passed_as_is_when_files_are_posted(self):
         response = fake_response(200)
@@ -116,7 +117,7 @@ class SessionTest(unittest.TestCase):
                         permissions=permissions)
         self.requests_mock.request.assert_called_with(
             'post', 'https://example.org/test',
-            json={'permissions': {'foo': 'bar'}},
+            data='{"permissions": {"foo": "bar"}}',
             headers=self.requests_mock.request.return_value.headers)
 
     def test_url_is_used_if_schema_is_present(self):
@@ -178,7 +179,7 @@ class SessionTest(unittest.TestCase):
         session = Session('https://example.org')
         session.request('put', 'https://example.org/anothertest')
         self.requests_mock.request.assert_called_with(
-            'put', 'https://example.org/anothertest', json={},
+            'put', 'https://example.org/anothertest', data='{}',
             headers=self.requests_mock.request.return_value.headers)
 
     def test_user_agent_is_sent_on_requests(self):

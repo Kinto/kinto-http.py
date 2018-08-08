@@ -264,7 +264,29 @@ A record is a dict with the "permissions" and "data" keys.
     # Or every records of a collection.
     client.delete_records(collection='todos')
 
+History
+-------
 
+If the built-in plugin kinto.plugins.history is enabled, it is possible to access all changes
+
+.. code-block:: python
+
+    # Get the history of a complete bucket
+	hist = client.get_history(id='default')
+	
+	# and activate additional data operations
+	hist = client.get_history(id='default',_limit=2, _sort='-last_modified', _since='1533762576015')
+	hist = client.get_history(id='default', resource_name='collection')
+	
+	# Purge the complete history of a bucket
+	client.purge_history(id='default')
+	
+	# Get latest record
+	record = client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d', collection='todos', bucket='default')
+	
+	# Get record by its revision id
+	record = client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d', collection='todos', bucket='default', history_revision='25e6f07b-05b1-4525-b712-efd990ccab2d')
+	
 Permissions
 -----------
 

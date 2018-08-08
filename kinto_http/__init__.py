@@ -38,6 +38,7 @@ class Endpoints(object):
         'group':                 '{root}/buckets/{bucket}/groups/{group}',
         'collections':           '{root}/buckets/{bucket}/collections',
         'collection':            '{root}/buckets/{bucket}/collections/{collection}',
+		'history':               '{root}/buckets/{bucket}/history',
         'records':               '{root}/buckets/{bucket}/collections/{collection}/records',      # NOQA
         'record':                '{root}/buckets/{bucket}/collections/{collection}/records/{id}',  # NOQA
         'record_revision':       '{root}/buckets/{bucket}/history?uri=/buckets/{bucket_id}/collections/{collection}/records/{id}'
@@ -357,6 +358,30 @@ class Client(object):
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
+    def get_history(self, *, id=None, **kwargs):
+        endpoint = self.get_endpoint('history', bucket=id)
+        logger.info("Get bucket %r history" % id or self._bucket_name)
+
+        return self._paginated(endpoint, **kwargs)
+
+    def purge_history(self, *, id=None,
+                          safe=True, if_match=None, if_exists=False):
+        if if_exists:
+            return self._delete_if_exists('history',
+                                          bucket=id,
+                                          safe=safe,
+                                          if_match=if_match)
+        endpoint = self.get_endpoint('history',
+                                     bucket=id,
+                                     )
+        headers = self._get_cache_headers(safe, if_match=if_match)
+
+        logger.info("Purge History of bucket %r" %
+                    (id or self._bucket_name))
+
+        resp, _ = self.session.request('delete', endpoint, headers=headers)
+        return resp['data']
+
     # Groups
 
     def get_groups(self, *, bucket=None, **kwargs):
@@ -662,7 +687,7 @@ class Client(object):
             resp, _ = self.session.request('get', endpoint)
             for rev in resp.get('data', None):
                 if rev.get('id') == history_revision:
-                    return rev
+                    return rev.get('target')
         else:
             endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,

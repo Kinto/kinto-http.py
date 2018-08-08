@@ -38,7 +38,7 @@ class Endpoints(object):
         'group':                 '{root}/buckets/{bucket}/groups/{group}',
         'collections':           '{root}/buckets/{bucket}/collections',
         'collection':            '{root}/buckets/{bucket}/collections/{collection}',
-		'history':               '{root}/buckets/{bucket}/history',
+        'history':               '{root}/buckets/{bucket}/history',
         'records':               '{root}/buckets/{bucket}/collections/{collection}/records',      # NOQA
         'record':                '{root}/buckets/{bucket}/collections/{collection}/records/{id}',  # NOQA
         'record_revision':       '{root}/buckets/{bucket}/history?uri=/buckets/{bucket_id}/collections/{collection}/records/{id}'

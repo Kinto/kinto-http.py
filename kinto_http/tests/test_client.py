@@ -626,32 +626,48 @@ class HistoryTest(unittest.TestCase):
 
     def test_basic_retrivial_of_bucket_history(self):
         mock_response(self.session)
-        self.client.get_history(id='mybucket')
+        self.client.get_history(bucket='mybucket')
         url = '/buckets/mybucket/history'
         self.session.request.assert_called_with('get', url, headers={}, params={})
 
     def test_filter_sorting_operations_on_bucket_history(self):
         mock_response(self.session)
-        self.client.get_history(id='mybucket',_limit=2, _sort='-last_modified', _since='1533762576015')
+        self.client.get_history(bucket='mybucket',
+                                _limit=2,
+                                _sort='-last_modified',
+                                _since='1533762576015')
+
         url = '/buckets/mybucket/history'
-        self.session.request.assert_called_with('get', url, headers={}, params={'_limit': 2, '_sort': '-last_modified', '_since': '1533762576015'})
+        self.session.request.assert_called_with('get', url, headers={},
+                                                params={'_limit': 2,
+                                                        '_sort': '-last_modified',
+                                                        '_since': '1533762576015'}
+                                                )
 
     def test_grouping_on_bucket_history(self):
         mock_response(self.session)
-        self.client.get_history(id='mybucket', resource_name='collection')
+        self.client.get_history(bucket='mybucket', resource_name='collection')
         url = '/buckets/mybucket/history'
-        self.session.request.assert_called_with('get', url, headers={}, params={'resource_name': 'collection'})
+        self.session.request.assert_called_with('get', url, headers={},
+                                                params={'resource_name': 'collection'}
+                                                )
 
     def test_purging_of_history(self):
         mock_response(self.session)
-        self.client.purge_history(id='mybucket')
+        self.client.purge_history(bucket='mybucket')
         url = '/buckets/mybucket/history'
         self.session.request.assert_called_with('delete', url, headers=None)
 
     def test_get_record_by_revision_id(self):
         mock_response(self.session)
-        self.client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d', collection='mycollection', bucket='mybucket', bucket_id='mybucket_id', history_revision='25e6f07b-05b1-4525-b712-efd990ccab2d')
-        url = '/buckets/mybucket/history?uri=/buckets/mybucket_id/collections/mycollection/records/fe0e8cbb-6074-403e-9017-c8d79192cf0d'
+        self.client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d',
+                               collection='mycollection',
+                               bucket='mybucket',
+                               history_revision='25e6f07b-05b1-4525-b712-efd990ccab2d')
+
+        url = '/buckets/mybucket/history?uri=/buckets/mybucket/' \
+        'collections/mycollection/records/fe0e8cbb-6074-403e-9017-c8d79192cf0d'
+
         self.session.request.assert_called_with('get', url)
 
 class RecordTest(unittest.TestCase):

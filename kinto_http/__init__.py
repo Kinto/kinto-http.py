@@ -41,7 +41,8 @@ class Endpoints(object):
         'history':               '{root}/buckets/{bucket}/history',
         'records':               '{root}/buckets/{bucket}/collections/{collection}/records',      # NOQA
         'record':                '{root}/buckets/{bucket}/collections/{collection}/records/{id}',  # NOQA
-        'record_revision':       '{root}/buckets/{bucket}/history?uri=/buckets/{bucket_id}/collections/{collection}/records/{id}'
+        'record_revision':       '{root}/buckets/{bucket}/history?uri=/buckets/{bucket}/'
+                                 'collections/{collection}/records/{id}'
     }
 
     def __init__(self, root=''):
@@ -107,7 +108,8 @@ class Client(object):
         batch_session.send()
         batch_session.reset()
 
-    def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None, bucket_id=None):
+    def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None,
+                     bucket_id=None):
         """Return the endpoint with named parameters."""
         kwargs = {
             'bucket': bucket or self._bucket_name,
@@ -358,26 +360,22 @@ class Client(object):
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
 
-    def get_history(self, *, id=None, **kwargs):
-        endpoint = self.get_endpoint('history', bucket=id)
-        logger.info("Get bucket %r history" % id or self._bucket_name)
+    def get_history(self, *, bucket=None, **kwargs):
+        endpoint = self.get_endpoint('history', bucket=bucket)
+        logger.info("Get bucket %r history" % bucket or self._bucket_name)
 
         return self._paginated(endpoint, **kwargs)
 
-    def purge_history(self, *, id=None,
-                          safe=True, if_match=None, if_exists=False):
-        if if_exists:
-            return self._delete_if_exists('history',
-                                          bucket=id,
-                                          safe=safe,
-                                          if_match=if_match)
+    def purge_history(self, *, bucket=None,
+                          safe=True, if_match=None):
+
         endpoint = self.get_endpoint('history',
-                                     bucket=id,
+                                     bucket=bucket,
                                      )
         headers = self._get_cache_headers(safe, if_match=if_match)
 
         logger.info("Purge History of bucket %r" %
-                    (id or self._bucket_name))
+                    (bucket or self._bucket_name))
 
         resp, _ = self.session.request('delete', endpoint, headers=headers)
         return resp['data']
@@ -671,17 +669,16 @@ class Client(object):
                                      collection=collection)
         return self._paginated(endpoint, **kwargs)
 
-    def get_record(self, *, id, collection=None, bucket=None, history_revision=None, bucket_id=None):
+    def get_record(self, *, id, collection=None, bucket=None, history_revision=None):
         if history_revision is not None:
-            used_bucket_id = bucket_id if bucket_id is not None else self.get_bucket(id=bucket).get('data',None).get('id',None)
-            
             endpoint = self.get_endpoint('record_revision', id=id,
                                      bucket=bucket,
-                                     bucket_id=used_bucket_id,
                                      collection=collection)
             logger.info(
               "Get record with id %r from collection %r in bucket %r by revision %r"
-              % (id, collection or self._collection_name, bucket or self._bucket_name, history_revision))
+              % (id, collection or self._collection_name,
+                 bucket or self._bucket_name, history_revision)
+            )
 
             resp, _ = self.session.request('get', endpoint)
             for rev in resp.get('data', None):

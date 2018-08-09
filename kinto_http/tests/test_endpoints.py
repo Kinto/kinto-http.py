@@ -46,7 +46,7 @@ class EndpointsTest(unittest.TestCase):
             '/buckets/buck/collections/coll/records/1'
 
     def test_record_revision(self):
-        assert self.endpoints.get('record_revision',history_revision = 'rev_id', **self.kwargs) ==\
+        assert self.endpoints.get('record_revision', history_revision = 'rev_id', **self.kwargs) ==\
             '/buckets/buck/history?uri=/buckets/5/collections/coll/records/1'
 
     def test_missing_arguments_raise_an_error(self):

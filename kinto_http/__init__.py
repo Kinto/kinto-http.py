@@ -671,14 +671,13 @@ class Client(object):
                                      collection=collection)
         return self._paginated(endpoint, **kwargs)
 
-    def get_record(self, *, id, collection=None, bucket=None, history_revision=None):
+    def get_record(self, *, id, collection=None, bucket=None, history_revision=None, bucket_id=None):
         if history_revision is not None:
-            bucket_details = self.get_bucket(id=bucket)
-            bucket_id = bucket_details.get('data',None).get('id',None)
+            used_bucket_id = bucket_id if bucket_id is not None else self.get_bucket(id=bucket).get('data',None).get('id',None)
             
             endpoint = self.get_endpoint('record_revision', id=id,
                                      bucket=bucket,
-                                     bucket_id=bucket_id,
+                                     bucket_id=used_bucket_id,
                                      collection=collection)
             logger.info(
               "Get record with id %r from collection %r in bucket %r by revision %r"

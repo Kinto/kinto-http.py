@@ -25,7 +25,7 @@ class EndpointsTest(unittest.TestCase):
 
     def test_bucket(self):
         assert self.endpoints.get('bucket', **self.kwargs) == '/buckets/buck'
-		
+
     def test_history(self):
         assert self.endpoints.get('history', **self.kwargs) == '/buckets/buck/history'
 

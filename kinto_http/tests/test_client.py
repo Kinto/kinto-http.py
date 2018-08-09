@@ -619,6 +619,7 @@ class CollectionTest(unittest.TestCase):
             'put', '/buckets/buck/collections/coll', data={'id': 'coll'}, permissions=None,
             headers=None)
 
+
 class HistoryTest(unittest.TestCase):
     def setUp(self):
         self.session = mock.MagicMock()
@@ -666,9 +667,10 @@ class HistoryTest(unittest.TestCase):
                                history_revision='25e6f07b-05b1-4525-b712-efd990ccab2d')
 
         url = '/buckets/mybucket/history?uri=/buckets/mybucket/' \
-        'collections/mycollection/records/fe0e8cbb-6074-403e-9017-c8d79192cf0d'
+              'collections/mycollection/records/fe0e8cbb-6074-403e-9017-c8d79192cf0d'
 
         self.session.request.assert_called_with('get', url)
+
 
 class RecordTest(unittest.TestCase):
     def setUp(self):

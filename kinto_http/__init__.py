@@ -367,7 +367,7 @@ class Client(object):
         return self._paginated(endpoint, **kwargs)
 
     def purge_history(self, *, bucket=None,
-                          safe=True, if_match=None):
+                      safe=True, if_match=None):
 
         endpoint = self.get_endpoint('history',
                                      bucket=bucket,
@@ -671,9 +671,11 @@ class Client(object):
 
     def get_record(self, *, id, collection=None, bucket=None, history_revision=None):
         if history_revision is not None:
-            endpoint = self.get_endpoint('record_revision', id=id,
-                                     bucket=bucket,
-                                     collection=collection)
+            endpoint = self.get_endpoint('record_revision', 
+                                         id=id,
+                                         bucket=bucket,
+                                         collection=collection
+                                        )
             logger.info(
               "Get record with id %r from collection %r in bucket %r by revision %r"
               % (id, collection or self._collection_name,
@@ -685,9 +687,11 @@ class Client(object):
                 if rev.get('id') == history_revision:
                     return rev.get('target')
         else:
-            endpoint = self.get_endpoint('record', id=id,
-                                     bucket=bucket,
-                                     collection=collection)
+            endpoint = self.get_endpoint('record', 
+                                         id=id,
+                                         bucket=bucket,
+                                         collection=collection
+                                        )
 
             logger.info(
               "Get record with id %r from collection %r in bucket %r"

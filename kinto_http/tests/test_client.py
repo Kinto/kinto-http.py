@@ -661,7 +661,7 @@ class HistoryTest(unittest.TestCase):
 
     def test_get_record_by_revision_id(self):
         mock_response(self.session)
-        self.session.request.return_value = ({'data':[{'target':{}}]}, mock.sentinel.count)
+        self.session.request.return_value = ({'data': [{'target': {}}]}, mock.sentinel.count)
 
         self.client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d',
                                collection='mycollection',

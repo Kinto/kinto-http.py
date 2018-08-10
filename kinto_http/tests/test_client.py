@@ -661,13 +661,16 @@ class HistoryTest(unittest.TestCase):
 
     def test_get_record_by_revision_id(self):
         mock_response(self.session)
+        self.session.request.return_value = ({'data':[{'target':{}}]}, mock.sentinel.count)
+
         self.client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d',
                                collection='mycollection',
                                bucket='mybucket',
                                history_revision='25e6f07b-05b1-4525-b712-efd990ccab2d')
 
         url = '/buckets/mybucket/history?uri=/buckets/mybucket/' \
-              'collections/mycollection/records/fe0e8cbb-6074-403e-9017-c8d79192cf0d'
+              'collections/mycollection/records/fe0e8cbb-6074-403e-9017-c8d79192cf0d' \
+              '&id=25e6f07b-05b1-4525-b712-efd990ccab2d'
 
         self.session.request.assert_called_with('get', url)
 

@@ -42,7 +42,7 @@ class Endpoints(object):
         'records':               '{root}/buckets/{bucket}/collections/{collection}/records',      # NOQA
         'record':                '{root}/buckets/{bucket}/collections/{collection}/records/{id}',  # NOQA
         'record_revision':       '{root}/buckets/{bucket}/history?uri=/buckets/{bucket}/'
-                                 'collections/{collection}/records/{id}'
+                                 'collections/{collection}/records/{id}&id={history_revision}'
     }
 
     def __init__(self, root=''):
@@ -109,14 +109,15 @@ class Client(object):
         batch_session.reset()
 
     def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None,
-                     bucket_id=None):
+                     bucket_id=None, history_revision=None):
         """Return the endpoint with named parameters."""
         kwargs = {
             'bucket': bucket or self._bucket_name,
             'bucket_id': bucket_id,
             'collection': collection or self._collection_name,
             'group': group,
-            'id': id
+            'id': id,
+            'history_revision': history_revision
         }
         return self.endpoints.get(name, **kwargs)
 
@@ -671,11 +672,12 @@ class Client(object):
 
     def get_record(self, *, id, collection=None, bucket=None, history_revision=None):
         if history_revision is not None:
-            endpoint = self.get_endpoint('record_revision', 
+            endpoint = self.get_endpoint('record_revision',
                                          id=id,
                                          bucket=bucket,
-                                         collection=collection
-                                        )
+                                         collection=collection,
+                                         history_revision=history_revision
+                                         )
             logger.info(
               "Get record with id %r from collection %r in bucket %r by revision %r"
               % (id, collection or self._collection_name,
@@ -683,15 +685,14 @@ class Client(object):
             )
 
             resp, _ = self.session.request('get', endpoint)
-            for rev in resp.get('data', None):
-                if rev.get('id') == history_revision:
-                    return rev.get('target')
+            return resp.get('data')[0].get('target')
+
         else:
-            endpoint = self.get_endpoint('record', 
+            endpoint = self.get_endpoint('record',
                                          id=id,
                                          bucket=bucket,
                                          collection=collection
-                                        )
+                                         )
 
             logger.info(
               "Get record with id %r from collection %r in bucket %r"

@@ -267,7 +267,7 @@ A record is a dict with the "permissions" and "data" keys.
 History
 -------
 
-If the built-in plugin kinto.plugins.history is enabled, it is possible to access all changes
+If the built-in plugin kinto.plugins.history is enabled, it is possible to access all historical changes
 
 .. code-block:: python
 
@@ -282,7 +282,8 @@ If the built-in plugin kinto.plugins.history is enabled, it is possible to acces
     record = client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d', collection='todos', bucket='default')
 
     # Get record by its revision id
-    record = client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d', collection='todos', bucket='default', history_revision='25e6f07b-05b1-4525-b712-efd990ccab2d')
+    record = client.get_record(id='fe0e8cbb-6074-403e-9017-c8d79192cf0d', collection='todos', bucket='default',
+                               history_revision='25e6f07b-05b1-4525-b712-efd990ccab2d')
 
 .. code-block:: python
 

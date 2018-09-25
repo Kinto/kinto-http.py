@@ -12,6 +12,7 @@ ALL_PARAMETERS = [
     ['-c', '--collection'],
     ['--retry'],
     ['--retry-after'],
+    ['--ignore-4xx-errors'],
     ['-v', '--verbose'],
     ['-q', '--quiet'],
     ['-D', '--debug'],
@@ -118,6 +119,7 @@ class ClientFromArgsTest(unittest.TestCase):
             auth=('user', 'password'),
             bucket='blocklists',
             collection='certificates',
+            ignore_4xx_errors=False,
             retry=0,
             retry_after=None)
 
@@ -138,6 +140,7 @@ class ClientFromArgsTest(unittest.TestCase):
             auth=('user', 'password'),
             bucket='blocklists',
             collection='certificates',
+            ignore_4xx_errors=False,
             retry=3,
             retry_after=None)
 
@@ -158,5 +161,6 @@ class ClientFromArgsTest(unittest.TestCase):
             auth=('user', 'password'),
             bucket=None,
             collection=None,
+            ignore_4xx_errors=False,
             retry=0,
             retry_after=None)

@@ -11,11 +11,11 @@ logger = logging.getLogger(__name__)
 
 class BatchSession(object):
 
-    def __init__(self, client, batch_max_requests=0, strict=False):
+    def __init__(self, client, batch_max_requests=0, ignore_4xx_errors=False):
         self.session = client.session
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
-        self._strict = strict
+        self._ignore_4xx_errors = ignore_4xx_errors
         self.requests = []
         self._results = []
 
@@ -78,8 +78,8 @@ class BatchSession(object):
                     exception = KintoException(message)
                     exception.request = chunk[i]
                     exception.response = response
-                    # Raise in case of a 500
-                    if status_code >= 500 or self._strict:
+                    raise_on_4xx = status_code >= 400 and not self._ignore_4xx_errors
+                    if status_code >= 500 or raise_on_4xx:
                         raise exception
 
                 id_request += 1

@@ -2,7 +2,8 @@ import unittest
 from unittest import mock
 import pytest
 
-from kinto_http import KintoException, BucketNotFound, Client, DO_NOT_OVERWRITE
+from kinto_http import (KintoException, KintoBatchException, BucketNotFound,
+    Client, DO_NOT_OVERWRITE)
 from kinto_http.session import create_session
 from kinto_http.patch_type import MergePatch, JSONPatch
 
@@ -84,23 +85,40 @@ class ClientTest(unittest.TestCase):
                 batch.create_record(id=5678, data={'tutu': 'toto'})
 
     def test_batch_raises_exception_if_subrequest_failed_with_code_4xx(self):
-        error = {
+        error_403 = {
             "errno": 121,
             "message": "Forbidden",
             "code": 403,
             "error": "This user cannot access this resource."
         }
+        error_400 = {
+            "code": 400,
+            "errno": 104,
+            "error": "Invalid parameters",
+            "message": "Bad Request",
+        }
         self.session.request.side_effect = [
             ({"settings": {"batch_max_requests": 25}}, []),
             ({"responses": [
                 {"status": 200, "path": "/url1", "body": {}, "headers": {}},
-                {"status": 403, "path": "/url2", "body": error, "headers": {}}
+                {"status": 403, "path": "/url2", "body": error_403, "headers": {}},
+                {"status": 200, "path": "/url1", "body": {}, "headers": {}},
+                {"status": 400, "path": "/url2", "body": error_400, "headers": {}},
             ]}, [])]
 
-        with self.assertRaises(KintoException) as cm:
+        with self.assertRaises(KintoBatchException) as cm:
             with self.client.batch(bucket='moz', collection='test') as batch:
                 batch.create_record(id=1234, data={'foo': 'bar'})
+                batch.create_record(id=1987, data={'maz': 'miz'})
+                batch.create_record(id=1982, data={'plop': 'plip'})
                 batch.create_record(id=5678, data={'tutu': 'toto'})
+
+        raised = cm.exception
+        assert "403" in str(raised)
+        assert "400" in str(raised)
+        assert isinstance(raised.exceptions[0], KintoException)
+        assert raised.exceptions[0].response.status_code == 403
+        assert raised.exceptions[1].response.status_code == 400
 
     def test_batch_does_not_raise_exception_if_batch_4xx_errors_are_ignored(self):
         error = {

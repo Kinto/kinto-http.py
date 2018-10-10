@@ -2,7 +2,7 @@ import json
 import logging
 from collections import defaultdict
 
-from kinto_http.exceptions import KintoException
+from kinto_http.exceptions import KintoException, KintoBatchException
 
 from . import utils
 
@@ -17,15 +17,17 @@ class WrapDict(dict):
     def __getattr__(self, name):
         return self[name]
 
+
 class RequestDict(WrapDict):
     @property
     def path_url(self):
         return self.path
 
+
 class ResponseDict(WrapDict):
     @property
     def status_code(self):
-        return self.status
+        return self["status"]
 
 
 class BatchSession(object):
@@ -72,6 +74,7 @@ class BatchSession(object):
 
     def send(self):
         self._results = []
+        _exceptions = []
         requests = self._build_requests()
         id_request = 0
         for chunk in utils.chunks(requests, self.batch_max_requests):
@@ -100,13 +103,17 @@ class BatchSession(object):
                     exception.response = ResponseDict(response)
                     # Should we ignore 4XX errors?
                     raise_on_4xx = status_code >= 400 and not self._ignore_4xx_errors
-                    if status_code >= 500 or raise_on_4xx:
-                        # XXX: accumulate instead of fail-fast
+                    if raise_on_4xx:
+                        _exceptions.append(exception)
+                    if status_code >= 500:
                         raise exception
 
                 id_request += 1
 
             self._results.append((resp, headers))
+
+        if _exceptions:
+            raise KintoBatchException(_exceptions)
 
         return self._results
 

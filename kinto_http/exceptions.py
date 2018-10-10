@@ -32,3 +32,9 @@ class BackoffException(KintoException):
     def __init__(self, message, backoff, exception=None):
         self.backoff = backoff
         super().__init__(message, exception)
+
+
+class KintoBatchException(KintoException):
+    def __init__(self, exceptions):
+        self.message = "\n".join([str(e) for e in exceptions])
+        self.exceptions = exceptions

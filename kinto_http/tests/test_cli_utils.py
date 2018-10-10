@@ -12,7 +12,7 @@ ALL_PARAMETERS = [
     ['-c', '--collection'],
     ['--retry'],
     ['--retry-after'],
-    ['--ignore-4xx-errors'],
+    ['--ignore-batch-4xx'],
     ['-v', '--verbose'],
     ['-q', '--quiet'],
     ['-D', '--debug'],
@@ -29,7 +29,7 @@ class ParserServerOptionsTest(unittest.TestCase):
     def test_add_parser_options_create_a_parser_if_needed(self):
         parser = cli_utils.add_parser_options()
         self.assert_option_strings(parser, *ALL_PARAMETERS)
-        assert len(parser._actions) == 10
+        assert len(parser._actions) == len(ALL_PARAMETERS)
 
     def test_add_parser_options_adds_arguments_on_existing_parser(self):
         parser = argparse.ArgumentParser(prog="importer")
@@ -39,7 +39,7 @@ class ParserServerOptionsTest(unittest.TestCase):
         parser = cli_utils.add_parser_options(parser)
         self.assert_option_strings(parser, ['-t', '--type'],
                                    *ALL_PARAMETERS)
-        assert len(parser._actions) == 11
+        assert len(parser._actions) == len(ALL_PARAMETERS) + 1
 
     def test_add_parser_options_can_ignore_bucket_and_collection(self):
         parser = cli_utils.add_parser_options(
@@ -50,12 +50,13 @@ class ParserServerOptionsTest(unittest.TestCase):
             ['-a', '--auth'],
             ['--retry'],
             ['--retry-after'],
+            ['--ignore-batch-4xx'],
             ['-v', '--verbose'],
             ['-q', '--quiet'],
             ['-D', '--debug'],
         ]
         self.assert_option_strings(parser, *parameters)
-        assert len(parser._actions) == 8
+        assert len(parser._actions) == len(parameters)
 
     def test_can_change_default_values(self):
         parser = cli_utils.add_parser_options(
@@ -74,7 +75,8 @@ class ParserServerOptionsTest(unittest.TestCase):
             'collection': 'certificates',
             'retry': 0,
             'retry_after': None,
-            'verbosity': None
+            'verbosity': None,
+            'ignore_batch_4xx': False,
         }
 
 
@@ -119,7 +121,7 @@ class ClientFromArgsTest(unittest.TestCase):
             auth=('user', 'password'),
             bucket='blocklists',
             collection='certificates',
-            ignore_4xx_errors=False,
+            ignore_batch_4xx=False,
             retry=0,
             retry_after=None)
 
@@ -140,7 +142,7 @@ class ClientFromArgsTest(unittest.TestCase):
             auth=('user', 'password'),
             bucket='blocklists',
             collection='certificates',
-            ignore_4xx_errors=False,
+            ignore_batch_4xx=False,
             retry=3,
             retry_after=None)
 
@@ -161,6 +163,6 @@ class ClientFromArgsTest(unittest.TestCase):
             auth=('user', 'password'),
             bucket=None,
             collection=None,
-            ignore_4xx_errors=False,
+            ignore_batch_4xx=False,
             retry=0,
             retry_after=None)

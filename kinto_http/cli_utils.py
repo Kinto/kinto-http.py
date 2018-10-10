@@ -25,7 +25,7 @@ def create_client_from_args(args):
                   collection=getattr(args, 'collection', None),
                   retry=args.retry,
                   retry_after=args.retry_after,
-                  ignore_4xx_errors=args.ignore_4xx_errors)
+                  ignore_batch_4xx=args.ignore_batch_4xx)
 
 
 class AuthAction(argparse.Action):
@@ -40,7 +40,7 @@ def add_parser_options(parser=None,
                        default_auth=None,
                        default_retry=0,
                        default_retry_after=None,
-                       default_ignore_4xx=False,
+                       default_ignore_batch_4xx=False,
                        default_bucket=None,
                        default_collection=None,
                        include_bucket=True,
@@ -77,10 +77,10 @@ def add_parser_options(parser=None,
                         '(default: provided by server)',
                         type=int, default=default_retry_after)
 
-    parser.add_argument('--ignore-4XX-errors',
-                        help='Do not fail on 4XX errors in batch requests.',
-                        default=default_ignore_4xx, action='store_true',
-                        dest='ignore_4xx_errors')
+    parser.add_argument('--ignore-batch-4xx',
+                        help='Do not fail on 4xx errors in batch requests.',
+                        default=default_ignore_batch_4xx, action='store_true',
+                        dest='ignore_batch_4xx')
 
     # Defaults
     parser.add_argument('-v', '--verbose', action='store_const',

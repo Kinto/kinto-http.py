@@ -83,7 +83,7 @@ class ClientTest(unittest.TestCase):
                 batch.create_record(id=1234, data={'foo': 'bar'})
                 batch.create_record(id=5678, data={'tutu': 'toto'})
 
-    def test_batch_dont_raise_exception_if_subrequest_failed_with_code_4xx(self):
+    def test_batch_raises_exception_if_subrequest_failed_with_code_4xx(self):
         error = {
             "errno": 121,
             "message": "Forbidden",
@@ -97,7 +97,27 @@ class ClientTest(unittest.TestCase):
                 {"status": 403, "path": "/url2", "body": error, "headers": {}}
             ]}, [])]
 
-        with self.client.batch(bucket='moz', collection='test') as batch:  # Do not raise
+        with self.assertRaises(KintoException) as cm:
+            with self.client.batch(bucket='moz', collection='test') as batch:
+                batch.create_record(id=1234, data={'foo': 'bar'})
+                batch.create_record(id=5678, data={'tutu': 'toto'})
+
+    def test_batch_does_not_raise_exception_if_batch_4xx_errors_are_ignored(self):
+        error = {
+            "errno": 121,
+            "message": "Forbidden",
+            "code": 403,
+            "error": "This user cannot access this resource."
+        }
+        self.session.request.side_effect = [
+            ({"settings": {"batch_max_requests": 25}}, []),
+            ({"responses": [
+                {"status": 200, "path": "/url1", "body": {}, "headers": {}},
+                {"status": 403, "path": "/url2", "body": error, "headers": {}}
+            ]}, [])]
+
+        client = Client(session=self.session, ignore_batch_4xx=True)
+        with client.batch(bucket='moz', collection='test') as batch:  # Do not raise
             batch.create_record(id=1234, data={'foo': 'bar'})
             batch.create_record(id=5678, data={'tutu': 'toto'})
 

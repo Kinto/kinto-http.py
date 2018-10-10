@@ -9,6 +9,25 @@ from . import utils
 logger = logging.getLogger(__name__)
 
 
+class WrapDict(dict):
+    """
+    The Kinto batch API returns requests and responses as dicts.
+    We use this small helper to make it look like the classes from requests.
+    """
+    def __getattr__(self, name):
+        return self[name]
+
+class RequestDict(WrapDict):
+    @property
+    def path_url(self):
+        return self.path
+
+class ResponseDict(WrapDict):
+    @property
+    def status_code(self):
+        return self.status
+
+
 class BatchSession(object):
 
     def __init__(self, client, batch_max_requests=0, ignore_4xx_errors=False):
@@ -74,12 +93,15 @@ class BatchSession(object):
                     id_request, json.dumps(chunk[i]), json.dumps(response)))
 
                 if not (200 <= status_code < 400):
+                    # One of the server response is an error.
                     message = '{0} - {1}'.format(status_code, response['body'])
                     exception = KintoException(message)
-                    exception.request = chunk[i]
-                    exception.response = response
+                    exception.request = RequestDict(chunk[i])
+                    exception.response = ResponseDict(response)
+                    # Should we ignore 4XX errors?
                     raise_on_4xx = status_code >= 400 and not self._ignore_4xx_errors
                     if status_code >= 500 or raise_on_4xx:
+                        # XXX: accumulate instead of fail-fast
                         raise exception
 
                 id_request += 1

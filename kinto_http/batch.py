@@ -27,6 +27,7 @@ class BatchSession(object):
         if permissions is not None:
             payload['permissions'] = permissions
 
+        print(method, endpoint, payload, headers)
         self.requests.append((method, endpoint, payload, headers))
         # This is the signature of the session request.
         return defaultdict(dict), defaultdict(dict)

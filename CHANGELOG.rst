@@ -7,7 +7,9 @@ This document describes changes between each past release.
 9.2.0 (unreleased)
 ==================
 
-- Nothing changed yet.
+**Internal changes**
+
+- Update tests to work with Kinto 11.0.0
 
 
 9.1.2 (2018-04-17)

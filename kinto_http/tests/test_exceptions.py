@@ -8,7 +8,7 @@ class BaseException(unittest.TestCase):
 
     def test_assert_message_is_rendered_in_representation(self):
         exc = KintoException("Failure")
-        self.assertEqual("KintoException('Failure',)", repr(exc))
+        self.assertIn("KintoException('Failure'", repr(exc))
 
     def test_assert_message_is_rendered_in_string(self):
         exc = KintoException("Failure")
@@ -34,7 +34,7 @@ class RequestException(unittest.TestCase):
         self.exc.response = response
 
     def test_assert_message_is_rendered_in_representation(self):
-        self.assertEqual("KintoException('Failure',)", repr(self.exc))
+        self.assertIn("KintoException('Failure'", repr(self.exc))
 
     def test_assert_request_response_is_rendered_in_representation(self):
         self.assertEqual("PUT /pim - 400 Failure", str(self.exc))

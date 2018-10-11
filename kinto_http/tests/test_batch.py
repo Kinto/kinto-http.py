@@ -1,5 +1,5 @@
-import unittest2 as unittest
-import mock
+import unittest
+from unittest import mock
 
 from kinto_http.batch import BatchSession
 from kinto_http.exceptions import KintoException

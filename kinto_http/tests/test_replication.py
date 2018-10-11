@@ -1,10 +1,11 @@
-import mock
+import unittest
+from unittest import mock
 
 from kinto_http.replication import replicate
 from kinto_http import Client
 from kinto_http import exceptions
 
-from .support import unittest, mock_response
+from .support import mock_response
 
 
 class ReplicationTest(unittest.TestCase):

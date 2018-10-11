@@ -24,6 +24,10 @@ class BucketNotFound(KintoException):
     pass
 
 
+class CollectionNotFound(KintoException):
+    pass
+
+
 class BackoffException(KintoException):
     def __init__(self, message, backoff, exception=None):
         self.backoff = backoff

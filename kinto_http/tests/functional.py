@@ -8,7 +8,7 @@ import requests
 import unittest
 from urllib.parse import urljoin
 
-from kinto_http import Client, BucketNotFound, KintoException
+from kinto_http import Client, BucketNotFound, CollectionNotFound, KintoException
 from kinto_http import replication
 from kinto_http.patch_type import JSONPatch
 
@@ -213,6 +213,15 @@ class FunctionalTest(unittest.TestCase):
         # Test retrieval of a collection gets the permissions as well.
         collection = self.client.get_collection(id='payments', bucket='mozilla')
         assert 'account:alexis' in collection['permissions']['write']
+
+    def test_collection_not_found(self):
+        self.client.create_bucket(id='mozilla')
+        with pytest.raises(CollectionNotFound):
+            self.client.get_collection(id='payments', bucket='mozilla')
+
+    def test_collection_access_forbidden(self):
+        with pytest.raises(KintoException):
+            self.client.get_collection(id='payments', bucket='mozilla')
 
     def test_collection_creation_if_not_exists(self):
         self.client.create_bucket(id='mozilla')

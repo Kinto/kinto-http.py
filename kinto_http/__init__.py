@@ -8,13 +8,13 @@ import logging
 from kinto_http import utils
 from kinto_http.session import create_session, Session
 from kinto_http.batch import BatchSession
-from kinto_http.exceptions import BucketNotFound, KintoException
+from kinto_http.exceptions import BucketNotFound, CollectionNotFound, KintoException
 from kinto_http.patch_type import PatchType, BasicPatch
 
 logger = logging.getLogger('kinto_http')
 
-__all__ = ('Endpoints', 'Session', 'Client',
-           'create_session', 'BucketNotFound', 'KintoException')
+__all__ = ('Endpoints', 'Session', 'Client', 'create_session',
+           'BucketNotFound', 'CollectionNotFound', 'KintoException')
 
 
 OBJECTS_PERMISSIONS = {
@@ -591,7 +591,13 @@ class Client(object):
         logger.info("Get collection %r in bucket %r" %
                     (id or self._collection_name, bucket or self._bucket_name))
 
-        resp, _ = self.session.request('get', endpoint)
+        try:
+            resp, _ = self.session.request('get', endpoint)
+        except KintoException as e:
+            error_resp_code = e.response.status_code
+            if error_resp_code == 404:
+                raise CollectionNotFound(id or self._collection_name, e)
+            raise
         return resp
 
     def delete_collection(self, *, id=None, bucket=None,

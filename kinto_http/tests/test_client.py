@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from kinto_http import (KintoException, KintoBatchException, BucketNotFound,
-    Client, DO_NOT_OVERWRITE)
+                        Client, DO_NOT_OVERWRITE)
 from kinto_http.session import create_session
 from kinto_http.patch_type import MergePatch, JSONPatch
 

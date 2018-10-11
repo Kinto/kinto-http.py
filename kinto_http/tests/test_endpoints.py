@@ -1,4 +1,4 @@
-from .support import unittest
+import unittest
 
 from kinto_http import Endpoints, KintoException
 

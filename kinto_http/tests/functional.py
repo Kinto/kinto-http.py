@@ -5,7 +5,7 @@ import mock
 import os.path
 import pytest
 import requests
-import unittest2
+import unittest
 from urllib.parse import urljoin
 
 from kinto_http import Client, BucketNotFound, KintoException
@@ -28,10 +28,10 @@ def hmac_digest(secret, message, encoding='utf-8'):
                     hashlib.sha256).hexdigest()
 
 
-class FunctionalTest(unittest2.TestCase):
+class FunctionalTest(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super(FunctionalTest, self).__init__(*args, **kwargs)
+    def setUp(self):
+        super().setUp()
         # XXX Read the configuration from env variables.
         self.server_url = SERVER_URL
         self.auth = DEFAULT_AUTH
@@ -40,6 +40,7 @@ class FunctionalTest(unittest2.TestCase):
         self.config = configparser.RawConfigParser()
         self.config.read(os.path.join(__HERE__, 'config/kinto.ini'))
         self.client = Client(server_url=self.server_url, auth=self.auth)
+        self.create_user(self.auth)
 
     def tearDown(self):
         # Delete all the created objects
@@ -47,11 +48,16 @@ class FunctionalTest(unittest2.TestCase):
         resp = requests.post(flush_url)
         resp.raise_for_status()
 
+    def create_user(self, credentials):
+        account_url = urljoin(self.server_url, '/accounts/{}'.format(credentials[0]))
+        r = requests.put(account_url, json={"data": {"password": credentials[1]}},
+                         auth=DEFAULT_AUTH)
+        r.raise_for_status()
+        return r.json()
+
     def get_user_id(self, credentials):
-        hmac_secret = self.config.get('app:main', 'kinto.userid_hmac_secret')
-        credentials = '%s:%s' % credentials
-        digest = hmac_digest(hmac_secret, credentials)
-        return 'basicauth:%s' % digest
+        r = self.create_user(credentials)
+        return 'account:{}'.format(r["data"]["id"])
 
     def test_bucket_creation(self):
         bucket = self.client.create_bucket(id='mozilla')
@@ -108,9 +114,9 @@ class FunctionalTest(unittest2.TestCase):
         assert len(deleted_buckets) == 0
 
     def test_bucket_save(self):
-        self.client.create_bucket(id='mozilla', permissions={'write': ['alexis']})
+        self.client.create_bucket(id='mozilla', permissions={'write': ['account:alexis']})
         bucket = self.client.get_bucket(id='mozilla')
-        assert 'alexis' in bucket['permissions']['write']
+        assert 'account:alexis' in bucket['permissions']['write']
 
     def test_group_creation(self):
         self.client.create_bucket(id='mozilla')
@@ -201,12 +207,12 @@ class FunctionalTest(unittest2.TestCase):
         self.client.create_bucket(id='mozilla')
         self.client.create_collection(
             id='payments', bucket='mozilla',
-            permissions={'write': ['alexis', ]}
+            permissions={'write': ['account:alexis', ]}
         )
 
         # Test retrieval of a collection gets the permissions as well.
         collection = self.client.get_collection(id='payments', bucket='mozilla')
-        assert 'alexis' in collection['permissions']['write']
+        assert 'account:alexis' in collection['permissions']['write']
 
     def test_collection_creation_if_not_exists(self):
         self.client.create_bucket(id='mozilla')
@@ -263,9 +269,9 @@ class FunctionalTest(unittest2.TestCase):
         client.create_bucket()
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
-                                       permissions={'read': ['alexis']})
+                                       permissions={'read': ['account:alexis']})
         record = client.get_record(id=created['data']['id'])
-        assert 'alexis' in record['permissions']['read']
+        assert 'account:alexis' in record['permissions']['read']
 
     def test_records_list_retrieval(self):
         client = Client(server_url=self.server_url, auth=self.auth,
@@ -273,7 +279,7 @@ class FunctionalTest(unittest2.TestCase):
         client.create_bucket()
         client.create_collection()
         client.create_record(data={'foo': 'bar'},
-                             permissions={'read': ['alexis']})
+                             permissions={'read': ['account:alexis']})
         records = client.get_records()
         assert len(records) == 1
 
@@ -283,7 +289,7 @@ class FunctionalTest(unittest2.TestCase):
         client.create_bucket()
         client.create_collection()
         record = client.create_record(data={'foo': 'bar'},
-                                      permissions={'read': ['alexis']})
+                                      permissions={'read': ['account:alexis']})
         etag = client.get_records_timestamp()
         assert str(etag) == str(record["data"]["last_modified"])
 
@@ -294,7 +300,7 @@ class FunctionalTest(unittest2.TestCase):
         client.create_collection()
         for i in range(10):
             client.create_record(data={'foo': 'bar'},
-                                 permissions={'read': ['alexis']})
+                                 permissions={'read': ['account:alexis']})
         # Kinto is running with kinto.paginate_by = 5
         records = client.get_records()
         assert len(records) == 10
@@ -305,14 +311,14 @@ class FunctionalTest(unittest2.TestCase):
         client.create_bucket()
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
-                                       permissions={'read': ['alexis']})
+                                       permissions={'read': ['account:alexis']})
         created['data']['bar'] = 'baz'
 
         # XXX enhance this in order to have to pass only one argument, created.
         client.update_record(id=created['data']['id'], data=created['data'])
 
         retrieved = client.get_record(id=created['data']['id'])
-        assert 'alexis' in retrieved['permissions']['read']
+        assert 'account:alexis' in retrieved['permissions']['read']
         assert retrieved['data']['foo'] == u'bar'
         assert retrieved['data']['bar'] == u'baz'
         assert created['data']['id'] == retrieved['data']['id']
@@ -323,7 +329,7 @@ class FunctionalTest(unittest2.TestCase):
         client.create_bucket()
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
-                                       permissions={'read': ['alexis']})
+                                       permissions={'read': ['account:alexis']})
 
         with self.assertRaises(KintoException):
             # Create a second record with the ID of the first one.
@@ -345,7 +351,7 @@ class FunctionalTest(unittest2.TestCase):
         client.create_bucket()
         client.create_collection()
         created = client.create_record(data={'foo': 'bar'},
-                                       permissions={'read': ['alexis']})
+                                       permissions={'read': ['account:alexis']})
 
         client.create_record(data={'id': created['data']['id'],
                                    'bar': 'baz'}, safe=False)
@@ -465,7 +471,7 @@ class FunctionalTest(unittest2.TestCase):
             batch.create_record(data={'foo': 'bar'},
                                 permissions={'read': ['natim']})
             batch.create_record(data={'bar': 'baz'},
-                                permissions={'read': ['alexis']})
+                                permissions={'read': ['account:alexis']})
 
         _, _, r1, r2 = batch.results()
         records = self.client.get_records(bucket='mozilla', collection='fonts')
@@ -518,4 +524,4 @@ class FunctionalTest(unittest2.TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main()
+    unittest.main()

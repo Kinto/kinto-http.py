@@ -4,5 +4,4 @@ pytest-cover
 pytest-xdist
 mock
 kinto
-unittest2
 unidecode

@@ -1,6 +1,4 @@
-import unittest2 as unittest  # NOQA
-
-import mock
+from unittest import mock
 
 from kinto_http.exceptions import KintoException
 

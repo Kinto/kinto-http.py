@@ -26,13 +26,13 @@ class SessionTest(unittest.TestCase):
 
     def test_uses_specified_server_url(self):
         session = Session(mock.sentinel.server_url)
-        self.assertEquals(session.server_url, mock.sentinel.server_url)
+        self.assertEqual(session.server_url, mock.sentinel.server_url)
 
     def test_no_auth_is_used_by_default(self):
         response = fake_response(200)
         self.requests_mock.request.return_value = response
         session = Session('https://example.org')
-        self.assertEquals(session.auth, None)
+        self.assertEqual(session.auth, None)
         session.request('get', '/test')
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/test',
@@ -154,7 +154,7 @@ class SessionTest(unittest.TestCase):
 
     def test_use_given_session_if_provided(self):
         session = create_session(session=mock.sentinel.session)
-        self.assertEquals(session, mock.sentinel.session)
+        self.assertEqual(session, mock.sentinel.session)
 
     def test_body_is_none_on_304(self):
         response = fake_response(304)

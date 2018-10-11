@@ -313,9 +313,9 @@ class BucketTest(unittest.TestCase):
         with self.assertRaises(BucketNotFound) as cm:
             self.client.get_bucket(id='test')
         e = cm.exception
-        self.assertEquals(e.response, exception.response)
-        self.assertEquals(e.request, mock.sentinel.request)
-        self.assertEquals(e.message, 'test')
+        self.assertEqual(e.response, exception.response)
+        self.assertEqual(e.request, mock.sentinel.request)
+        self.assertEqual(e.message, 'test')
 
     def test_unauthorized_raises_a_kinto_exception(self):
         # Make the next call to sess.request raise a 401.
@@ -328,9 +328,9 @@ class BucketTest(unittest.TestCase):
         with self.assertRaises(KintoException) as cm:
             self.client.get_bucket(id='test')
         e = cm.exception
-        self.assertEquals(e.response, exception.response)
-        self.assertEquals(e.request, mock.sentinel.request)
-        self.assertEquals(e.message,
+        self.assertEqual(e.response, exception.response)
+        self.assertEqual(e.request, mock.sentinel.request)
+        self.assertEqual(e.message,
                           "Unauthorized. Please authenticate or make sure the bucket "
                           "can be read anonymously.")
 
@@ -345,8 +345,8 @@ class BucketTest(unittest.TestCase):
         try:
             self.client.get_bucket(id='test')
         except KintoException as e:
-            self.assertEquals(e.response, exception.response)
-            self.assertEquals(e.request, mock.sentinel.request)
+            self.assertEqual(e.response, exception.response)
+            self.assertEqual(e.request, mock.sentinel.request)
         else:
             self.fail("Exception not raised")
 
@@ -640,7 +640,7 @@ class RecordTest(unittest.TestCase):
         id = self.session.request.mock_calls[0][1][1].split('/')[-1]
 
         uuid_regexp = r'[\w]{8}-[\w]{4}-[\w]{4}-[\w]{4}-[\w]{12}'
-        self.assertRegexpMatches(id, uuid_regexp)
+        self.assertRegex(id, uuid_regexp)
 
     def test_records_handles_permissions(self):
         mock_response(self.session)
@@ -724,7 +724,7 @@ class RecordTest(unittest.TestCase):
         mock_response(self.session, data={'foo': 'bar'})
         record = self.client.get_record(id='1234')
 
-        self.assertEquals(record['data'], {'foo': 'bar'})
+        self.assertEqual(record['data'], {'foo': 'bar'})
         url = '/buckets/mybucket/collections/mycollection/records/1234'
         self.session.request.assert_called_with('get', url)
 

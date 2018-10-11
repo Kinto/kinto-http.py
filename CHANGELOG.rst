@@ -9,7 +9,7 @@ This document describes changes between each past release.
 
 **New feature**
 
-- Handle CollectionNotFoundException.
+- Raise a specific `CollectionNotFound` exception rather than a generic `KintoException`.
 
 **Internal changes**
 

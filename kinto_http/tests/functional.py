@@ -216,12 +216,10 @@ class FunctionalTest(unittest.TestCase):
 
     def test_collection_not_found(self):
         self.client.create_bucket(id='mozilla')
-        # Test retrieval of a collection gets the permissions as well.
         with pytest.raises(CollectionNotFound):
             self.client.get_collection(id='payments', bucket='mozilla')
 
     def test_collection_access_forbidden(self):
-        # Test retrieval of a collection gets the permissions as well.
         with pytest.raises(KintoException):
             self.client.get_collection(id='payments', bucket='mozilla')
 

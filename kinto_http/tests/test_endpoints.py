@@ -9,7 +9,6 @@ class EndpointsTest(unittest.TestCase):
         self.endpoints = Endpoints()
         self.kwargs = {
             'bucket': 'buck',
-            'bucket_id': 5,
             'collection': 'coll',
             'id': 1
         }

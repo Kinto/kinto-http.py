@@ -113,7 +113,6 @@ class Client(object):
         """Return the endpoint with named parameters."""
         kwargs = {
             'bucket': bucket or self._bucket_name,
-            'bucket_id': bucket_id,
             'collection': collection or self._collection_name,
             'group': group,
             'id': id,
@@ -364,11 +363,9 @@ class Client(object):
     def get_history(self, *, bucket=None, **kwargs):
         endpoint = self.get_endpoint('history', bucket=bucket)
         logger.info("Get bucket %r history" % bucket or self._bucket_name)
-
         return self._paginated(endpoint, **kwargs)
 
-    def purge_history(self, *, bucket=None,
-                      safe=True, if_match=None):
+    def purge_history(self, *, bucket=None, safe=True, if_match=None):
 
         endpoint = self.get_endpoint('history',
                                      bucket=bucket,
@@ -685,21 +682,23 @@ class Client(object):
             )
 
             resp, _ = self.session.request('get', endpoint)
-            return resp.get('data')[0].get('target')
+            data = resp['data']
+            if data:
+                return data[0]['target']
+            else:
+                return None
 
-        else:
-            endpoint = self.get_endpoint('record',
-                                         id=id,
-                                         bucket=bucket,
-                                         collection=collection
-                                         )
+        endpoint = self.get_endpoint('record',
+                                     id=id,
+                                     bucket=bucket,
+                                     collection=collection)
 
-            logger.info(
-              "Get record with id %r from collection %r in bucket %r"
-              % (id, collection or self._collection_name, bucket or self._bucket_name))
+        logger.info(
+            "Get record with id %r from collection %r in bucket %r"
+            % (id, collection or self._collection_name, bucket or self._bucket_name))
 
-            resp, _ = self.session.request('get', endpoint)
-            return resp
+        resp, _ = self.session.request('get', endpoint)
+        return resp
 
     def create_record(self, *, id=None, bucket=None, collection=None,
                       data=None, permissions=None,

@@ -171,7 +171,7 @@ class FunctionalTest(unittest.TestCase):
         groups = self.client.get_groups(bucket='mozilla')
         self.assertEqual(2, len(groups))
         self.assertEqual(set([coll['id'] for coll in groups]),
-                          set(['receipts', 'assets']))
+                         set(['receipts', 'assets']))
 
     def test_group_deletion(self):
         self.client.create_bucket(id='mozilla')
@@ -240,7 +240,7 @@ class FunctionalTest(unittest.TestCase):
         self.assertEqual(len(collections), 2)
 
         self.assertEqual(set([coll['id'] for coll in collections]),
-                          set(['receipts', 'assets']))
+                         set(['receipts', 'assets']))
 
     def test_collection_deletion(self):
         self.client.create_bucket(id='mozilla')

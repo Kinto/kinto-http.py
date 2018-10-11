@@ -331,8 +331,8 @@ class BucketTest(unittest.TestCase):
         self.assertEqual(e.response, exception.response)
         self.assertEqual(e.request, mock.sentinel.request)
         self.assertEqual(e.message,
-                          "Unauthorized. Please authenticate or make sure the bucket "
-                          "can be read anonymously.")
+                         "Unauthorized. Please authenticate or make sure the bucket "
+                         "can be read anonymously.")
 
     def test_http_500_raises_an_error(self):
         exception = KintoException()

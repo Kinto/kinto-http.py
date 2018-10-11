@@ -96,37 +96,6 @@ class SessionTest(unittest.TestCase):
             data='{"data": {"foo": "bar"}}',
             headers=self.requests_mock.request.post_json_headers)
 
-    def test_passed_datetime_data_is_encoded_to_json(self):
-        response = fake_response(200)
-        self.requests_mock.request.return_value = response
-        session = Session('https://example.org')
-        session.request('post', '/test',
-                        data={'foo': datetime(2018, 6, 22, 18, 00)})
-        self.requests_mock.request.assert_called_with(
-            'post', 'https://example.org/test',
-            data='{"data": {"foo": "2018-06-22T18:00:00"}}',
-            headers=self.requests_mock.request.post_json_headers)
-
-    def test_passed_random_python_data_fails_to_be_encoded_to_json(self):
-        response = fake_response(200)
-        self.requests_mock.request.return_value = response
-        session = Session('https://example.org')
-        with pytest.raises(TypeError) as exc:
-            session.request('post', '/test',
-                            data={'foo': object()})
-        assert str(exc.value) == "Type <class 'object'> is not serializable"
-
-    def test_passed_date_data_is_encoded_to_json(self):
-        response = fake_response(200)
-        self.requests_mock.request.return_value = response
-        session = Session('https://example.org')
-        session.request('post', '/test',
-                        data={'foo': date(2018, 6, 22)})
-        self.requests_mock.request.assert_called_with(
-            'post', 'https://example.org/test',
-            data='{"data": {"foo": "2018-06-22"}}',
-            headers=self.requests_mock.request.post_json_headers)
-
     def test_passed_data_is_passed_as_is_when_files_are_posted(self):
         response = fake_response(200)
         self.requests_mock.request.return_value = response
@@ -232,6 +201,37 @@ class SessionTest(unittest.TestCase):
         assert kinto_http_info == 'kinto_http/{}'.format(kinto_http_version)
         assert requests_info == 'requests/{}'.format(requests_version)
         assert python_info == 'python/{}'.format(python_version)
+
+
+class SessionJSONTest(unittest.TestCase):
+    def setUp(self):
+        p = mock.patch('kinto_http.session.requests')
+        self.requests_mock = p.start()
+        self.addCleanup(p.stop)
+        self.requests_mock.request.headers = {'User-Agent': USER_AGENT}
+        self.requests_mock.request.post_json_headers = {'User-Agent': USER_AGENT,
+                                                        'Content-Type': 'application/json'}
+        self.requests_mock.request.return_value = fake_response(200)
+        self.session = Session('https://example.org')
+
+    def test_passed_datetime_data_is_encoded_to_json(self):
+        self.session.request('post', '/test', data={'foo': datetime(2018, 6, 22, 18, 00)})
+        self.requests_mock.request.assert_called_with(
+            'post', 'https://example.org/test',
+            data='{"data": {"foo": "2018-06-22T18:00:00"}}',
+            headers=self.requests_mock.request.post_json_headers)
+
+    def test_passed_random_python_data_fails_to_be_encoded_to_json(self):
+        with pytest.raises(TypeError) as exc:
+            self.session.request('post', '/test', data={'foo': object()})
+        assert str(exc.value) == "Type <class 'object'> is not serializable"
+
+    def test_passed_date_data_is_encoded_to_json(self):
+        self.session.request('post', '/test', data={'foo': date(2018, 6, 22)})
+        self.requests_mock.request.assert_called_with(
+            'post', 'https://example.org/test',
+            data='{"data": {"foo": "2018-06-22"}}',
+            headers=self.requests_mock.request.post_json_headers)
 
 
 class RetryRequestTest(unittest.TestCase):

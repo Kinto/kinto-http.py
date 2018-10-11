@@ -26,7 +26,6 @@ test_requirements = [
     'pytest-cover',
     'pytest-sugar',
     'pytest-xdist',
-    'mock',
     'kinto',
     'unidecode',
 ]

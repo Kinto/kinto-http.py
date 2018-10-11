@@ -1,5 +1,4 @@
-# -*- coding: utf-8 -*-
-from unittest2 import TestCase
+from unittest import TestCase
 
 from kinto_http import utils
 

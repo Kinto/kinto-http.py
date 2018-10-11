@@ -1,13 +1,14 @@
-import mock
 import pkg_resources
 import pytest
 import sys
 import time
+import unittest
+from unittest import mock
 
 from kinto_http.session import Session, create_session
 from kinto_http.exceptions import KintoException, BackoffException
 from kinto_http.session import USER_AGENT
-from .support import unittest, get_200, get_503, get_403, get_http_response
+from .support import get_200, get_503, get_403, get_http_response
 
 
 def fake_response(status_code):

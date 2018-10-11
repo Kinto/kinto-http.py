@@ -5,7 +5,7 @@ import mock
 import os.path
 import pytest
 import requests
-import unittest2
+import unittest
 from urllib.parse import urljoin
 
 from kinto_http import Client, BucketNotFound, KintoException
@@ -28,10 +28,10 @@ def hmac_digest(secret, message, encoding='utf-8'):
                     hashlib.sha256).hexdigest()
 
 
-class FunctionalTest(unittest2.TestCase):
+class FunctionalTest(unittest.TestCase):
 
-    def __init__(self, *args, **kwargs):
-        super(FunctionalTest, self).__init__(*args, **kwargs)
+    def setUp(self):
+        super().setUp()
         # XXX Read the configuration from env variables.
         self.server_url = SERVER_URL
         self.auth = DEFAULT_AUTH
@@ -518,4 +518,4 @@ class FunctionalTest(unittest2.TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main()
+    unittest.main()

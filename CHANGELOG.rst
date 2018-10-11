@@ -7,6 +7,10 @@ This document describes changes between each past release.
 9.2.0 (unreleased)
 ==================
 
+**New feature**
+
+- Handle CollectionNotFoundException.
+
 **Internal changes**
 
 - Update tests to work with Kinto 11.0.0

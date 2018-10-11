@@ -49,11 +49,11 @@ def chunks(l, n):
         yield l
 
 
-def json_serial(obj):
+def json_iso_datetime(obj):
     """JSON serializer for objects not serializable by default json code"""
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
     raise TypeError("Type %s is not serializable" % type(obj))
 
 
-json_dumps = functools.partial(json.dumps, default=json_serial)
+json_dumps = functools.partial(json.dumps, default=json_iso_datetime)

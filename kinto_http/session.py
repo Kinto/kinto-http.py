@@ -71,11 +71,12 @@ class Session(object):
             kwargs.setdefault('auth', self.auth)
 
         # Set the default User-Agent if not already defined.
-        if 'headers' not in kwargs or kwargs['headers'] is None:
-            kwargs['headers'] = {}
+        kwargs.setdefault('headers', {})
+
         if not isinstance(kwargs['headers'], dict):
             raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))
-        kwargs['headers'] = {"User-Agent": USER_AGENT, **kwargs['headers']}
+
+        kwargs['headers'].setdefault("User-Agent", USER_AGENT)
 
         payload = payload or {}
         if data is not None:

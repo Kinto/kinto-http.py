@@ -119,6 +119,9 @@ class ClientTest(unittest.TestCase):
         assert isinstance(raised.exceptions[0], KintoException)
         assert raised.exceptions[0].response.status_code == 403
         assert raised.exceptions[1].response.status_code == 400
+        resp, headers = raised.results[0]
+        assert len(resp["responses"]) == 4
+        assert resp["responses"][0]["status"] == 200
 
     def test_batch_does_not_raise_exception_if_batch_4xx_errors_are_ignored(self):
         error = {

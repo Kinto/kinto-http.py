@@ -113,7 +113,7 @@ class BatchSession(object):
             self._results.append((resp, headers))
 
         if _exceptions:
-            raise KintoBatchException(_exceptions)
+            raise KintoBatchException(_exceptions, self._results)
 
         return self._results
 

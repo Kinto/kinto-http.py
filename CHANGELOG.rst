@@ -4,8 +4,8 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-9.2.0 (unreleased)
-==================
+10.0.0 (unreleased)
+===================
 
 **Breaking changes**
 

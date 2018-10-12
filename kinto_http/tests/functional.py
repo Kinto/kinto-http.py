@@ -161,7 +161,7 @@ class FunctionalTest(unittest.TestCase):
         group = self.client.update_group(
                     data={'members': ['blah', 'foo']},
                     id='payments', bucket='mozilla')
-        self.assertEquals(group['data']['members'][1], 'foo')
+        self.assertEqual(group['data']['members'][1], 'foo')
 
     def test_group_list(self):
         self.client.create_bucket(id='mozilla')
@@ -169,9 +169,9 @@ class FunctionalTest(unittest.TestCase):
         self.client.create_group(id='assets', bucket='mozilla', data={'members': ['blah', ]})
         # The returned groups should be strings.
         groups = self.client.get_groups(bucket='mozilla')
-        self.assertEquals(2, len(groups))
-        self.assertEquals(set([coll['id'] for coll in groups]),
-                          set(['receipts', 'assets']))
+        self.assertEqual(2, len(groups))
+        self.assertEqual(set([coll['id'] for coll in groups]),
+                         set(['receipts', 'assets']))
 
     def test_group_deletion(self):
         self.client.create_bucket(id='mozilla')
@@ -237,10 +237,10 @@ class FunctionalTest(unittest.TestCase):
 
         # The returned collections should be strings.
         collections = self.client.get_collections(bucket='mozilla')
-        self.assertEquals(2, len(collections))
+        self.assertEqual(len(collections), 2)
 
-        self.assertEquals(set([coll['id'] for coll in collections]),
-                          set(['receipts', 'assets']))
+        self.assertEqual(set([coll['id'] for coll in collections]),
+                         set(['receipts', 'assets']))
 
     def test_collection_deletion(self):
         self.client.create_bucket(id='mozilla')

@@ -8,13 +8,15 @@ import logging
 from kinto_http import utils
 from kinto_http.session import create_session, Session
 from kinto_http.batch import BatchSession
-from kinto_http.exceptions import BucketNotFound, CollectionNotFound, KintoException
+from kinto_http.exceptions import (
+    BucketNotFound, CollectionNotFound, KintoException, KintoBatchException
+)
 from kinto_http.patch_type import PatchType, BasicPatch
 
 logger = logging.getLogger('kinto_http')
 
 __all__ = ('Endpoints', 'Session', 'Client', 'create_session',
-           'BucketNotFound', 'CollectionNotFound', 'KintoException')
+           'BucketNotFound', 'CollectionNotFound', 'KintoException', 'KintoBatchException')
 
 
 OBJECTS_PERMISSIONS = {
@@ -62,7 +64,8 @@ class Endpoints(object):
 class Client(object):
 
     def __init__(self, *, server_url=None, session=None, auth=None,
-                 bucket="default", collection=None, retry=0, retry_after=None):
+                 bucket="default", collection=None, retry=0, retry_after=None,
+                 ignore_batch_4xx=False):
         self.endpoints = Endpoints()
         session_kwargs = dict(server_url=server_url,
                               auth=auth,
@@ -74,6 +77,7 @@ class Client(object):
         self._collection_name = collection
         self._server_settings = None
         self._records_timestamp = {}
+        self._ignore_batch_4xx = ignore_batch_4xx
 
     def clone(self, **kwargs):
         if 'server_url' in kwargs or 'auth' in kwargs:
@@ -95,7 +99,8 @@ class Client(object):
 
         batch_max_requests = self._server_settings['batch_max_requests']
         batch_session = BatchSession(self,
-                                     batch_max_requests=batch_max_requests)
+                                     batch_max_requests=batch_max_requests,
+                                     ignore_4xx_errors=self._ignore_batch_4xx)
         batch_client = self.clone(session=batch_session, **kwargs)
 
         # Set a reference for reading results from the context.

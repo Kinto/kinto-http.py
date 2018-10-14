@@ -4,8 +4,14 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-9.2.0 (unreleased)
-==================
+10.0.0 (unreleased)
+===================
+
+**Breaking changes**
+
+By default, the client now raises an exception when a 4XX error occurs in a batch request (#154)
+
+In order to ignore those errors as before, instantiate the client with ``ignore_batch_4xx=True``.
 
 **New feature**
 

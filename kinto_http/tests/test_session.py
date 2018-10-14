@@ -148,9 +148,7 @@ class SessionTest(unittest.TestCase):
                        auth=mock.sentinel.auth)
         session_mock.assert_called_with(
             server_url=mock.sentinel.server_url,
-            auth=mock.sentinel.auth,
-            retry=0,
-            retry_after=None)
+            auth=mock.sentinel.auth)
 
     def test_use_given_session_if_provided(self):
         session = create_session(session=mock.sentinel.session)

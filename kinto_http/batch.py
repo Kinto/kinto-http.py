@@ -2,19 +2,41 @@ import json
 import logging
 from collections import defaultdict
 
-from kinto_http.exceptions import KintoException
+from kinto_http.exceptions import KintoException, KintoBatchException
 
 from . import utils
 
 logger = logging.getLogger(__name__)
 
 
+class WrapDict(dict):
+    """
+    The Kinto batch API returns requests and responses as dicts.
+    We use this small helper to make it look like the classes from requests.
+    """
+    def __getattr__(self, name):
+        return self[name]
+
+
+class RequestDict(WrapDict):
+    @property
+    def path_url(self):
+        return self.path
+
+
+class ResponseDict(WrapDict):
+    @property
+    def status_code(self):
+        return self["status"]
+
+
 class BatchSession(object):
 
-    def __init__(self, client, batch_max_requests=0):
+    def __init__(self, client, batch_max_requests=0, ignore_4xx_errors=False):
         self.session = client.session
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
+        self._ignore_4xx_errors = ignore_4xx_errors
         self.requests = []
         self._results = []
 
@@ -52,6 +74,7 @@ class BatchSession(object):
 
     def send(self):
         self._results = []
+        _exceptions = []
         requests = self._build_requests()
         id_request = 0
         for chunk in utils.chunks(requests, self.batch_max_requests):
@@ -61,11 +84,6 @@ class BatchSession(object):
             resp, headers = self.session.request(**kwargs)
             for i, response in enumerate(resp['responses']):
                 status_code = response['status']
-                if not (200 <= status_code < 400):
-                    message = '{0} - {1}'.format(status_code, response['body'])
-                    exception = KintoException(message)
-                    exception.request = chunk[i]
-                    exception.response = response
 
                 level = logging.WARN if status_code < 400 else logging.ERROR
                 message = response["body"].get("message", "")
@@ -77,13 +95,25 @@ class BatchSession(object):
                 logger.debug("\nBatch #{}: \n\tRequest: {}\n\tResponse: {}\n".format(
                     id_request, json.dumps(chunk[i]), json.dumps(response)))
 
-                # Raise in case of a 500
-                if status_code >= 500:
-                    raise exception
+                if not (200 <= status_code < 400):
+                    # One of the server response is an error.
+                    message = '{0} - {1}'.format(status_code, response['body'])
+                    exception = KintoException(message)
+                    exception.request = RequestDict(chunk[i])
+                    exception.response = ResponseDict(response)
+                    # Should we ignore 4XX errors?
+                    raise_on_4xx = status_code >= 400 and not self._ignore_4xx_errors
+                    if raise_on_4xx:
+                        _exceptions.append(exception)
+                    if status_code >= 500:
+                        raise exception
 
                 id_request += 1
 
             self._results.append((resp, headers))
+
+        if _exceptions:
+            raise KintoBatchException(_exceptions, self._results)
 
         return self._results
 

@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.0.0 (unreleased)
+10.0.0 (2018-10-15)
 ===================
 
 **Breaking changes**
@@ -15,16 +15,16 @@ In order to ignore those errors as before, instantiate the client with ``ignore_
 
 **New feature**
 
-- Raise a specific `CollectionNotFound` exception rather than a generic `KintoException`.
+- Raise a specific ``CollectionNotFound`` exception rather than a generic ``KintoException``.
 
 **Bug fixes**
 
-- Handle json date and datetime object dumps.
+- Handle YAML date in the import file as ISO formated date and datetime JSON strings.
 
 **Internal changes**
 
-- Update tests to work with Kinto 11.0.0
-
+- Update tests to work with Kinto 11.0.0.
+- Update tests to use stdlib mock module.
 
 9.1.2 (2018-04-17)
 ==================

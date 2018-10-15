@@ -416,6 +416,13 @@ get_endpoint utility to do so:
 
     # '/buckets/payments/collections/receipts/records/c6894b2c-1856-11e6-9415-3c970ede22b0'
 
+Handling YAML date objects
+--------------------------
+
+JSON doesn't have a specific type cast for dates while YAML does.
+
+In case a YAML file contains a date or datetime object, it will be
+formated as an ISO datetime string while calling Kinto in JSON.
 
 Command-line scripts
 --------------------

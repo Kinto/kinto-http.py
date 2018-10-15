@@ -15,11 +15,11 @@ In order to ignore those errors as before, instantiate the client with ``ignore_
 
 **New feature**
 
-- Raise a specific `CollectionNotFound` exception rather than a generic `KintoException`.
+- Raise a specific ``CollectionNotFound`` exception rather than a generic ``KintoException``.
 
 **Bug fixes**
 
-- Handle json date and datetime object dumps.
+- Handle YAML date in the import file as ISO formated date and datetime JSON strings.
 
 **Internal changes**
 

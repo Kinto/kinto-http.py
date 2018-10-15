@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.0.0 (unreleased)
+10.0.0 (2018-10-15)
 ===================
 
 **Breaking changes**

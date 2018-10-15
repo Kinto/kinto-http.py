@@ -23,8 +23,8 @@ In order to ignore those errors as before, instantiate the client with ``ignore_
 
 **Internal changes**
 
-- Update tests to work with Kinto 11.0.0
-
+- Update tests to work with Kinto 11.0.0.
+- Update tests to use stdlib mock module.
 
 9.1.2 (2018-04-17)
 ==================

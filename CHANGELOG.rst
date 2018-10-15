@@ -17,6 +17,10 @@ In order to ignore those errors as before, instantiate the client with ``ignore_
 
 - Raise a specific `CollectionNotFound` exception rather than a generic `KintoException`.
 
+**Bug fixes**
+
+- Handle json date and datetime object dumps.
+
 **Internal changes**
 
 - Update tests to work with Kinto 11.0.0

@@ -68,6 +68,17 @@ class Session(object):
         if self.auth is not None:
             kwargs.setdefault('auth', self.auth)
 
+        if kwargs.get('headers') is None:
+            kwargs['headers'] = dict()
+
+        if not isinstance(kwargs['headers'], dict):
+            raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))
+
+        # Set the default User-Agent if not already defined.
+        # In the meantime, clone the header dict to avoid changing the
+        # user header dict when adding information.
+        kwargs['headers'] = {"User-Agent": USER_AGENT, **kwargs["headers"]}
+
         payload = payload or {}
         if data is not None:
             payload['data'] = data
@@ -76,16 +87,11 @@ class Session(object):
                 permissions = permissions.as_dict()
             payload['permissions'] = permissions
         if method not in ('get', 'head'):
-            payload_kwarg = 'data' if 'files' in kwargs else 'json'
-            kwargs.setdefault(payload_kwarg, payload)
-
-        # Set the default User-Agent if not already defined.
-        if 'headers' not in kwargs or kwargs['headers'] is None:
-            kwargs['headers'] = {}
-        if not isinstance(kwargs['headers'], dict):
-            raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))
-
-        kwargs['headers'] = {"User-Agent": USER_AGENT, **kwargs['headers']}
+            if 'files' in kwargs:
+                kwargs.setdefault('data', payload)
+            else:
+                kwargs.setdefault('data', utils.json_dumps(payload))
+                kwargs['headers'].setdefault('Content-Type', 'application/json')
 
         retry = self.nb_retry
         while retry >= 0:

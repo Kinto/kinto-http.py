@@ -1,4 +1,3 @@
-import json
 import logging
 from collections import defaultdict
 
@@ -50,6 +49,7 @@ class BatchSession(object):
         if permissions is not None:
             payload['permissions'] = permissions
 
+        print(method, endpoint, payload, headers)
         self.requests.append((method, endpoint, payload, headers))
         # This is the signature of the session request.
         return defaultdict(dict), defaultdict(dict)
@@ -93,7 +93,7 @@ class BatchSession(object):
 
                 # Full log in DEBUG mode
                 logger.debug("\nBatch #{}: \n\tRequest: {}\n\tResponse: {}\n".format(
-                    id_request, json.dumps(chunk[i]), json.dumps(response)))
+                    id_request, utils.json_dumps(chunk[i]), utils.json_dumps(response)))
 
                 if not (200 <= status_code < 400):
                     # One of the server response is an error.

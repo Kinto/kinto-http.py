@@ -25,7 +25,8 @@ In order to ignore those errors as before, instantiate the client with ``ignore_
 
 **Bug fixes**
 
-- Handle YAML date in the import file as ISO formated date and datetime JSON strings.
+- Handle date and datetime object in a Kinto payload. They will be
+  formated as ISO date JSON strings.
 
 **Internal changes**
 

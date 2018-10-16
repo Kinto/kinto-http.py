@@ -416,13 +416,25 @@ get_endpoint utility to do so:
 
     # '/buckets/payments/collections/receipts/records/c6894b2c-1856-11e6-9415-3c970ede22b0'
 
-Handling YAML date objects
---------------------------
 
-JSON doesn't have a specific type cast for dates while YAML does.
+Handling datetime and date objects
+----------------------------------
 
-In case a YAML file contains a date or datetime object, it will be
-formated as an ISO datetime string while calling Kinto in JSON.
+In addition to the data types supported by JSON, kinto-http.py also
+supports native Python date and datetime objects.
+
+In case a payload contain a date or a datetime object, kinto-http.py
+will encode it as an ISO formatted string.
+
+Please note that this transformation is only one-way. While reading a
+record, if a string contains a ISO formated string, kinto-http.py will
+not convert it to a native Python date or datetime object.
+
+If you know that a field will be a datetime, you might consider
+encoding it yourself to be more explicit about it being a string for
+Kinto.
+
+
 
 Command-line scripts
 --------------------

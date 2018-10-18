@@ -89,6 +89,26 @@ some key arguments.
 
     client2 = client.clone(collection="orders")
 
+
+Using a Bearer token to authenticate
+------------------------------------
+
+.. code-block:: python
+
+    import requests
+
+    class BearerTokenAuth(requests.auth.AuthBase):
+        def __init__(self, token):
+            self.token = token
+
+        def __call__(self, r):
+            r.headers['Authorization'] = 'Bearer ' + self.token
+            return r
+
+    auth = BearerTokenAuth("a67fjnewgre5")
+    client = Client(bucket="main", collection="tippytop", auth=auth)
+
+
 Using FxA from a script with the email/password
 -----------------------------------------------
 

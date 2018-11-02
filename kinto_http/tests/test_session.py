@@ -243,12 +243,12 @@ class SessionJSONTest(unittest.TestCase):
                                  price=12,
                                  contains_id=["toto", "tata"]))
         self.requests_mock.request.assert_called_with(
-            'get', '/buckets/buck/collections/coll/records', params={
+            'get', 'https://example.org/v1/buckets/buck/collections/coll/records', params={
                 "_sort": "-published_date",
                 "is_published": "true",
                 "price": "12",
-                "contains_id": '["toto","tata"]'
-            })
+                "contains_id": '["toto", "tata"]'
+            }, headers=self.requests_mock.request.headers)
 
 
 class RetryRequestTest(unittest.TestCase):

@@ -7,7 +7,7 @@ This document describes changes between each past release.
 10.1.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+- Convert params values as JSON values before passing them to requests. (#185)
 
 
 10.0.0 (2018-10-15)

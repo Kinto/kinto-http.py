@@ -1,6 +1,6 @@
-certifi==2018.8.24
+certifi==2018.10.15
 chardet==3.0.4
 idna==2.7
-requests==2.19.1
+requests==2.20.0
 Unidecode==1.0.22
-urllib3==1.23
+urllib3==1.24

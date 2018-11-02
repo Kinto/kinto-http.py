@@ -1,3 +1,4 @@
+import json
 import pkg_resources
 import sys
 import time
@@ -70,6 +71,9 @@ class Session(object):
 
         if kwargs.get('headers') is None:
             kwargs['headers'] = dict()
+
+        if kwargs.get('params') is not None:
+            kwargs['params'] = {k: json.dumps(v).strip('"') for k, v in kwargs["params"].items()}
 
         if not isinstance(kwargs['headers'], dict):
             raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))

@@ -231,6 +231,25 @@ class SessionJSONTest(unittest.TestCase):
             data='{"data": {"foo": "2018-06-22"}}',
             headers=self.requests_mock.request.post_json_headers)
 
+    def test_request_converts_params(self):
+        response = mock.MagicMock()
+        response.headers = {}
+        response.status_code = 200
+        self.requests_mock.request.return_value = response
+        self.session.request('get', '/v1/buckets/buck/collections/coll/records',
+                             params=dict(
+                                 _sort="-published_date",
+                                 is_published=True,
+                                 price=12,
+                                 contains_id=["toto", "tata"]))
+        self.requests_mock.request.assert_called_with(
+            'get', '/buckets/buck/collections/coll/records', params={
+                "_sort": "-published_date",
+                "is_published": "true",
+                "price": "12",
+                "contains_id": '["toto","tata"]'
+            })
+
 
 class RetryRequestTest(unittest.TestCase):
 

@@ -22,8 +22,8 @@ def slugify(value):
     if isinstance(value, bytes):
         value = value.decode('ascii')  # pragma: nocover
     value = unicodedata.normalize('NFKD', value).lower()
-    value = re.sub('[^\w\s-]', '', value.lower()).strip()
-    value = re.sub('[-\s]+', '-', value)
+    value = re.sub('[^\\w\\s-]', '', value.lower()).strip()
+    value = re.sub('[-\\s]+', '-', value)
     return value
 
 

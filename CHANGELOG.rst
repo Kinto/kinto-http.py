@@ -9,7 +9,7 @@ This document describes changes between each past release.
 
 **Bug fixes**
 
-- `in_` and `exclude_` doesn't support json encoded array. (#188)
+- Fix JSON support for `in_` and `exclude_`. (#188)
 
 
 10.1.0 (2018-11-05)

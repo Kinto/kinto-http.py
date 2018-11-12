@@ -74,11 +74,13 @@ class Session(object):
 
         if kwargs.get('params') is not None:
             params = dict()
-            for k, v in kwargs["params"].items():
-                if k.startswith('in_') or k.startswith('exclude_'):
-                    params[k] = ','.join(v)
+            for key, value in kwargs["params"].items():
+                if key.startswith('in_') or key.startswith('exclude_'):
+                    params[key] = ','.join(value)
+                elif isinstance(value, str):
+                    params[key] = value
                 else:
-                    params[k] = json.dumps(v)
+                    params[key] = json.dumps(value)
             kwargs['params'] = params
 
         if not isinstance(kwargs['headers'], dict):

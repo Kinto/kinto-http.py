@@ -4,10 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.2.0 (unreleased)
+10.1.1 (unreleased)
 ===================
 
-- Nothing changed yet.
+**Bug fixes**
+
+- `in_` and `exclude_` doesn't support json encoded array. (#188)
 
 
 10.1.0 (2018-11-05)

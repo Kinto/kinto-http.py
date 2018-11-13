@@ -241,13 +241,17 @@ class SessionJSONTest(unittest.TestCase):
                                  _sort="-published_date",
                                  is_published=True,
                                  price=12,
-                                 contains_id=["toto", "tata"]))
+                                 contains_id=["toto", "tata"],
+                                 in_id=["toto", "tata"],
+                                 exclude_id=["titi", "tutu"]))
         self.requests_mock.request.assert_called_with(
             'get', 'https://example.org/v1/buckets/buck/collections/coll/records', params={
-                "_sort": "-published_date",
+                "_sort": '-published_date',
                 "is_published": "true",
                 "price": "12",
-                "contains_id": '["toto", "tata"]'
+                "contains_id": '["toto", "tata"]',
+                "in_id": 'toto,tata',
+                "exclude_id": 'titi,tutu'
             }, headers=self.requests_mock.request.headers)
 
 

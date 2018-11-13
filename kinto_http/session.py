@@ -73,7 +73,15 @@ class Session(object):
             kwargs['headers'] = dict()
 
         if kwargs.get('params') is not None:
-            kwargs['params'] = {k: json.dumps(v).strip('"') for k, v in kwargs["params"].items()}
+            params = dict()
+            for key, value in kwargs["params"].items():
+                if key.startswith('in_') or key.startswith('exclude_'):
+                    params[key] = ','.join(value)
+                elif isinstance(value, str):
+                    params[key] = value
+                else:
+                    params[key] = json.dumps(value)
+            kwargs['params'] = params
 
         if not isinstance(kwargs['headers'], dict):
             raise TypeError("headers must be a dict (got {})".format(kwargs['headers']))

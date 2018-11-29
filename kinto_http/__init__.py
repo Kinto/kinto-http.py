@@ -655,6 +655,29 @@ class Client(object):
                                      collection=collection)
         return self._paginated(endpoint, **kwargs)
 
+    def get_paginated_records(self, *, collection=None, bucket=None, **kwargs):
+        endpoint = self.get_endpoint('records',
+                                     bucket=bucket,
+                                     collection=collection)
+
+        yield from self._paginated_gen(endpoint, **kwargs)
+
+    def _paginated_gen(self, endpoint, records=None, *, if_none_match=None, **kwargs):
+        headers = {}
+        if if_none_match is not None:
+            headers['If-None-Match'] = utils.quote(if_none_match)
+
+        record_resp, headers = self.session.request(
+            'get', endpoint, headers=headers, params=kwargs)
+
+        if record_resp:
+            yield record_resp
+
+        if 'next-page' in map(str.lower, headers.keys()):
+            next_page = headers['Next-Page']
+            yield from self._paginated_gen(next_page,
+                                           if_none_match=if_none_match)
+
     def get_record(self, *, id, collection=None, bucket=None):
         endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,

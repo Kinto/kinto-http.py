@@ -833,6 +833,48 @@ class RecordTest(unittest.TestCase):
             {'id': '6', 'value': 'item6'},
         ]
 
+    def test_pagination_is_followed_generator(self):
+        # Mock the calls to request.
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        self.session.request.side_effect = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                 {'Next-Page': link}),
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+                 {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '5', 'value': 'item5'},
+                 {'id': '6', 'value': 'item6'}, ],
+            ),
+        ]
+
+        response = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+            )[0],
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ]
+            )[0],
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '5', 'value': 'item5'},
+                 {'id': '6', 'value': 'item6'}, ],
+            )[0],
+        ]
+
+        for index, page_records in enumerate(self.client.get_paginated_records()):
+            assert response[index] == page_records
+
     def test_pagination_is_followed_for_number_of_pages(self):
         # Mock the calls to request.
         link = ('http://example.org/buckets/buck/collections/coll/records/'

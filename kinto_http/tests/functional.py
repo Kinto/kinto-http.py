@@ -311,6 +311,20 @@ class FunctionalTest(unittest.TestCase):
         records = client.get_records()
         assert len(records) == 10
 
+
+    def test_records_generator_retrieval(self):
+        client = Client(server_url=self.server_url, auth=self.auth,
+                        bucket='mozilla', collection='payments')
+        client.create_bucket()
+        client.create_collection()
+        for i in range(10):
+            client.create_record(data={'foo': 'bar'},
+                                 permissions={'read': ['account:alexis']})
+
+        pages = sum(1 for i in client.get_paginated_records())
+
+        assert(pages == 2)
+
     def test_single_record_save(self):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla', collection='payments')

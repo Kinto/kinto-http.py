@@ -838,16 +838,16 @@ class RecordTest(unittest.TestCase):
         link = ('http://example.org/buckets/buck/collections/coll/records/'
                 '?token=1234')
 
-        self.session.request.side_effect = [
+        response = [
             # First one returns a list of items with a pagination token.
             build_response(
                 [{'id': '1', 'value': 'item1'},
                  {'id': '2', 'value': 'item2'}, ],
-                 {'Next-Page': link}),
+            ),
             build_response(
                 [{'id': '3', 'value': 'item3'},
-                 {'id': '4', 'value': 'item4'}, ],
-                 {'Next-Page': link}),
+                 {'id': '4', 'value': 'item4'}, ]
+            ),
             # Second one returns a list of items without a pagination token.
             build_response(
                 [{'id': '5', 'value': 'item5'},
@@ -855,22 +855,10 @@ class RecordTest(unittest.TestCase):
             ),
         ]
 
-        response = [
-            # First one returns a list of items with a pagination token.
-            build_response(
-                [{'id': '1', 'value': 'item1'},
-                 {'id': '2', 'value': 'item2'}, ],
-            )[0],
-            build_response(
-                [{'id': '3', 'value': 'item3'},
-                 {'id': '4', 'value': 'item4'}, ]
-            )[0],
-            # Second one returns a list of items without a pagination token.
-            build_response(
-                [{'id': '5', 'value': 'item5'},
-                 {'id': '6', 'value': 'item6'}, ],
-            )[0],
-        ]
+        self.session.request.side_effect = response
+
+        # Build repsonses for assertion without next page
+        response = [record[0] for record in response]
 
         for index, page_records in enumerate(self.client.get_paginated_records()):
             assert response[index] == page_records

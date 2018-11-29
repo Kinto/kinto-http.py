@@ -843,11 +843,11 @@ class RecordTest(unittest.TestCase):
             build_response(
                 [{'id': '1', 'value': 'item1'},
                  {'id': '2', 'value': 'item2'}, ],
-            ),
+                {'Next-Page': link}),
             build_response(
                 [{'id': '3', 'value': 'item3'},
-                 {'id': '4', 'value': 'item4'}, ]
-            ),
+                 {'id': '4', 'value': 'item4'}, ],
+                {'Next-Page': link}),
             # Second one returns a list of items without a pagination token.
             build_response(
                 [{'id': '5', 'value': 'item5'},

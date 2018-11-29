@@ -311,7 +311,6 @@ class FunctionalTest(unittest.TestCase):
         records = client.get_records()
         assert len(records) == 10
 
-
     def test_records_generator_retrieval(self):
         client = Client(server_url=self.server_url, auth=self.auth,
                         bucket='mozilla', collection='payments')

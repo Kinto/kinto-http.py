@@ -320,9 +320,9 @@ class FunctionalTest(unittest.TestCase):
             client.create_record(data={'foo': 'bar'},
                                  permissions={'read': ['account:alexis']})
 
-        pages = sum(1 for i in client.get_paginated_records())
+        pages = list(client.get_paginated_records())
 
-        assert(pages == 2)
+        assert len(pages) == 2
 
     def test_single_record_save(self):
         client = Client(server_url=self.server_url, auth=self.auth,

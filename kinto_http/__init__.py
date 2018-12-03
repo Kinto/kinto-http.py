@@ -664,6 +664,8 @@ class Client(object):
 
     def _paginated_generator(self, endpoint, *, if_none_match=None, **kwargs):
         headers = {}
+        if if_none_match is not None:
+            headers['If-None-Match'] = utils.quote(if_none_match)
 
         record_resp, headers = self.session.request(
             'get', endpoint, headers=headers, params=kwargs)

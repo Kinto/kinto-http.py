@@ -1,11 +1,11 @@
 language: python
-python: 3.5
+python: 3.6
 env:
-    - TOX_ENV=py35
-    - TOX_ENV=py35 SERVER=development
+    - TOX_ENV=py36
+    - TOX_ENV=py36 SERVER=development
 before_install:
     - make install-dev
-    - if [[ $SERVER == development ]]; then pip install https://github.com/Kinto/kinto/tarball/master; fi
+    - if [[ $SERVER == development ]]; then pip install --pre https://github.com/Kinto/kinto/tarball/master; fi
     - make runkinto &
     - sleep 5   # to give kinto migrate a chance to finish
 install:
@@ -18,10 +18,6 @@ after_success:
     - coveralls
 matrix:
   include:
-    - python: 3.6
-      env: TOX_ENV=py36
-    - python: 3.6
-      env: TOX_ENV=py36 SERVER=development
     - python: 3.7
       dist: xenial
       sudo: true
@@ -30,10 +26,6 @@ matrix:
       dist: xenial
       sudo: true
       env: TOX_ENV=py37 SERVER=development
-    - env:
-        - TOX_ENV=flake8
-      before_install:
-        - python --version
     - python: 3.6
       env:
         - TOX_ENV=flake8

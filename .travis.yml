@@ -5,7 +5,7 @@ env:
     - TOX_ENV=py36 SERVER=development
 before_install:
     - make install-dev
-    - if [[ $SERVER == development ]]; then pip install --pre https://github.com/Kinto/kinto/tarball/master; fi
+    - if [[ $SERVER == development ]]; then pip install --pre -U https://github.com/Kinto/kinto/tarball/master; fi
     - make runkinto &
     - sleep 5   # to give kinto migrate a chance to finish
 install:

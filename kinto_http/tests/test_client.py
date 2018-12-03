@@ -941,7 +941,6 @@ class RecordTest(unittest.TestCase):
         self.session.request.assert_any_call(
             'get', link, headers={'If-None-Match': '"1234"'}, params={})
 
-
     def test_pagination_generator_if_none_match(self):
         link = ('http://example.org/buckets/buck/collections/coll/records/'
                 '?token=1234')
@@ -968,7 +967,8 @@ class RecordTest(unittest.TestCase):
         # Build repsonses for assertion without next page
         response = [record[0] for record in response]
 
-        for index, page_records in enumerate(self.client.get_paginated_records(if_none_match="1234")):
+        for index, page_records in enumerate(self.client.get_paginated_records(
+                                             if_none_match="1234")):
             # Check that the If-None-Match header is present in the requests.
             assert response[index] == page_records
 

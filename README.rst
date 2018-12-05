@@ -265,8 +265,8 @@ A record is a dict with the "permissions" and "data" keys.
     # Or retrieve all records.
     records = client.get_records(collection='todos', bucket='default')
 
-   # Or retrive records page by page.
-   for page in client.get_paginated_records(collection='todos', bucket='dafult'):
+   # Or retrieve records page by page.
+   for page in client.get_paginated_records(collection='todos', bucket='default'):
       # Do something with each page
       print(page)
 

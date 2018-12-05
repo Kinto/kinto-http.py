@@ -9,7 +9,7 @@ This document describes changes between each past release.
 
 **New feature**
 
-- Created new method on client to get paginated records``get_paginated_records``. (#175)
+- Created new method on client to get paginated records ``get_paginated_records``. (#175)
 
 
 10.1.1 (2018-11-13)

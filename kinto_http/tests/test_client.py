@@ -833,6 +833,36 @@ class RecordTest(unittest.TestCase):
             {'id': '6', 'value': 'item6'},
         ]
 
+    def test_pagination_is_followed_generator(self):
+        # Mock the calls to request.
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        response = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                {'Next-Page': link}),
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+                {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '5', 'value': 'item5'},
+                 {'id': '6', 'value': 'item6'}, ],
+            ),
+        ]
+
+        self.session.request.side_effect = response
+
+        # Build repsonses for assertion without next page
+        response = [record[0] for record in response]
+
+        for index, page_records in enumerate(self.client.get_paginated_records()):
+            assert response[index] == page_records
+
     def test_pagination_is_followed_for_number_of_pages(self):
         # Mock the calls to request.
         link = ('http://example.org/buckets/buck/collections/coll/records/'
@@ -908,6 +938,41 @@ class RecordTest(unittest.TestCase):
         self.session.request.assert_any_call(
             'get', '/buckets/bucket/collections/collection/records',
             headers={'If-None-Match': '"1234"'}, params={})
+        self.session.request.assert_any_call(
+            'get', link, headers={'If-None-Match': '"1234"'}, params={})
+
+    def test_pagination_generator_if_none_match(self):
+        link = ('http://example.org/buckets/buck/collections/coll/records/'
+                '?token=1234')
+
+        response = [
+            # First one returns a list of items with a pagination token.
+            build_response(
+                [{'id': '1', 'value': 'item1'},
+                 {'id': '2', 'value': 'item2'}, ],
+                {'Next-Page': link}),
+            build_response(
+                [{'id': '3', 'value': 'item3'},
+                 {'id': '4', 'value': 'item4'}, ],
+                {'Next-Page': link}),
+            # Second one returns a list of items without a pagination token.
+            build_response(
+                [{'id': '5', 'value': 'item5'},
+                 {'id': '6', 'value': 'item6'}, ],
+            ),
+        ]
+
+        self.session.request.side_effect = response
+
+        # Build repsonses for assertion without next page
+        response = [record[0] for record in response]
+
+        for index, page_records in enumerate(self.client.get_paginated_records(
+                                             if_none_match="1234")):
+            # Check that the If-None-Match header is present in the requests.
+            assert response[index] == page_records
+
+        # Check that the If-None-Match header is present in the requests.
         self.session.request.assert_any_call(
             'get', link, headers={'If-None-Match': '"1234"'}, params={})
 

@@ -530,14 +530,21 @@ get all the records from one collection in a file.
 
 ::
 
-   kinto-wizard dump --full --server http://{kinto_url}:8888/v1 --bucket {bucket_name} --auth {user}:{password} > {path_to_file.yaml}
+   kinto-wizard dump \
+      --full --server http://{kinto_url}:8888/v1 \
+      --bucket {bucket_name} \
+      --auth {user}:{password} \
+      > {path_to_file.yaml}
 
 With this local file you can now re-upload all reacords into a new collection
 by running the following load command.
 
 ::
 
-   kinto-wizard load --server http://{kinto_url}:8888/v1 --auth {user}:{password} {path_to_file.yaml}
+   kinto-wizard load \
+      --server http://{kinto_url}:8888/v1 \
+      --auth {user}:{password} \
+      {path_to_file.yaml}
 
 After running the first dump command you might want to validate the dumped
 records, this will ensure that you can upload them successfully using the load command.

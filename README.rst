@@ -518,7 +518,7 @@ The script now accepts basic options:
 Moving records from one collection to another
 ---------------------------------------------
 
-Moving records is not directly supported by the CLI tools int this library.
+Moving records is not directly supported by the CLI tools in this library.
 To do this you'll need to install kinto-wizard.
 
 ::
@@ -536,7 +536,13 @@ get all the records from one collection in a file.
       --auth {user}:{password} \
       > {path_to_file.yaml}
 
-With this local file you can now re-upload all reacords into a new collection
+This new local file has a description of all the collections and records inside
+the specified bucket. Now you can change the file in order to reflect the modifications
+you need. If you are moving items into a new collection you'll have to search for
+the collection name in the YAML file and change it, do not forget to change the id
+field of that collection too.
+
+With this local file you can now re-upload all records into a new collection
 by running the following load command.
 
 ::

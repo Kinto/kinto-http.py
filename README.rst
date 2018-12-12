@@ -522,24 +522,28 @@ Moving records is not directly supported by the CLI tools int this library.
 To do this you'll need to install kinto-wizard.
 
 ::
+
    pip install kinto-wizard
 
 Once kinto-wizard is installed you can then run a dump command in order to
 get all the records from one collection in a file.
 
 ::
+
    kinto-wizard dump --full --server http://{kinto_url}:8888/v1 --bucket {bucket_name} --auth {user}:{password} > {path_to_file.yaml}
 
 With this local file you can now re-upload all reacords into a new collection
 by running the following load command.
 
 ::
+
    kinto-wizard load --server http://{kinto_url}:8888/v1 --auth {user}:{password} {path_to_file.yaml}
 
 After running the first dump command you might want to validate the dumped
 records, this will ensure that you can upload them successfully using the load command.
 
 ::
+
    kinto-wizard validate {path_to_file.yaml}
 
 Run tests

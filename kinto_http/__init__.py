@@ -319,13 +319,13 @@ class Client(object):
         endpoint = self.get_endpoint('buckets')
         return self._paginated(endpoint, **kwargs)
 
-    def get_bucket(self, *, id=None):
+    def get_bucket(self, *, id=None, **kwargs):
         endpoint = self.get_endpoint('bucket', bucket=id)
 
         logger.info("Get bucket %r" % id or self._bucket_name)
 
         try:
-            resp, _ = self.session.request('get', endpoint)
+            resp, _ = self.session.request('get', endpoint, params=kwargs)
         except KintoException as e:
             error_resp_code = e.response.status_code
             if error_resp_code == 401:
@@ -588,7 +588,7 @@ class Client(object):
             if_match=if_match,
         )
 
-    def get_collection(self, *, id=None, bucket=None):
+    def get_collection(self, *, id=None, bucket=None, **kwargs):
         endpoint = self.get_endpoint('collection',
                                      bucket=bucket,
                                      collection=id)
@@ -597,7 +597,7 @@ class Client(object):
                     (id or self._collection_name, bucket or self._bucket_name))
 
         try:
-            resp, _ = self.session.request('get', endpoint)
+            resp, _ = self.session.request('get', endpoint, params=kwargs)
         except KintoException as e:
             error_resp_code = e.response.status_code
             if error_resp_code == 404:
@@ -678,7 +678,7 @@ class Client(object):
             yield from self._paginated_generator(next_page,
                                                  if_none_match=if_none_match)
 
-    def get_record(self, *, id, collection=None, bucket=None):
+    def get_record(self, *, id, collection=None, bucket=None, **kwargs):
         endpoint = self.get_endpoint('record', id=id,
                                      bucket=bucket,
                                      collection=collection)
@@ -687,7 +687,7 @@ class Client(object):
           "Get record with id %r from collection %r in bucket %r"
           % (id, collection or self._collection_name, bucket or self._bucket_name))
 
-        resp, _ = self.session.request('get', endpoint)
+        resp, _ = self.session.request('get', endpoint, params=kwargs)
         return resp
 
     def create_record(self, *, id=None, bucket=None, collection=None,

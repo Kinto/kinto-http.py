@@ -7,10 +7,10 @@ This document describes changes between each past release.
 10.2.0 (unreleased)
 ===================
 
-**New feature**
+**New features**
 
 - Created new method on client to get paginated records ``get_paginated_records``. (#175)
-
+- Allow additional querystring params in `get_*()` methods
 
 10.1.1 (2018-11-13)
 ===================

@@ -183,7 +183,7 @@ class ClientTest(unittest.TestCase):
         mock_response(self.session)
         client = Client(session=self.session)
         client.get_bucket()
-        self.session.request.assert_called_with('get', '/buckets/default')
+        self.session.request.assert_called_with('get', '/buckets/default', params={})
 
     def test_client_uses_passed_bucket_if_specified(self):
         client = Client(
@@ -330,12 +330,17 @@ class BucketTest(unittest.TestCase):
 
     def test_get_is_issued_on_retrieval(self):
         self.client.get_bucket(id='testbucket')
-        self.session.request.assert_called_with('get', '/buckets/testbucket')
+        self.session.request.assert_called_with('get', '/buckets/testbucket', params={})
 
     def test_bucket_names_are_slugified(self):
         self.client.get_bucket(id='my bucket')
         url = '/buckets/my-bucket'
-        self.session.request.assert_called_with('get', url)
+        self.session.request.assert_called_with('get', url, params={})
+
+    def test_get_bucket_supports_queryparams(self):
+        self.client.get_bucket(id='bid', _expected="123")
+        url = '/buckets/bid'
+        self.session.request.assert_called_with('get', url, params={"_expected": "123"})
 
     def test_permissions_are_retrieved(self):
         mock_response(self.session, permissions={'read': ['phrawzty', ]})
@@ -487,7 +492,12 @@ class CollectionTest(unittest.TestCase):
     def test_collection_names_are_slugified(self):
         self.client.get_collection(id='my collection')
         url = '/buckets/mybucket/collections/my-collection'
-        self.session.request.assert_called_with('get', url)
+        self.session.request.assert_called_with('get', url, params={})
+
+    def test_get_collection_supports_queryparams(self):
+        self.client.get_collection(id='cid', _expected="123")
+        url = '/buckets/mybucket/collections/cid'
+        self.session.request.assert_called_with('get', url, params={"_expected": "123"})
 
     def test_collection_creation_issues_an_http_put(self):
         self.client.create_collection(id='mycollection',
@@ -767,7 +777,12 @@ class RecordTest(unittest.TestCase):
 
         self.assertEqual(record['data'], {'foo': 'bar'})
         url = '/buckets/mybucket/collections/mycollection/records/1234'
-        self.session.request.assert_called_with('get', url)
+        self.session.request.assert_called_with('get', url, params={})
+
+    def test_get_record_supports_queryparams(self):
+        self.client.get_record(id='1234', _expected="123")
+        url = '/buckets/mybucket/collections/mycollection/records/1234'
+        self.session.request.assert_called_with('get', url, params={"_expected": "123"})
 
     def test_collection_can_retrieve_all_records(self):
         mock_response(self.session, data=[{'id': 'foo'}, {'id': 'bar'}])

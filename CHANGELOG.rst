@@ -4,6 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
+10.3.0 (unreleased)
+===================
+
+- Nothing changed yet.
+
+
 10.2.0 (2018-12-17)
 ===================
 

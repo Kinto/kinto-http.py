@@ -533,14 +533,22 @@ get all the records from one collection in a file.
    kinto-wizard dump \
       --full --server http://{kinto_url}:8888/v1 \
       --bucket {bucket_name} \
+      --collection {collection_name} \
       --auth {user}:{password} \
       > {path_to_file.yaml}
 
-This new local file has a description of all the collections and records inside
-the specified bucket. Now you can change the file in order to reflect the modifications
-you need. If you are moving items into a new collection you'll have to search for
+This new local file has a description of the specified collection and its records.
+Now you can change the file in order to reflect the modifications you need.
+If you are moving items into a new collection you'll have to search for
 the collection name in the YAML file and change it, do not forget to change the id
 field of that collection too.
+
+After running the first dump command you might want to validate the dumped
+records, this will ensure that you can upload them successfully using the load command.
+
+::
+
+   kinto-wizard validate {path_to_file.yaml}
 
 With this local file you can now re-upload all records into a new collection
 by running the following load command.
@@ -552,12 +560,9 @@ by running the following load command.
       --auth {user}:{password} \
       {path_to_file.yaml}
 
-After running the first dump command you might want to validate the dumped
-records, this will ensure that you can upload them successfully using the load command.
+The old collection will not be deleted automatically, so you probably would
+want to delete it manually.
 
-::
-
-   kinto-wizard validate {path_to_file.yaml}
 
 Run tests
 =========

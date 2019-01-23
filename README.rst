@@ -520,6 +520,54 @@ The script now accepts basic options:
     -D, --debug           Show all messages, including debug messages.
 
 
+Moving records from one collection to another
+---------------------------------------------
+
+Moving records is not directly supported by the CLI tools in this library.
+To do this you'll need to install kinto-wizard.
+
+::
+
+   pip install kinto-wizard
+
+Once kinto-wizard is installed you can then run a dump command in order to
+get all the records from one collection in a file.
+
+::
+
+   kinto-wizard dump \
+      --full --server http://{kinto_url}:8888/v1 \
+      --bucket {bucket_name} \
+      --collection {collection_name} \
+      --auth {user}:{password} \
+      > {path_to_file.yaml}
+
+This new local file has a description of the specified collection and its records.
+Now you can change the file in order to reflect the modifications you need.
+If you are moving items into a new collection you'll have to search for
+the collection name in the YAML file and change it, do not forget to change the id
+field of that collection too.
+
+After running the first dump command you might want to validate the dumped
+records, this will ensure that you can upload them successfully using the load command.
+
+::
+
+   kinto-wizard validate {path_to_file.yaml}
+
+With this local file you can now re-upload all records into a new collection
+by running the following load command.
+
+::
+
+   kinto-wizard load \
+      --server http://{kinto_url}:8888/v1 \
+      --auth {user}:{password} \
+      {path_to_file.yaml}
+
+The old collection will not be deleted automatically, so you probably would
+want to delete it manually.
+
 
 Run tests
 =========

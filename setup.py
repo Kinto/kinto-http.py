@@ -23,7 +23,7 @@ if sys.version_info < (2, 7, 9):
 test_requirements = [
     'pytest',
     'pytest-cache',
-    'pytest-cover',
+    'pytest-cov',
     'pytest-sugar',
     'pytest-xdist',
     'kinto',

@@ -1,6 +1,6 @@
 pytest
 pytest-cache
-pytest-cover
+pytest-cov
 pytest-xdist
 kinto
 unidecode

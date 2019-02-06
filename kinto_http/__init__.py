@@ -1,10 +1,9 @@
 import collections
+import logging
 import uuid
-
 from contextlib import contextmanager
 
-import logging
-
+import requests
 from kinto_http import utils
 from kinto_http.session import create_session, Session
 from kinto_http.batch import BatchSession
@@ -61,12 +60,25 @@ class Endpoints(object):
                                  field=','.join(e.args)))
 
 
+class BearerTokenAuth(requests.auth.AuthBase):
+    def __init__(self, token):
+        self.token = token
+
+    def __call__(self, r):
+        r.headers["Authorization"] = "Bearer " + self.token
+        return r
+
+
 class Client(object):
 
-    def __init__(self, *, server_url=None, session=None, auth=None,
+    def __init__(self, *, server_url=None, session=None, access_token=None, auth=None,
                  bucket="default", collection=None, retry=0, retry_after=None,
                  ignore_batch_4xx=False):
         self.endpoints = Endpoints()
+
+        if access_token is not None:
+            auth = BearerTokenAuth(access_token)
+
         session_kwargs = dict(server_url=server_url,
                               auth=auth,
                               session=session,

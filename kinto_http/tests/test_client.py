@@ -20,6 +20,15 @@ class ClientTest(unittest.TestCase):
         self.client.server_info()
         self.session.request.assert_called_with('get', '/')
 
+    def test_auth_from_access_token(self):
+        r = mock.MagicMock()
+        r.headers = {}
+
+        client = Client(access_token="abc")
+        client.session.auth(r)
+
+        assert r.headers["Authorization"] == "Bearer abc"
+
     def test_context_manager_works_as_expected(self):
         settings = {"batch_max_requests": 25}
         self.session.request.side_effect = [({"settings": settings}, []),

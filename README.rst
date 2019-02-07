@@ -95,7 +95,14 @@ Using a Bearer access token to authenticate (OpenID)
 
 .. code-block:: python
 
-    client = Client(bucket="main", collection="tippytop", access_token="XYPJTNsFKV2")
+    import kinto_http
+
+    client = kinto_http.Client(auth=kinto_http.BearerTokenAuth("XYPJTNsFKV2"))
+
+
+The authorization header is prefixed with ``Bearer`` by default. If the ``header_type``
+is `customized on the server <https://kinto.readthedocs.io/en/stable/configuration/settings.html#openid-connect>`_,
+the client must specify the expected type: ``kinto_http.BearerTokenAuth("XYPJTNsFKV2" type="Bearer+OIDC")``
 
 
 Using FxA from a script with the email/password

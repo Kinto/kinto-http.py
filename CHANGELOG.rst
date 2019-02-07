@@ -9,8 +9,7 @@ This document describes changes between each past release.
 
 **New features**
 
-- Add support for OAuth access tokens (OpenID) via the ``access_token`` parameter in
-  client constructor
+- Add support for OAuth access tokens (OpenID) with the ``BearerTokenAuth()`` helper. See README. (#197)
 
 
 10.2.0 (2018-12-17)

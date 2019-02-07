@@ -14,7 +14,7 @@ from kinto_http.patch_type import PatchType, BasicPatch
 
 logger = logging.getLogger('kinto_http')
 
-__all__ = ('Endpoints', 'Session', 'Client', 'create_session',
+__all__ = ('BearerTokenAuth', 'Endpoints', 'Session', 'Client', 'create_session',
            'BucketNotFound', 'CollectionNotFound', 'KintoException', 'KintoBatchException')
 
 
@@ -61,23 +61,21 @@ class Endpoints(object):
 
 
 class BearerTokenAuth(requests.auth.AuthBase):
-    def __init__(self, token):
+    def __init__(self, token, type=None):
         self.token = token
+        self.type = type or "Bearer"
 
     def __call__(self, r):
-        r.headers["Authorization"] = "Bearer " + self.token
+        r.headers["Authorization"] = "{} {}".format(self.type, self.token)
         return r
 
 
 class Client(object):
 
-    def __init__(self, *, server_url=None, session=None, access_token=None, auth=None,
+    def __init__(self, *, server_url=None, session=None, auth=None,
                  bucket="default", collection=None, retry=0, retry_after=None,
                  ignore_batch_4xx=False):
         self.endpoints = Endpoints()
-
-        if access_token is not None:
-            auth = BearerTokenAuth(access_token)
 
         session_kwargs = dict(server_url=server_url,
                               auth=auth,

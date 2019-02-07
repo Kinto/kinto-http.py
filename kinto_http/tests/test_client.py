@@ -3,7 +3,7 @@ from unittest import mock
 import pytest
 
 from kinto_http import (KintoException, KintoBatchException, BucketNotFound,
-                        Client, DO_NOT_OVERWRITE)
+                        BearerTokenAuth, Client, DO_NOT_OVERWRITE)
 from kinto_http.session import create_session
 from kinto_http.patch_type import MergePatch, JSONPatch
 
@@ -24,10 +24,10 @@ class ClientTest(unittest.TestCase):
         r = mock.MagicMock()
         r.headers = {}
 
-        client = Client(access_token="abc")
+        client = Client(auth=BearerTokenAuth("abc", type="Bearer+OIDC"))
         client.session.auth(r)
 
-        assert r.headers["Authorization"] == "Bearer abc"
+        assert r.headers["Authorization"] == "Bearer+OIDC abc"
 
     def test_context_manager_works_as_expected(self):
         settings = {"batch_max_requests": 25}

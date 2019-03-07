@@ -90,23 +90,19 @@ some key arguments.
     client2 = client.clone(collection="orders")
 
 
-Using a Bearer token to authenticate
-------------------------------------
+Using a Bearer access token to authenticate (OpenID)
+----------------------------------------------------
 
 .. code-block:: python
 
-    import requests
+    import kinto_http
 
-    class BearerTokenAuth(requests.auth.AuthBase):
-        def __init__(self, token):
-            self.token = token
+    client = kinto_http.Client(auth=kinto_http.BearerTokenAuth("XYPJTNsFKV2"))
 
-        def __call__(self, r):
-            r.headers['Authorization'] = 'Bearer ' + self.token
-            return r
 
-    auth = BearerTokenAuth("a67fjnewgre5")
-    client = Client(bucket="main", collection="tippytop", auth=auth)
+The authorization header is prefixed with ``Bearer`` by default. If the ``header_type``
+is `customized on the server <https://kinto.readthedocs.io/en/stable/configuration/settings.html#openid-connect>`_,
+the client must specify the expected type: ``kinto_http.BearerTokenAuth("XYPJTNsFKV2" type="Bearer+OIDC")``
 
 
 Using FxA from a script with the email/password

@@ -7,7 +7,9 @@ This document describes changes between each past release.
 10.3.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**New features**
+
+- Add support for OAuth access tokens (OpenID) with the ``BearerTokenAuth()`` helper. See README. (#197)
 
 
 10.2.0 (2018-12-17)

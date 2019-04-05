@@ -2,7 +2,7 @@ import argparse
 import getpass
 import logging
 
-from . import Client
+from . import Client, BearerTokenAuth
 
 
 def get_auth(auth):
@@ -19,8 +19,12 @@ def get_auth(auth):
 
 def create_client_from_args(args):
     """Return a client from parser args."""
+    if args.bearer_token:
+        auth = BearerTokenAuth(token=args.bearer_token, type=args.bearer_type)
+    else:
+        auth = args.auth
     return Client(server_url=args.server,
-                  auth=args.auth,
+                  auth=auth,
                   bucket=getattr(args, 'bucket', None),
                   collection=getattr(args, 'collection', None),
                   retry=args.retry,
@@ -29,7 +33,6 @@ def create_client_from_args(args):
 
 
 class AuthAction(argparse.Action):
-
     def __call__(self, parser, namespace, values, option_string=None):
         if values is not None:
             setattr(namespace, self.dest, get_auth(values))
@@ -43,6 +46,8 @@ def add_parser_options(parser=None,
                        default_ignore_batch_4xx=False,
                        default_bucket=None,
                        default_collection=None,
+                       default_bearer_token=None,
+                       default_bearer_type="Bearer",
                        include_bucket=True,
                        include_collection=True,
                        **kwargs):
@@ -57,6 +62,14 @@ def add_parser_options(parser=None,
     parser.add_argument('-a', '--auth',
                         help='BasicAuth token:my-secret',
                         type=str, default=default_auth, action=AuthAction)
+
+    parser.add_argument('--bearer-type',
+                        help='Bearer token authorization realm. Default: Bearer',
+                        type=str, default=default_bearer_type)
+
+    parser.add_argument('--bearer-token',
+                        help='Bearer Authorization token',
+                        type=str, default=default_bearer_token)
 
     if include_bucket:
         parser.add_argument('-b', '--bucket',

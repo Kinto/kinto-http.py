@@ -3,11 +3,15 @@ import unittest
 from unittest import mock
 
 from kinto_http import cli_utils
+from kinto_http import BearerTokenAuth
+
 
 ALL_PARAMETERS = [
     ['-h', '--help'],
     ['-s', '--server'],
     ['-a', '--auth'],
+    ['--bearer-type'],
+    ['--bearer-token'],
     ['-b', '--bucket'],
     ['-c', '--collection'],
     ['--retry'],
@@ -48,6 +52,8 @@ class ParserServerOptionsTest(unittest.TestCase):
             ['-h', '--help'],
             ['-s', '--server'],
             ['-a', '--auth'],
+            ['--bearer-type'],
+            ['--bearer-token'],
             ['--retry'],
             ['--retry-after'],
             ['--ignore-batch-4xx'],
@@ -71,6 +77,8 @@ class ParserServerOptionsTest(unittest.TestCase):
         assert args == {
             'server': 'https://firefox.settings.services.mozilla.com/',
             'auth': 'user:password',
+            'bearer_type': 'Bearer',
+            'bearer_token': None,
             'bucket': 'blocklists',
             'collection': 'certificates',
             'retry': 0,
@@ -166,3 +174,15 @@ class ClientFromArgsTest(unittest.TestCase):
             ignore_batch_4xx=False,
             retry=0,
             retry_after=None)
+
+    @mock.patch('kinto_http.cli_utils.Client')
+    def test_create_client_from_args_with_bearer_token(
+            self, mocked_client):
+        parser = cli_utils.add_parser_options(
+            default_server="https://firefox.settings.services.mozilla.com/",
+        )
+
+        args = parser.parse_args(['--bearer-token', 'TOKEN'])
+
+        cli_utils.create_client_from_args(args)
+        assert isinstance(mocked_client.call_args[1]["auth"], BearerTokenAuth)

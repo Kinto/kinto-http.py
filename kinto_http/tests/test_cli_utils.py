@@ -10,8 +10,6 @@ ALL_PARAMETERS = [
     ['-h', '--help'],
     ['-s', '--server'],
     ['-a', '--auth'],
-    ['--bearer-type'],
-    ['--bearer-token'],
     ['-b', '--bucket'],
     ['-c', '--collection'],
     ['--retry'],
@@ -52,8 +50,6 @@ class ParserServerOptionsTest(unittest.TestCase):
             ['-h', '--help'],
             ['-s', '--server'],
             ['-a', '--auth'],
-            ['--bearer-type'],
-            ['--bearer-token'],
             ['--retry'],
             ['--retry-after'],
             ['--ignore-batch-4xx'],
@@ -77,8 +73,6 @@ class ParserServerOptionsTest(unittest.TestCase):
         assert args == {
             'server': 'https://firefox.settings.services.mozilla.com/',
             'auth': 'user:password',
-            'bearer_type': 'Bearer',
-            'bearer_token': None,
             'bucket': 'blocklists',
             'collection': 'certificates',
             'retry': 0,
@@ -139,7 +133,7 @@ class ClientFromArgsTest(unittest.TestCase):
             default_server="https://firefox.settings.services.mozilla.com/",
         )
 
-        args = parser.parse_args(['--auth', 'user:password',
+        args = parser.parse_args(['--auth', 'user:password with spaces',
                                   '--bucket', 'blocklists',
                                   '--collection', 'certificates',
                                   '--retry', '3'])
@@ -147,7 +141,7 @@ class ClientFromArgsTest(unittest.TestCase):
         cli_utils.create_client_from_args(args)
         mocked_client.assert_called_with(
             server_url='https://firefox.settings.services.mozilla.com/',
-            auth=('user', 'password'),
+            auth=('user', 'password with spaces'),
             bucket='blocklists',
             collection='certificates',
             ignore_batch_4xx=False,
@@ -182,7 +176,7 @@ class ClientFromArgsTest(unittest.TestCase):
             default_server="https://firefox.settings.services.mozilla.com/",
         )
 
-        args = parser.parse_args(['--bearer-token', 'TOKEN'])
+        args = parser.parse_args(['--auth', 'Bearer Token_Containing:a:semicolumn'])
 
         cli_utils.create_client_from_args(args)
         assert isinstance(mocked_client.call_args[1]["auth"], BearerTokenAuth)

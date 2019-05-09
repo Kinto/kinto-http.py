@@ -10,10 +10,6 @@ TEMPDIR := $(shell mktemp -d)
 
 OBJECTS = .venv .coverage
 
-.PHONY: init
-init:
-	git config core.hooksPath .githooks
-
 all: install
 install: $(INSTALL_STAMP)
 $(INSTALL_STAMP): $(PYTHON) setup.py

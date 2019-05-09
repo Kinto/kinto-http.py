@@ -1,5 +1,0 @@
-#!/bin/sh
-# Redirect output to stderr.
-exec 1>&2
-make black
-git diff --cached --name-status | cut -f 2 | xargs -I % git add -u %

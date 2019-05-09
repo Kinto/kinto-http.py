@@ -9,6 +9,7 @@ class PatchType(object):
     include changes to the request's ``data`` (the resource being
     modified) and its ``permissions``.
     """
+
     pass
 
 
@@ -22,7 +23,7 @@ class BasicPatch(PatchType):
     http://docs.kinto-storage.org/en/stable/api/1.x/records.html#attributes-merge.
     """
 
-    content_type = 'application/json'
+    content_type = "application/json"
 
     def __init__(self, data=None, permissions=None):
         """BasicPatch(data)
@@ -41,9 +42,9 @@ class BasicPatch(PatchType):
     def body(self):
         ret = {}
         if self.data is not None:
-            ret['data'] = self.data
+            ret["data"] = self.data
         if self.permissions is not None:
-            ret['permissions'] = self.permissions
+            ret["permissions"] = self.permissions
 
         return ret
 
@@ -62,7 +63,7 @@ class MergePatch(PatchType):
     work (see https://github.com/Kinto/kinto/issues/1322).
     """
 
-    content_type = 'application/merge-patch+json'
+    content_type = "application/merge-patch+json"
 
     def __init__(self, data=None, permissions=None):
         """MergePatch(data)
@@ -81,9 +82,9 @@ class MergePatch(PatchType):
     def body(self):
         ret = {}
         if self.data is not None:
-            ret['data'] = self.data
+            ret["data"] = self.data
         if self.permissions is not None:
-            ret['permissions'] = self.permissions
+            ret["permissions"] = self.permissions
 
         return ret
 
@@ -98,7 +99,7 @@ class JSONPatch(PatchType):
     http://docs.kinto-storage.org/en/stable/api/1.x/records.html#json-patch-operations.
     """
 
-    content_type = 'application/json-patch+json'
+    content_type = "application/json-patch+json"
 
     def __init__(self, operations):
         """JSONPatch(operations)

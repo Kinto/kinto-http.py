@@ -15,8 +15,9 @@ class KintoException(Exception):
 
     def __str__(self):
         if self.request is not None and self.response is not None:
-            return '{} {} - {} {}'.format(self.request.method, self.request.path_url,
-                                          self.response.status_code, self.message)
+            return "{} {} - {} {}".format(
+                self.request.method, self.request.path_url, self.response.status_code, self.message
+            )
         return self.message
 
 

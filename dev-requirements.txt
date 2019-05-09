@@ -1,6 +1,9 @@
+black
+flake8
 pytest
 pytest-cache
 pytest-cov
 pytest-xdist
 kinto
+therapist
 unidecode

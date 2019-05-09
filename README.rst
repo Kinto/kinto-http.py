@@ -580,3 +580,10 @@ In another, run the tests against it:
 ::
 
     $ make tests
+
+
+(Optional) Install a git hook:
+
+::
+
+    therapist install

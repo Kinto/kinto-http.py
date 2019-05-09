@@ -4,10 +4,11 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.4.0 (unreleased)
+10.4.0 (2019-05-09)
 ===================
 
 - Add support for Bearer tokens in the CLI utilities.
+- Use black for code formatting.
 
 
 10.3.0 (2019-03-07)

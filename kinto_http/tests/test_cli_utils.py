@@ -176,7 +176,7 @@ class ClientFromArgsTest(unittest.TestCase):
             default_server="https://firefox.settings.services.mozilla.com/",
         )
 
-        args = parser.parse_args(['--auth', 'Bearer Token_Containing:a:semicolumn'])
+        args = parser.parse_args(['--auth', 'Bearer Token_Containing:a:semicolon'])
 
         cli_utils.create_client_from_args(args)
         assert isinstance(mocked_client.call_args[1]["auth"], BearerTokenAuth)

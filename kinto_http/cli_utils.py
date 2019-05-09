@@ -33,7 +33,7 @@ class AuthAction(argparse.Action):
         if values is not None:
             auth = None
             try:
-                # Handle: `username:password with spaces` versus `Bearer TokenWith:Semicolumn`
+                # Handle: `username:password with spaces` versus `Bearer TokenWith:Semicolon`
                 if values.index(" ") < values.index(":"):
                     bearer_type, bearer_token = values.split(" ", 1)
                     auth = BearerTokenAuth(token=bearer_token, type=bearer_type)
@@ -66,7 +66,8 @@ def add_parser_options(parser=None,
                         type=str, default=default_server)
 
     parser.add_argument('-a', '--auth',
-                        help='BasicAuth token:my-secret',
+                        help='BasicAuth credentials: `token:my-secret` or '
+                        'Authorization header: `Bearer token`',
                         type=str, default=default_auth, action=AuthAction)
 
     if include_bucket:

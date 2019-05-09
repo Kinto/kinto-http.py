@@ -6,7 +6,7 @@ from datetime import date, datetime
 from unidecode import unidecode
 
 
-VALID_SLUG_REGEXP = re.compile(r'^[a-zA-Z0-9][a-zA-Z0-9_-]*$')
+VALID_SLUG_REGEXP = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$")
 
 
 def slugify(value):
@@ -20,20 +20,20 @@ def slugify(value):
 
     value = unidecode(value)
     if isinstance(value, bytes):
-        value = value.decode('ascii')  # pragma: nocover
-    value = unicodedata.normalize('NFKD', value).lower()
-    value = re.sub('[^\\w\\s-]', '', value.lower()).strip()
-    value = re.sub('[-\\s]+', '-', value)
+        value = value.decode("ascii")  # pragma: nocover
+    value = unicodedata.normalize("NFKD", value).lower()
+    value = re.sub("[^\\w\\s-]", "", value.lower()).strip()
+    value = re.sub("[-\\s]+", "-", value)
     return value
 
 
 def urljoin(server_url, path):
     """Return the url concatenation of server_url and path."""
-    return server_url.rstrip('/') + '/' + path.lstrip('/')
+    return server_url.rstrip("/") + "/" + path.lstrip("/")
 
 
 def quote(text):
-    if hasattr(text, 'strip'):
+    if hasattr(text, "strip"):
         text = text.strip('"')
     return '"{0}"'.format(text)
 
@@ -44,7 +44,7 @@ def chunks(l, n):
     """
     if n > 0:
         for i in range(0, len(l), n):
-            yield l[i:i+n]
+            yield l[i : i + n]
     else:
         yield l
 

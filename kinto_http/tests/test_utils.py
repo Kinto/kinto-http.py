@@ -4,21 +4,20 @@ from kinto_http import utils
 
 
 class UtilsTest(TestCase):
-
     def test_slugify_converts_integers(self):
-        assert utils.slugify(1) == '1'
+        assert utils.slugify(1) == "1"
 
     def test_slugify_replaces_spaces_by_hyphens(self):
-        assert utils.slugify(u'text with spaces') == 'text-with-spaces'
+        assert utils.slugify(u"text with spaces") == "text-with-spaces"
 
     def test_slugify_removes_unknown_characters(self):
-        assert utils.slugify(u'chars!') == 'chars'
+        assert utils.slugify(u"chars!") == "chars"
 
     def test_slugify_replaces_equivalent_chars(self):
-        assert utils.slugify(u'chârs') == 'chars'
+        assert utils.slugify(u"chârs") == "chars"
 
     def test_slugify_do_no_modify_valid_ids(self):
-        for value in ['en-US', 'en_GB']:
+        for value in ["en-US", "en_GB"]:
             assert utils.slugify(value) == value
 
     def test_urljoin_can_join_with_trailing_slash(self):

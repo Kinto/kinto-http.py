@@ -3,12 +3,11 @@ from unittest import mock
 from kinto_http.exceptions import KintoException
 
 
-def mock_response(session, data=None, permissions=None, headers=None,
-                  error=False):
+def mock_response(session, data=None, permissions=None, headers=None, error=False):
     data = data or {}
     permissions = permissions or {}
     headers = headers or {}
-    info = {'data': data, 'permissions': permissions}
+    info = {"data": data, "permissions": permissions}
     if error:
         session.request.side_effect = ValueError
     else:
@@ -17,18 +16,16 @@ def mock_response(session, data=None, permissions=None, headers=None,
 
 def get_record(id=None, data=None, permissions=None):
     record = mock.MagicMock()
-    record.id = id or '1234'
-    record.data = data or {'foo': 'bar'}
-    record.permissions = permissions or {'read': ['Niko', 'Mat']}
+    record.id = id or "1234"
+    record.data = data or {"foo": "bar"}
+    record.permissions = permissions or {"read": ["Niko", "Mat"]}
     return record
 
 
 def build_response(data, headers=None):
     if headers is None:
         headers = {}
-    resp = {
-        'data': data
-    }
+    resp = {"data": data}
     return resp, headers
 
 
@@ -65,10 +62,7 @@ def get_503():
         "message": "Service temporary unavailable due to overloading",
         "code": 503,
         "error": "Service Unavailable",
-        "errno": 201
+        "errno": 201,
     }
-    headers_503 = {
-        "Content-Type": "application/json; charset=UTF-8",
-        "Content-Length": 151
-    }
+    headers_503 = {"Content-Type": "application/json; charset=UTF-8", "Content-Length": 151}
     return get_http_response(503, body=body_503, headers=headers_503)

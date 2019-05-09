@@ -5,7 +5,6 @@ from kinto_http import KintoException
 
 
 class BaseException(unittest.TestCase):
-
     def test_assert_message_is_rendered_in_representation(self):
         exc = KintoException("Failure")
         self.assertIn("KintoException('Failure'", repr(exc))
@@ -20,7 +19,6 @@ class BaseException(unittest.TestCase):
 
 
 class RequestException(unittest.TestCase):
-
     def setUp(self):
         request = mock.MagicMock()
         request.method = "PUT"

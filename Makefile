@@ -42,6 +42,12 @@ functional: install-dev need-kinto-running
 tests: install-dev need-kinto-running
 	$(VENV)/bin/py.test -f kinto_http/tests/ kinto_http/tests/functional.py
 
+flake8: install-dev
+	$(VENV)/bin/flake8 kinto_http
+
+black: install-dev
+	$(VENV)/bin/black kinto_http
+
 clean:
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -type d | xargs rm -fr

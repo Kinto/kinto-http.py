@@ -3,6 +3,8 @@ import unittest
 from unittest import mock
 
 from kinto_http import cli_utils
+from kinto_http import BearerTokenAuth
+
 
 ALL_PARAMETERS = [
     ['-h', '--help'],
@@ -131,7 +133,7 @@ class ClientFromArgsTest(unittest.TestCase):
             default_server="https://firefox.settings.services.mozilla.com/",
         )
 
-        args = parser.parse_args(['--auth', 'user:password',
+        args = parser.parse_args(['--auth', 'user:password with spaces',
                                   '--bucket', 'blocklists',
                                   '--collection', 'certificates',
                                   '--retry', '3'])
@@ -139,7 +141,7 @@ class ClientFromArgsTest(unittest.TestCase):
         cli_utils.create_client_from_args(args)
         mocked_client.assert_called_with(
             server_url='https://firefox.settings.services.mozilla.com/',
-            auth=('user', 'password'),
+            auth=('user', 'password with spaces'),
             bucket='blocklists',
             collection='certificates',
             ignore_batch_4xx=False,
@@ -166,3 +168,15 @@ class ClientFromArgsTest(unittest.TestCase):
             ignore_batch_4xx=False,
             retry=0,
             retry_after=None)
+
+    @mock.patch('kinto_http.cli_utils.Client')
+    def test_create_client_from_args_with_bearer_token(
+            self, mocked_client):
+        parser = cli_utils.add_parser_options(
+            default_server="https://firefox.settings.services.mozilla.com/",
+        )
+
+        args = parser.parse_args(['--auth', 'Bearer Token_Containing:a:semicolon'])
+
+        cli_utils.create_client_from_args(args)
+        assert isinstance(mocked_client.call_args[1]["auth"], BearerTokenAuth)

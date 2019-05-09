@@ -502,7 +502,8 @@ The script now accepts basic options:
     -h, --help            show this help message and exit
     -s SERVER, --server SERVER
                           The location of the remote server (with prefix)
-    -a AUTH, --auth AUTH  BasicAuth token:my-secret
+    -a AUTH, --auth AUTH  BasicAuth credentials: `token:my-secret` or
+                          Authorization header: `Bearer token`
     -b BUCKET, --bucket BUCKET
                           Bucket name.
     -c COLLECTION, --collection COLLECTION
@@ -535,7 +536,7 @@ get all the records from one collection in a file.
       --full --server http://{kinto_url}:8888/v1 \
       --bucket {bucket_name} \
       --collection {collection_name} \
-      --auth {user}:{password} \
+      --auth "Bearer {token}" \
       > {path_to_file.yaml}
 
 This new local file has a description of the specified collection and its records.
@@ -579,4 +580,3 @@ In another, run the tests against it:
 ::
 
     $ make tests
-

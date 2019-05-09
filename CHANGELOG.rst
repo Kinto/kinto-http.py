@@ -4,6 +4,12 @@ CHANGELOG
 This document describes changes between each past release.
 
 
+10.5.0 (unreleased)
+===================
+
+- Nothing changed yet.
+
+
 10.4.0 (2019-05-09)
 ===================
 

@@ -7,7 +7,9 @@ This document describes changes between each past release.
 10.5.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**Bug fixes**
+
+- Handle bearer tokens without a column.
 
 
 10.4.0 (2019-05-09)

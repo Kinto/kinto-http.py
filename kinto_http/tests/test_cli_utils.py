@@ -154,6 +154,42 @@ class ClientFromArgsTest(unittest.TestCase):
             retry_after=None,
         )
 
+    @mock.patch("getpass.getpass")
+    @mock.patch("kinto_http.cli_utils.Client")
+    def test_create_client_from_args_build_a_client_and_ask_for_password(
+        self, mocked_client, mocked_getpass
+    ):
+        parser = cli_utils.add_parser_options(
+            default_server="https://firefox.settings.services.mozilla.com/"
+        )
+
+        mocked_getpass.return_value = "password"
+
+        args = parser.parse_args(
+            [
+                "--auth",
+                "user",
+                "--bucket",
+                "blocklists",
+                "--collection",
+                "certificates",
+                "--retry",
+                "3",
+            ]
+        )
+
+        cli_utils.create_client_from_args(args)
+        mocked_getpass.assert_called_with("Please enter a password for user: ")
+        mocked_client.assert_called_with(
+            server_url="https://firefox.settings.services.mozilla.com/",
+            auth=("user", "password"),
+            bucket="blocklists",
+            collection="certificates",
+            ignore_batch_4xx=False,
+            retry=3,
+            retry_after=None,
+        )
+
     @mock.patch("kinto_http.cli_utils.Client")
     def test_create_client_from_args_default_bucket_and_collection_to_none(self, mocked_client):
         parser = cli_utils.add_parser_options(

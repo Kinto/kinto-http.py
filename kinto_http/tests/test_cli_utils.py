@@ -186,3 +186,14 @@ class ClientFromArgsTest(unittest.TestCase):
 
         cli_utils.create_client_from_args(args)
         assert isinstance(mocked_client.call_args[1]["auth"], BearerTokenAuth)
+
+    @mock.patch("kinto_http.cli_utils.Client")
+    def test_create_client_from_args_with_basic_bearer_token(self, mocked_client):
+        parser = cli_utils.add_parser_options(
+            default_server="https://firefox.settings.services.mozilla.com/"
+        )
+
+        args = parser.parse_args(["--auth", "Bearer Token.Containing"])
+
+        cli_utils.create_client_from_args(args)
+        assert isinstance(mocked_client.call_args[1]["auth"], BearerTokenAuth)

@@ -34,8 +34,9 @@ class AuthAction(argparse.Action):
         if values is not None:
             auth = None
             try:
-                # Handle: `username:password with spaces` versus `Bearer TokenWith:Semicolon`
-                if values.index(" ") < values.index(":"):
+                columnIndex = values.find(":")
+                if columnIndex == -1 or values.index(" ") < columnIndex:
+                    # Handle: `username:password with spaces` versus `Bearer TokenWith:Semicolon`
                     bearer_type, bearer_token = values.split(" ", 1)
                     auth = BearerTokenAuth(token=bearer_token, type=bearer_type)
             except ValueError:

@@ -9,7 +9,7 @@ This document describes changes between each past release.
 
 **Bug fixes**
 
-- Handle bearer tokens without a column.
+- Handle bearer tokens without a colon.
 
 
 10.4.0 (2019-05-09)

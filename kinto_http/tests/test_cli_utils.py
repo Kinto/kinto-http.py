@@ -222,6 +222,8 @@ class ClientFromArgsTest(unittest.TestCase):
 
         cli_utils.create_client_from_args(args)
         assert isinstance(mocked_client.call_args[1]["auth"], BearerTokenAuth)
+        assert mocked_client.call_args[1]["auth"].type == "Bearer"
+        assert mocked_client.call_args[1]["auth"].token == "Token_Containing:a:semicolon"
 
     @mock.patch("kinto_http.cli_utils.Client")
     def test_create_client_from_args_with_basic_bearer_token(self, mocked_client):
@@ -229,7 +231,9 @@ class ClientFromArgsTest(unittest.TestCase):
             default_server="https://firefox.settings.services.mozilla.com/"
         )
 
-        args = parser.parse_args(["--auth", "Bearer Token.Containing"])
+        args = parser.parse_args(["--auth", "Bearer Token.Dotted"])
 
         cli_utils.create_client_from_args(args)
         assert isinstance(mocked_client.call_args[1]["auth"], BearerTokenAuth)
+        assert mocked_client.call_args[1]["auth"].type == "Bearer"
+        assert mocked_client.call_args[1]["auth"].token == "Token.Dotted"

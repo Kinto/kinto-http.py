@@ -11,12 +11,9 @@ Kinto python client
         :target: https://coveralls.io/r/Kinto/kinto-http.py
 
 
-Kinto is a service that allows users to store and synchronize arbitrary data,
-attached to a user account. Its primary interface is HTTP.
+*kinto-http* is the Python library to interact with a *Kinto* server.
 
-*kinto-http* is a Python library that eases the interactions with
-a *Kinto* server instance. `A project with related goals is
-also available for JavaScript <https://github.com/kinto/kinto-http.js>`_.
+There is also a similar `client in JavaScript <https://github.com/kinto/kinto-http.js>`_.
 
 
 Installation
@@ -30,56 +27,42 @@ Use pip::
 Usage
 =====
 
-.. note::
-
-    Operations are always performed directly on the server, and no
-    synchronisation features have been implemented yet.
-
-- The first version of this API doesn't cache any access nor provides any
-  refresh mechanism. If you want to be sure you have the latest data available,
-  issue another call.
-
 Here is an overview of what the API provides:
 
 .. code-block:: python
 
-    from kinto_http import Client
+    import kinto_http
 
-    client = Client(server_url="http://localhost:8888/v1",
-                    auth=('alexis', 'p4ssw0rd'))
+    client = kinto_http.Client(server_url="http://localhost:8888/v1",
+                               auth=('alexis', 'p4ssw0rd'))
 
     records = client.get_records(bucket='default', collection='todos')
     for i, record in enumerate(records):
         record['title'] = 'Todo {}'.format(i)
+        client.update_record(data=record)
 
-    for record in records:
-        client.update_record(record)
 
-Creating a client
------------------
+Instantiating a client
+----------------------
 
-The passed `auth` parameter is a `requests <http://docs.python-requests.org>`_
-authentication policy, allowing authenticating using whatever scheme fits you
-best.
+The passed ``auth`` parameter is a `requests <http://docs.python-requests.org>`_
+authentication policy.
 
-By default, Kinto supports
-`Firefox Accounts <https://wiki.mozilla.org/Identity/Firefox_Accounts>`_ and
-Basic authentication policies.
+By default, a simple tuple will become a ``Basic Auth`` authorization request header, that can authenticate users with `Kinto Accounts <https://kinto.readthedocs.io/en/stable/api/1.x/accounts.html>`_.
 
 .. code-block:: python
 
-    from kinto_http import Client
-    credentials = ('alexis', 'p4ssw0rd')
+    import kinto_http
 
-    client = Client(server_url='http://localhost:8888/v1',
-                    auth=credentials)
+    auth = ('alexis', 'p4ssw0rd')
 
-It is also possible to pass the bucket and the collection to the client
-at creation time, so that this value will be used by default.
+    client = kinto_http.Client(server_url='http://localhost:8888/v1',
+                               auth=auth)
+
+It is also possible to pass a ``bucket`` ID and/or ``collection`` ID to set them as default values for the parameters of the client operations.
 
 .. code-block:: python
 
-    auth = ("token", "secret")
     client = Client(bucket="payments", collection="receipts", auth=auth)
 
 After creating a client, you can also replicate an existing one and overwrite
@@ -105,27 +88,10 @@ is `customized on the server <https://kinto.readthedocs.io/en/stable/configurati
 the client must specify the expected type: ``kinto_http.BearerTokenAuth("XYPJTNsFKV2" type="Bearer+OIDC")``
 
 
-Using FxA from a script with the email/password
------------------------------------------------
-
-.. code-block:: python
-
-    from fxa.plugins.requests import FxABearerTokenAuth
-
-    auth = FxABearerTokenAuth(
-        email, passwd,
-        scopes=['kinto'],
-        client_id="<FXA-CLIENT-ID>",
-        account_server_url='https://api.accounts.firefox.com/v1',
-        oauth_server_url='https://oauth.accounts.firefox.com/v1',
-    )
-    client = Client(bucket="payments", collection="receipts", auth=auth)
-
-
 Getting server information
 --------------------------
 
-You can use the ``server_info`` method to get the server information:
+You can use the ``server_info()`` method to fetch the server information:
 
 .. code-block:: python
 
@@ -136,198 +102,85 @@ You can use the ``server_info`` method to get the server information:
     assert 'schema' in info['capabilities'], "Server doesn't support schema validation."
 
 
-Handling buckets
-----------------
+Bucket operations
+-----------------
 
-All operations are rooted in a bucket. It makes little sense for
-one application to handle multiple buckets at once (but it is possible).
-If no specific bucket name is provided, the "default" bucket is used.
-
-.. code-block:: python
-
-    from kinto_http import Client
-    from kinto_http.patch_type import BasicPatch, MergePatch, JSONPatch
-    credentials = ('alexis', 'p4ssw0rd')
-
-    client = Client(server_url='http://localhost:8888/v1',
-                    auth=credentials)
-
-    # To create a bucket.
-    client.create_bucket(id='payments')
-
-    # To get an existing bucket
-    bucket = client.get_bucket(id='payments')
-
-    # Or retrieve all readable buckets.
-    buckets = client.get_buckets()
-
-    # To create or replace an existing bucket.
-    client.update_bucket(id='payments', data={'description': 'My payments data.'})
-
-    # Or modify some fields in an existing bucket.
-    # The Kinto server supports different types of patches, which can be used from kinto_http.patch_type.
-    client.patch_bucket(id='payments', changes=BasicPatch({'status': 'updated'}))
-
-    # It is also possible to manipulate bucket permissions (see later)
-    client.patch_bucket(id='payments', changes=BasicPatch(permissions={}))
-
-    # Or delete a bucket and everything under.
-    client.delete_bucket(id='payment')
-
-    # Or even every writable buckets.
-    client.delete_buckets()
+* ``get_bucket(id=None, **kwargs)``: retrieve single bucket
+* ``get_buckets(**kwargs)``: retrieve all readable buckets
+* ``create_bucket(id=None, data=None, **kwargs)``: create a bucket
+* ``update_bucket(id=None, data=None, **kwargs)``: create or replace an existing bucket
+* ``patch_bucket(id=None, changes=None, **kwargs)``: modify some fields in an existing bucket
+* ``delete_bucket(id=None, **kwargs)``: delete a bucket and everything under it
+* ``delete_buckets(**kwargs)``: delete every writable buckets
 
 
-Groups
-------
+Groups operations
+-----------------
 
-A group associates a name to a list of principals. It is useful in order to handle permissions.
-
-.. code-block:: python
-
-    # To create a group.
-    client.create_group(id='receipts', bucket='payments', data={'members': ['blah', 'foo']})
-
-    # Or get an existing one.
-    group = client.get_group(id='receipts', bucket='payments')
-
-    # Or retrieve all groups in the bucket.
-    groups = client.get_groups(bucket='payments')
-
-    # To create or replace an existing bucket.
-    client.update_group(id='receipts', bucket='payments', 'data'={'members':['foo']})
-
-    # Or modify some fields in an existing group.
-    # This uses the server's support for JSON patch, but any patch_type is accepted.
-    client.patch_group(id='receipts', bucket='payments',
-        changes=JSONPatch([{'op': 'add', 'path': '/data/members/0', 'value': 'ldap:user@corp.com'}]))
-
-    # To delete an existing group.
-    client.delete_group(id='receipts', bucket='payments')
-
-    # Or all groups in a bucket.
-    client.delete_groups(bucket='payments')
+* ``get_group(id=None, bucket=None, **kwargs)``: retrieve single group
+* ``get_groups(bucket=None, **kwargs)``: retrieve all readable groups
+* ``create_group(id=None, data=None, bucket=None, **kwargs)``: create a group
+* ``update_group(id=None, data=None, bucket=None, **kwargs)``: create or replace an existing group
+* ``patch_group(id=None, changes=None, bucket=None, **kwargs)``: modify some fields in an existing group
+* ``delete_group(id=None, bucket=None, **kwargs)``: delete a group and everything under it
+* ``delete_groups(bucket=None, **kwargs)``: delete every writable groups
 
 
 Collections
 -----------
 
-A collection is where records are stored.
-
-.. code-block:: python
-
-    # To create a collection.
-    client.create_collection(id='receipts', bucket='payments')
-
-    # Or get an existing one.
-    collection = client.get_collection(id='receipts', bucket='payments')
-
-    # Or retrieve all of them inside a bucket.
-    collections = client.get_collections(bucket='payments')
-
-    # To create or replace an exiting collection.
-    client.update_collection(id='receipts', bucket='payments', data={'description':'bleeh'})
-
-    # Or modify some fields of an existing collection.
-    client.patch_collection(id='receipts', bucket='payments', changes=MergePatch({'status':'updated'}))
-
-    # To delete an existing collection.
-    client.delete_collection(id='receipts', bucket='payments')
-
-    # Or every collections in a bucket.
-    client.delete_collections(bucket='payments')
+* ``get_collection(id=None, bucket=None, **kwargs)``: retrieve single collection
+* ``get_collections(bucket=None, **kwargs)``: retrieve all readable collections
+* ``create_collection(id=None, data=None, bucket=None, **kwargs)``: create a collection
+* ``update_collection(id=None, data=None, bucket=None, **kwargs)``: create or replace an existing collection
+* ``patch_collection(id=None, changes=None, bucket=None, **kwargs)``: modify some fields in an existing collection
+* ``delete_collection(id=None, bucket=None, **kwargs)``: delete a collection and everything under it
+* ``delete_collections(bucket=None, **kwargs)``: delete every writable collections
 
 
 Records
 -------
 
-Records can be retrieved from and saved to collections.
-
-A record is a dict with the "permissions" and "data" keys.
-
-.. code-block:: python
-
-    # You can pass a python dictionary to create the record.
-    client.create_record(data={'status': 'done', title: 'Todo #1'},
-                         collection='todos', bucket='default')
-
-    # You can use id to specify the record id when creating it.
-    client.create_record(id='todo2', data={'status': 'doing', 'title': 'Todo #2'},
-                         collection='todos', bucket='default')
-
-    # Or get an existing one by its id.
-    record = client.get_record(id='todo2', collection='todos', bucket='default')
-
-    # Or retrieve all records.
-    records = client.get_records(collection='todos', bucket='default')
-
-   # Or retrieve records page by page.
-   for page in client.get_paginated_records(collection='todos', bucket='default'):
-      # Do something with each page
-      print(page)
-
-    # Or retrieve records timestamp.
-    records_timestamp = client.get_records_timestamp(collection='todos', bucket='default')
-
-    # To replace a record using a previously fetched record
-    client.update_record(data=record, collection='todos', bucket='default')
-
-    # Or create or replace it by its id.
-    client.update_record(data={'status': 'unknown'}, id='todo2', collection='todos', bucket='default')
-
-    # Or modify some fields in an existing record.
-    client.patch_record(changes=MergePatch({'assignee': 'bob'}), id='todo2', collection='todos', bucket='default')
-
-    # To delete an existing record.
-    client.delete_record(id='89881454-e4e9-4ef0-99a9-404d95900352',
-                         collection='todos')
-
-    # Or every records of a collection.
-    client.delete_records(collection='todos')
+* ``get_record(id=None, bucket=None, collection=None, **kwargs)``: retrieve single record
+* ``get_records(bucket=None, collection=None, **kwargs)``: retrieve all readable records
+* ``get_paginated_records(bucket=None, collection=None, **kwargs)``: paginated list of records
+* ``get_records_timestamp(bucket=None, collection=None, **kwargs)``: return the records timestamp of this collection
+* ``create_record(id=None, data=None, bucket=None, collection=None, **kwargs)``: create a record
+* ``update_record(id=None, data=None, bucket=None, collection=None, **kwargs)``: create or replace an existing record
+* ``patch_record(id=None, changes=None, bucket=None, collection=None, **kwargs)``: modify some fields in an existing record
+* ``delete_record(id=None, bucket=None, collection=None, **kwargs)``: delete a record and everything under it
+* ``delete_records(bucket=None, collection=None, **kwargs)``: delete every writable records
 
 
 Permissions
 -----------
 
- By default, authors will get read and write access to the manipulated objects.
- It is possible to change this behavior by passing a dict to the `permissions`
- parameter.
-
- .. code-block:: python
-
-    client.create_record(
-        data={'foo': 'bar'},
-        permissions={'read': ['group:groupid']},
-        collection='todos')
-
-.. note::
-
-    Every creation or modification operation on a distant object can be given
-    a `permissions` parameter.
-
-Buckets, collections and records have permissions which can be edited.
-For instance to give access to "leplatrem" to a specific record, you would do:
+The objects permissions can be specified or modified by passing a ``permissions`` to ``create_*()``, ``patch_*()``, or ``update_*()`` methods:
 
 .. code-block:: python
 
-  record = client.get_record(1234, collection='todos', bucket='alexis')
-  record['permissions']['write'].append('leplatrem')
-  client.update_record(record)
+    client.create_record(data={'foo': 'bar'},
+                         permissions={'read': ['group:groupid']})
 
-  # During creation, it is possible to pass the permissions dict.
-  client.create_record(data={'foo': 'bar'}, permissions={})
+
+    record = client.get_record('123', collection='todos', bucket='alexis')
+    record['permissions']['write'].append('leplatrem')
+    client.update_record(data=record)
+
 
 Get or create
 -------------
 
 In some cases, you might want to create a bucket, collection, group or record only if
 it doesn't exist already. To do so, you can pass the ``if_not_exists=True``
-to the ``create_*`` methods::
+to the ``create_*()`` methods::
 
-  client.create_bucket(id='bucket', if_not_exists=True)
+  client.create_bucket(id='blog', if_not_exists=True)
+  client.create_collection(id='articles', bucket='blog', if_not_exists=True)
 
-Delete
-------
+
+Delete if exists
+----------------
 
 In some cases, you might want to delete a bucket, collection, group or record only if
 it exists already. To do so, you can pass the ``if_exists=True``
@@ -335,28 +188,50 @@ to the ``delete_*`` methods::
 
   client.delete_bucket(id='bucket', if_exists=True)
 
-Overwriting existing objects
-----------------------------
 
-Most of the methods take a ``safe`` argument, which defaults to ``True``. If set
-to ``True`` and a ``last_modified`` field is present in the passed ``data``,
-or if the ``if_match`` parameter is specified then a
-check will be added to the requests to ensure the record wasn't modified on
-the server side in the meantime.
+Patch operations
+----------------
+
+The ``.patch_*()`` operations receive a ``changes`` parameter.
+
+
+.. code-block:: python
+
+    from kinto_http import MergePatch, JSONPatch
+
+    client.patch_record(id='todo', changes=MergePatch({'assignee': 'bob'}))
+
+    client.patch_record(id='receipts', changes=JSONPatch([
+        {'op': 'add', 'path': '/data/members/0', 'value': 'ldap:user@corp.com'}
+    ]))
+
+
+Concurrency control
+-------------------
+
+The ``create_*()``, ``patch_*()``, and ``update_*()`` methods take a ``safe`` argument (default: ``True``).
+
+If ``True``, the client will ensure that the object wasn't modified on the server side since we fetched it. The timestamp will be implicitly read from the ``last_modified`` field in the passed ``data`` object, or taken explicitly from the ``if_match`` parameter.
+
 
 Batching operations
 -------------------
 
 Rather than issuing a request for each and every operation, it is possible to
-batch the requests. The client will then issue as little requests as possible.
+batch several operations in one request.
 
-It is possible to do batch requests using a Python context manager (``with``):
+Using the ``batch()`` method as a Python context manager (``with``):
 
 .. code-block:: python
 
   with client.batch() as batch:
       for idx in range(0, 100):
           batch.update_record(data={'id': idx})
+
+.. note::
+
+    Besides the ``results()`` method, a batch object shares all the same methods as
+    another client.
 
 Reading data from batch operations is achieved by using the ``results()`` method
 available after a batch context is closed.
@@ -370,8 +245,6 @@ available after a batch context is closed.
 
   r1, r2, r3 = batch.results()
 
-Besides the ``results()`` method, a batch object shares all the same methods as
-another client.
 
 Retry on error
 --------------
@@ -420,11 +293,10 @@ of them, you can specify the number of pages:
     records = client.get_records(_limit=10, pages=float('inf'))  # Infinity
 
 
-Generating endpoint paths
--------------------------
+Endpoint URLs
+-------------
 
-You may want to generate some endpoint paths, you can use the
-get_endpoint utility to do so:
+The ``get_endpoint()`` method returns the endpoint URL on the server:
 
 .. code-block:: python
 
@@ -432,6 +304,7 @@ get_endpoint utility to do so:
                     auth=('token', 'your-token'),
                     bucket="payments",
                     collection="receipts")
+
     print(client.get_endpoint("record",
                               id="c6894b2c-1856-11e6-9415-3c970ede22b0"))
 
@@ -515,55 +388,6 @@ The script now accepts basic options:
     -v, --verbose         Show all messages.
     -q, --quiet           Show only critical errors.
     -D, --debug           Show all messages, including debug messages.
-
-
-Moving records from one collection to another
----------------------------------------------
-
-Moving records is not directly supported by the CLI tools in this library.
-To do this you'll need to install kinto-wizard.
-
-::
-
-   pip install kinto-wizard
-
-Once kinto-wizard is installed you can then run a dump command in order to
-get all the records from one collection in a file.
-
-::
-
-   kinto-wizard dump \
-      --full --server http://{kinto_url}:8888/v1 \
-      --bucket {bucket_name} \
-      --collection {collection_name} \
-      --auth "Bearer {token}" \
-      > {path_to_file.yaml}
-
-This new local file has a description of the specified collection and its records.
-Now you can change the file in order to reflect the modifications you need.
-If you are moving items into a new collection you'll have to search for
-the collection name in the YAML file and change it, do not forget to change the id
-field of that collection too.
-
-After running the first dump command you might want to validate the dumped
-records, this will ensure that you can upload them successfully using the load command.
-
-::
-
-   kinto-wizard validate {path_to_file.yaml}
-
-With this local file you can now re-upload all records into a new collection
-by running the following load command.
-
-::
-
-   kinto-wizard load \
-      --server http://{kinto_url}:8888/v1 \
-      --auth {user}:{password} \
-      {path_to_file.yaml}
-
-The old collection will not be deleted automatically, so you probably would
-want to delete it manually.
 
 
 Run tests

@@ -197,7 +197,10 @@ The ``.patch_*()`` operations receive a ``changes`` parameter.
 
 .. code-block:: python
 
-    from kinto_http import MergePatch, JSONPatch
+    from kinto_http.patch_type import BasicPatch, MergePatch, JSONPatch
+
+
+    client.patch_record(id='abc', changes=BasicPatch({'over': 'write'}))
 
     client.patch_record(id='todo', changes=MergePatch({'assignee': 'bob'}))
 
@@ -246,6 +249,20 @@ available after a batch context is closed.
   r1, r2, r3 = batch.results()
 
 
+Errors
+------
+
+Failing operations will raise a ``KintoException``, which has ``request`` and ``response`` attributes.
+
+.. code-block:: python
+
+    try:
+        client.create_group(id="friends")
+    except kinto_http.KintoException as e:
+        if e.response and e.response.status_code == 403:
+            print("Not allowed!")
+
+
 Retry on error
 --------------
 
@@ -278,8 +295,15 @@ Pagination
 When the server responses are paginated, the client will download every pages and
 merge them transparently.
 
-However, it is possible to specify a limit for the number of items to be retrieved
-in one page:
+The ``get_paginated_records()`` method returns a generator that will yield each page:
+
+
+.. code-block:: python
+
+  for page in client.get_paginated_records():
+      records = page["data"]
+
+It is possible to specify a limit for the number of items to be retrieved in one page:
 
 .. code-block:: python
 

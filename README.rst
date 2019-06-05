@@ -292,7 +292,7 @@ It is possible (but not recommended) to force this value in the clients:
 Pagination
 ----------
 
-When the server responses are paginated, the client will download every pages and
+When the server responses are paginated, the client will download every page and
 merge them transparently.
 
 The ``get_paginated_records()`` method returns a generator that will yield each page:
@@ -320,7 +320,7 @@ of them, you can specify the number of pages:
 Endpoint URLs
 -------------
 
-The ``get_endpoint()`` method returns the endpoint URL on the server:
+The ``get_endpoint()`` method returns an endpoint URL on the server:
 
 .. code-block:: python
 

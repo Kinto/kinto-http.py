@@ -47,6 +47,7 @@ class Endpoints(object):
         "batch": "{root}/batch",
         "buckets": "{root}/buckets",
         "bucket": "{root}/buckets/{bucket}",
+        "history": "{root}/buckets/{bucket}/history",
         "groups": "{root}/buckets/{bucket}/groups",
         "group": "{root}/buckets/{bucket}/groups/{group}",
         "collections": "{root}/buckets/{bucket}/collections",
@@ -861,6 +862,18 @@ class Client(object):
 
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
+
+    def get_history(self, *, bucket=None, **kwargs):
+        endpoint = self.get_endpoint("history", bucket=bucket)
+        logger.info("Get history from bucket %r" % bucket or self._bucket_name)
+        return self._paginated(endpoint, **kwargs)
+
+    def purge_history(self, *, bucket=None, safe=True, if_match=None):
+        endpoint = self.get_endpoint('history', bucket=bucket)
+        headers = self._get_cache_headers(safe, if_match=if_match)
+        logger.info("Purge History of bucket %r" % bucket or self._bucket_name)
+        resp, _ = self.session.request('delete', endpoint, headers=headers)
+        return resp['data']
 
     def __repr__(self):
         if self._collection_name:

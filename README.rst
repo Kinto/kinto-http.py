@@ -317,6 +317,28 @@ of them, you can specify the number of pages:
     records = client.get_records(_limit=10, pages=float('inf'))  # Infinity
 
 
+History
+-------
+
+If the built-in `history plugin <https://kinto.readthedocs.io/en/latest/api/1.x/history.html>`_ is enabled, it is possible to retrieve the history of changes:
+
+.. code-block:: python
+
+    # Get the complete history of a bucket
+    changes = client.get_history(bucket='default')
+
+    # and optionally use filters
+    hist = client.get_history(bucket='default', _limit=2, _sort='-last_modified', _since='1533762576015')
+    hist = client.get_history(bucket='default', resource_name='collection')
+
+
+The history of a bucket can also be purged with:
+
+.. code-block:: python
+
+    client.purge_history(bucket='default')
+
+
 Endpoint URLs
 -------------
 

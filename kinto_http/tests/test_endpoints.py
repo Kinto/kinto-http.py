@@ -38,6 +38,9 @@ class EndpointsTest(unittest.TestCase):
             == "/buckets/buck/collections/coll/records/1"
         )
 
+    def test_history(self):
+        assert self.endpoints.get("history", **self.kwargs) == "/buckets/buck/history"
+
     def test_missing_arguments_raise_an_error(self):
         # Don't include the record id; it should raise an error.
         with self.assertRaises(KintoException) as context:

@@ -7,7 +7,9 @@ This document describes changes between each past release.
 10.5.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**New features**
+
+- Add history support (fixes #112), Thanks @FlorianKuckelkorn!
 
 
 10.4.1 (2019-05-22)

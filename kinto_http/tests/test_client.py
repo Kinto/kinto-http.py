@@ -1182,3 +1182,43 @@ class RecordTest(unittest.TestCase):
             permissions=None,
             headers=None,
         )
+
+
+class HistoryTest(unittest.TestCase):
+    def setUp(self):
+        self.session = mock.MagicMock()
+        self.client = Client(session=self.session)
+
+    def test_basic_retrivial_of_bucket_history(self):
+        mock_response(self.session)
+        self.client.get_history(bucket='mybucket')
+        url = '/buckets/mybucket/history'
+        self.session.request.assert_called_with('get', url, headers={}, params={})
+
+    def test_filter_sorting_operations_on_bucket_history(self):
+        mock_response(self.session)
+        self.client.get_history(bucket='mybucket',
+                                _limit=2,
+                                _sort='-last_modified',
+                                _since='1533762576015')
+
+        url = '/buckets/mybucket/history'
+        self.session.request.assert_called_with('get', url, headers={},
+                                                params={'_limit': 2,
+                                                        '_sort': '-last_modified',
+                                                        '_since': '1533762576015'}
+                                                )
+
+    def test_filtering_by_resource_name(self):
+        mock_response(self.session)
+        self.client.get_history(bucket='mybucket', resource_name='collection')
+        url = '/buckets/mybucket/history'
+        self.session.request.assert_called_with('get', url, headers={},
+                                                params={'resource_name': 'collection'}
+                                                )
+
+    def test_purging_of_history(self):
+        mock_response(self.session)
+        self.client.purge_history(bucket='mybucket')
+        url = '/buckets/mybucket/history'
+        self.session.request.assert_called_with('delete', url, headers=None)

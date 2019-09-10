@@ -142,7 +142,7 @@ class FunctionalTest(unittest.TestCase):
     def test_group_creation_if_bucket_does_not_exist(self):
         with pytest.raises(KintoException) as e:
             self.client.create_group(id="payments", bucket="mozilla", data={"members": ["blah"]})
-        assert str(e).endswith(
+        assert str(e.value).endswith(
             "PUT /v1/buckets/mozilla/groups/payments - "
             "403 Unauthorized. Please check that the "
             "bucket exists and that you have the permission "

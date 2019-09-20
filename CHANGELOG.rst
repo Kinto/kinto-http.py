@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.6.0 (unreleased)
+10.6.0 (2019-09-20)
 ===================
 
 **New features**

@@ -69,7 +69,7 @@ class Session(object):
         else:
             actual_url = endpoint
 
-        if not isinstance(self.timeout, bool):
+        if self.timeout is not False:
             kwargs.setdefault("timeout", self.timeout)
 
         if self.auth is not None:

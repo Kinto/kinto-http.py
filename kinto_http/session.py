@@ -19,9 +19,6 @@ USER_AGENT = "kinto_http/{} requests/{} python/{}".format(
 )
 
 
-unset = object()
-
-
 def create_session(server_url=None, auth=None, session=None, **kwargs):
     """Returns a session from the passed arguments.
 
@@ -52,7 +49,7 @@ class Session(object):
     """Handles all the interactions with the network.
     """
 
-    def __init__(self, server_url, auth=None, timeout=unset, retry=0, retry_after=None):
+    def __init__(self, server_url, auth=None, timeout=False, retry=0, retry_after=None):
         self.backoff = None
         self.server_url = server_url
         self.auth = auth
@@ -72,7 +69,7 @@ class Session(object):
         else:
             actual_url = endpoint
 
-        if self.timeout != unset:
+        if not isinstance(self.timeout, bool):
             kwargs.setdefault("timeout", self.timeout)
 
         if self.auth is not None:

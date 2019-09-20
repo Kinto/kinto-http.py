@@ -7,7 +7,9 @@ This document describes changes between each past release.
 10.6.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**New features**
+
+- Specify requests timeout in client constructor
 
 
 10.5.0 (2019-09-10)

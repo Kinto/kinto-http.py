@@ -49,12 +49,13 @@ class Session(object):
     """Handles all the interactions with the network.
     """
 
-    def __init__(self, server_url, auth=None, retry=0, retry_after=None):
+    def __init__(self, server_url, auth=None, timeout=False, retry=0, retry_after=None):
         self.backoff = None
         self.server_url = server_url
         self.auth = auth
         self.nb_retry = retry
         self.retry_after = retry_after
+        self.timeout = timeout
 
     def request(self, method, endpoint, data=None, permissions=None, payload=None, **kwargs):
         current_time = time.time()
@@ -67,6 +68,9 @@ class Session(object):
             actual_url = utils.urljoin(self.server_url, endpoint)
         else:
             actual_url = endpoint
+
+        if self.timeout is not False:
+            kwargs.setdefault("timeout", self.timeout)
 
         if self.auth is not None:
             kwargs.setdefault("auth", self.auth)

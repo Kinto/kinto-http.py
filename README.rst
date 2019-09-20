@@ -263,6 +263,30 @@ Failing operations will raise a ``KintoException``, which has ``request`` and ``
             print("Not allowed!")
 
 
+Requests Timeout
+----------------
+
+A ``timeout`` value in seconds can be specified in the client constructor:
+
+.. code-block:: python
+
+    client = KintoClient(server_url="...", timeout=5)
+
+To distinguish the connect from the read timeout, use a tuple:
+
+.. code-block:: python
+
+    client = KintoClient(server_url="...", timeout=(3.05, 27))
+
+For an infinit timeout, use ``None``:
+
+.. code-block:: python
+
+    client = KintoClient(server_url="...", timeout=None)
+
+See the `timeout documentation <https://2.python-requests.org//en/master/user/advanced/#timeouts>`_ of the underlying ``requests`` library.
+
+
 Retry on error
 --------------
 

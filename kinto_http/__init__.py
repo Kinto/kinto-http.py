@@ -92,12 +92,14 @@ class Client(object):
         collection=None,
         retry=0,
         retry_after=None,
+        timeout=None,
         ignore_batch_4xx=False
     ):
         self.endpoints = Endpoints()
 
         session_kwargs = dict(
-            server_url=server_url, auth=auth, session=session, retry=retry, retry_after=retry_after
+            server_url=server_url, auth=auth, session=session, retry=retry, retry_after=retry_after,
+            timeout=timeout,
         )
         self.session = create_session(**session_kwargs)
         self._bucket_name = bucket

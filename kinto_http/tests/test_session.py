@@ -33,6 +33,28 @@ class SessionTest(unittest.TestCase):
         session = Session(mock.sentinel.server_url)
         self.assertEqual(session.server_url, mock.sentinel.server_url)
 
+    def test_timeout_can_be_set_to_none(self):
+        response = fake_response(200)
+        self.requests_mock.request.return_value = response
+        session = Session("https://example.org", timeout=None)
+        self.assertEqual(session.auth, None)
+        session.request("get", "/test")
+        self.requests_mock.request.assert_called_with(
+            "get", "https://example.org/test", timeout=None,
+            headers=self.requests_mock.request.headers
+        )
+
+    def test_timeout_can_be_set_to_value(self):
+        response = fake_response(200)
+        self.requests_mock.request.return_value = response
+        session = Session("https://example.org", timeout=4)
+        self.assertEqual(session.auth, None)
+        session.request("get", "/test")
+        self.requests_mock.request.assert_called_with(
+            "get", "https://example.org/test", timeout=4,
+            headers=self.requests_mock.request.headers
+        )
+
     def test_no_auth_is_used_by_default(self):
         response = fake_response(200)
         self.requests_mock.request.return_value = response

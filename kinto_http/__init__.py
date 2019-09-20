@@ -98,7 +98,8 @@ class Client(object):
         self.endpoints = Endpoints()
 
         session_kwargs = dict(
-            server_url=server_url, auth=auth, session=session, retry=retry, retry_after=retry_after,
+            server_url=server_url, auth=auth, session=session,
+            retry=retry, retry_after=retry_after,
             timeout=timeout,
         )
         self.session = create_session(**session_kwargs)

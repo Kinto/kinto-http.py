@@ -193,6 +193,13 @@ class SessionTest(unittest.TestCase):
         body, headers = session.request("get", "https://example.org/test")
         assert body is None
 
+    def test_body_is_not_parsed_on_204(self):
+        response = fake_response(204)
+        self.requests_mock.request.return_value = response
+        session = Session("https://example.org")
+        body, _ = session.request("delete", "https://example.org/anothertest")
+        assert body is None
+
     def test_no_payload_is_sent_on_get_requests(self):
         response = fake_response(200)
         self.requests_mock.request.return_value = response

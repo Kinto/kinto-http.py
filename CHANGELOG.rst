@@ -7,7 +7,9 @@ This document describes changes between each past release.
 10.7.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**Bug fixes**
+
+- Do not try to parse content on ``204 No Content`` responses
 
 
 10.6.0 (2019-09-20)

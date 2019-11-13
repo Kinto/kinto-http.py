@@ -145,7 +145,7 @@ class Session(object):
                 exception.request = resp.request
                 exception.response = resp
                 raise exception
-        if resp.status_code == 304 or method == "head":
+        if resp.status_code == 204 or resp.status_code == 304 or method == "head":
             body = None
         else:
             body = resp.json()

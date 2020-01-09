@@ -93,14 +93,19 @@ class Client(object):
         retry=0,
         retry_after=None,
         timeout=None,
-        ignore_batch_4xx=False
+        ignore_batch_4xx=False,
+        headers=None,
     ):
         self.endpoints = Endpoints()
 
         session_kwargs = dict(
-            server_url=server_url, auth=auth, session=session,
-            retry=retry, retry_after=retry_after,
+            server_url=server_url,
+            auth=auth,
+            session=session,
+            retry=retry,
+            retry_after=retry_after,
             timeout=timeout,
+            headers=headers,
         )
         self.session = create_session(**session_kwargs)
         self._bucket_name = bucket
@@ -323,7 +328,7 @@ class Client(object):
         original=None,
         permissions=None,
         safe=True,
-        if_match=None
+        if_match=None,
     ):
         """Issue a PATCH request on a bucket.
 
@@ -464,7 +469,7 @@ class Client(object):
         original=None,
         permissions=None,
         safe=True,
-        if_match=None
+        if_match=None,
     ):
         """Issue a PATCH request on a bucket.
 
@@ -592,7 +597,7 @@ class Client(object):
         original=None,
         permissions=None,
         safe=True,
-        if_match=None
+        if_match=None,
     ):
         """Issue a PATCH request on a collection.
 
@@ -724,7 +729,7 @@ class Client(object):
         data=None,
         permissions=None,
         safe=True,
-        if_not_exists=False
+        if_not_exists=False,
     ):
 
         id = id or data.get("id", None)
@@ -774,7 +779,7 @@ class Client(object):
         data=None,
         permissions=None,
         safe=True,
-        if_match=None
+        if_match=None,
     ):
         id = id or data.get("id")
         if id is None:
@@ -803,7 +808,7 @@ class Client(object):
         original=None,
         permissions=None,
         safe=True,
-        if_match=None
+        if_match=None,
     ):
         """Issue a PATCH request on a record.
 
@@ -872,11 +877,11 @@ class Client(object):
         return self._paginated(endpoint, **kwargs)
 
     def purge_history(self, *, bucket=None, safe=True, if_match=None):
-        endpoint = self.get_endpoint('history', bucket=bucket)
+        endpoint = self.get_endpoint("history", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         logger.info("Purge History of bucket %r" % bucket or self._bucket_name)
-        resp, _ = self.session.request('delete', endpoint, headers=headers)
-        return resp['data']
+        resp, _ = self.session.request("delete", endpoint, headers=headers)
+        return resp["data"]
 
     def __repr__(self):
         if self._collection_name:

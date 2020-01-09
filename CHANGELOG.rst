@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.7.0 (unreleased)
+10.7.0 (2020-01-09)
 ===================
 
 **New features**

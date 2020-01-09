@@ -88,6 +88,21 @@ is `customized on the server <https://kinto.readthedocs.io/en/stable/configurati
 the client must specify the expected type: ``kinto_http.BearerTokenAuth("XYPJTNsFKV2" type="Bearer+OIDC")``
 
 
+Custom headers
+--------------
+
+Custom headers can be specified in the Client constructor, and will be sent in every request:
+
+.. code-block:: python
+
+    import kinto_http
+
+    client = kinto_http.Client(server_url="http://server/v1", headers={
+        "Allow-Access": "CDN",
+        "User-Agent": "blocklist-updater"
+    })
+
+
 Getting server information
 --------------------------
 

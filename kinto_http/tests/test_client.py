@@ -225,6 +225,16 @@ class ClientTest(unittest.TestCase):
         client = Client(server_url="https://kinto.notmyidea.org/v1", bucket="buck")
         assert client._bucket_name == "buck"
 
+    def test_client_can_receive_default_headers(self):
+        r = mock.MagicMock()
+        r.status_code = 200
+        client = Client(server_url="https://kinto.io/v1", headers={"Allow-Access": "CDN"})
+        with mock.patch("kinto_http.session.requests") as mocked:
+            mocked.request.return_value = r
+            client.server_info()
+
+        assert "Allow-Access" in mocked.request.call_args_list[0][1]["headers"]
+
     def test_client_clone_with_auth(self):
         client_clone = self.client.clone(auth=("reviewer", ""))
         assert client_clone.session.auth == ("reviewer", "")
@@ -1191,34 +1201,34 @@ class HistoryTest(unittest.TestCase):
 
     def test_basic_retrivial_of_bucket_history(self):
         mock_response(self.session)
-        self.client.get_history(bucket='mybucket')
-        url = '/buckets/mybucket/history'
-        self.session.request.assert_called_with('get', url, headers={}, params={})
+        self.client.get_history(bucket="mybucket")
+        url = "/buckets/mybucket/history"
+        self.session.request.assert_called_with("get", url, headers={}, params={})
 
     def test_filter_sorting_operations_on_bucket_history(self):
         mock_response(self.session)
-        self.client.get_history(bucket='mybucket',
-                                _limit=2,
-                                _sort='-last_modified',
-                                _since='1533762576015')
+        self.client.get_history(
+            bucket="mybucket", _limit=2, _sort="-last_modified", _since="1533762576015"
+        )
 
-        url = '/buckets/mybucket/history'
-        self.session.request.assert_called_with('get', url, headers={},
-                                                params={'_limit': 2,
-                                                        '_sort': '-last_modified',
-                                                        '_since': '1533762576015'}
-                                                )
+        url = "/buckets/mybucket/history"
+        self.session.request.assert_called_with(
+            "get",
+            url,
+            headers={},
+            params={"_limit": 2, "_sort": "-last_modified", "_since": "1533762576015"},
+        )
 
     def test_filtering_by_resource_name(self):
         mock_response(self.session)
-        self.client.get_history(bucket='mybucket', resource_name='collection')
-        url = '/buckets/mybucket/history'
-        self.session.request.assert_called_with('get', url, headers={},
-                                                params={'resource_name': 'collection'}
-                                                )
+        self.client.get_history(bucket="mybucket", resource_name="collection")
+        url = "/buckets/mybucket/history"
+        self.session.request.assert_called_with(
+            "get", url, headers={}, params={"resource_name": "collection"}
+        )
 
     def test_purging_of_history(self):
         mock_response(self.session)
-        self.client.purge_history(bucket='mybucket')
-        url = '/buckets/mybucket/history'
-        self.session.request.assert_called_with('delete', url, headers=None)
+        self.client.purge_history(bucket="mybucket")
+        url = "/buckets/mybucket/history"
+        self.session.request.assert_called_with("delete", url, headers=None)

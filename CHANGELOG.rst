@@ -7,7 +7,9 @@ This document describes changes between each past release.
 10.7.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**New features**
+
+- Add ability to specify headers from Client constructor
 
 
 10.6.1 (2019-11-13)

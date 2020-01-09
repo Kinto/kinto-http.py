@@ -49,13 +49,16 @@ class Session(object):
     """Handles all the interactions with the network.
     """
 
-    def __init__(self, server_url, auth=None, timeout=False, retry=0, retry_after=None):
+    def __init__(
+        self, server_url, auth=None, timeout=False, headers=None, retry=0, retry_after=None
+    ):
         self.backoff = None
         self.server_url = server_url
         self.auth = auth
         self.nb_retry = retry
         self.retry_after = retry_after
         self.timeout = timeout
+        self.headers = headers or {}
 
     def request(self, method, endpoint, data=None, permissions=None, payload=None, **kwargs):
         current_time = time.time()
@@ -75,9 +78,6 @@ class Session(object):
         if self.auth is not None:
             kwargs.setdefault("auth", self.auth)
 
-        if kwargs.get("headers") is None:
-            kwargs["headers"] = dict()
-
         if kwargs.get("params") is not None:
             params = dict()
             for key, value in kwargs["params"].items():
@@ -89,13 +89,10 @@ class Session(object):
                     params[key] = json.dumps(value)
             kwargs["params"] = params
 
-        if not isinstance(kwargs["headers"], dict):
-            raise TypeError("headers must be a dict (got {})".format(kwargs["headers"]))
+        overridden_headers = kwargs.get("headers") or {}
 
         # Set the default User-Agent if not already defined.
-        # In the meantime, clone the header dict to avoid changing the
-        # user header dict when adding information.
-        kwargs["headers"] = {"User-Agent": USER_AGENT, **kwargs["headers"]}
+        kwargs["headers"] = {"User-Agent": USER_AGENT, **self.headers, **overridden_headers}
 
         payload = payload or {}
         if data is not None:

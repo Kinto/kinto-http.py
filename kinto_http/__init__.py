@@ -11,7 +11,7 @@ from kinto_http.exceptions import (
     BucketNotFound,
     CollectionNotFound,
     KintoException,
-    KintoBatchException,
+    KintoBatchException
 )
 from kinto_http.patch_type import PatchType, BasicPatch
 

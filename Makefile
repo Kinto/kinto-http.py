@@ -48,6 +48,9 @@ flake8: install-dev
 black: install-dev
 	$(VENV)/bin/black kinto_http
 
+lint: install-dev
+	$(VENV)/bin/therapist run --use-tracked-files kinto_http
+
 clean:
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -type d | xargs rm -fr

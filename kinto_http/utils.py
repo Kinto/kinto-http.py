@@ -38,15 +38,15 @@ def quote(text):
     return '"{0}"'.format(text)
 
 
-def chunks(l, n):
-    """Yield successive n-sized chunks from l.
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst.
     Source: http://stackoverflow.com/a/312464
     """
     if n > 0:
-        for i in range(0, len(l), n):
-            yield l[i : i + n]
+        for i in range(0, len(lst), n):
+            yield lst[i : i + n]
     else:
-        yield l
+        yield lst
 
 
 def json_iso_datetime(obj):

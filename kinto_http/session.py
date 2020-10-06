@@ -46,8 +46,7 @@ def create_session(server_url=None, auth=None, session=None, **kwargs):
 
 
 class Session(object):
-    """Handles all the interactions with the network.
-    """
+    """Handles all the interactions with the network."""
 
     def __init__(
         self, server_url, auth=None, timeout=False, headers=None, retry=0, retry_after=None

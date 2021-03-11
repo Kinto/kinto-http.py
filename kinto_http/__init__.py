@@ -97,7 +97,6 @@ class Client(object):
         headers=None,
     ):
         self.endpoints = Endpoints()
-
         session_kwargs = dict(
             server_url=server_url,
             auth=auth,
@@ -780,6 +779,7 @@ class Client(object):
         permissions=None,
         safe=True,
         if_match=None,
+        user_agent=None,
     ):
         id = id or data.get("id")
         if id is None:
@@ -792,6 +792,8 @@ class Client(object):
             % (id, collection or self._collection_name, bucket or self._bucket_name)
         )
 
+        if user_agent:
+           self.session.headers['User-Agent'] = user_agent
         resp, _ = self.session.request(
             "put", endpoint, data=data, headers=headers, permissions=permissions
         )

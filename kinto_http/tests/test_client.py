@@ -1,6 +1,7 @@
 import unittest
 from unittest import mock
 import pytest
+import time
 
 from kinto_http import (
     KintoException,
@@ -10,7 +11,7 @@ from kinto_http import (
     Client,
     DO_NOT_OVERWRITE,
 )
-from kinto_http.session import create_session
+from kinto_http.session import USER_AGENT, create_session
 from kinto_http.patch_type import MergePatch, JSONPatch
 
 from .support import mock_response, build_response, get_http_error
@@ -26,6 +27,16 @@ class ClientTest(unittest.TestCase):
         self.client.server_info()
         self.session.request.assert_called_with("get", "/")
 
+    def test_create_client_with_custom_user_agent(self):
+        new_agent_name = "007" + str(time.time())
+        self.client = Client(server_url="https://kinto.notmyidea.org/v1", headers={"User-Agent": new_agent_name})
+        assert self.client.session.headers["User-Agent"] != USER_AGENT
+        assert self.client.session.headers["User-Agent"] == new_agent_name
+
+    def test_create_client_with_default_user_agent(self):
+        self.client = Client(server_url="https://kinto.notmyidea.org/v1")
+        assert self.client.headers["User-Agent"] == USER_AGENT
+        
     def test_auth_from_access_token(self):
         r = mock.MagicMock()
         r.headers = {}
@@ -1192,6 +1203,20 @@ class RecordTest(unittest.TestCase):
             permissions=None,
             headers=None,
         )
+
+    def test_update_record_can_update_user_agent(self):
+        new_agent_name = "new_agent" + str(time.time())
+        assert self.client.session.user_agent != new_agent_name
+        self.client.update_record(data={"id": "record"}, collection="coll", user_agent=new_agent_name)
+        assert self.client.session.headers["User-Agent"] == new_agent_name
+        self.session.request.assert_called_with(
+            "put",
+            "/buckets/buck/collections/coll/records/record",
+            data={"id": "record"},
+            permissions=None,
+            headers=None,
+        )
+
 
 
 class HistoryTest(unittest.TestCase):

@@ -59,6 +59,10 @@ class Session(object):
         self.timeout = timeout
         self.headers = headers or {}
 
+        # Set the default User-Agent if not already defined in the headers.
+        if "User-Agent" not in self.headers:
+           self.headers["User-Agent"] = USER_AGENT
+
     def request(self, method, endpoint, data=None, permissions=None, payload=None, **kwargs):
         current_time = time.time()
         if self.backoff and self.backoff > current_time:
@@ -78,7 +82,7 @@ class Session(object):
             kwargs.setdefault("auth", self.auth)
 
         if kwargs.get("params") is not None:
-            params = dict()
+  
             for key, value in kwargs["params"].items():
                 if key.startswith("in_") or key.startswith("exclude_"):
                     params[key] = ",".join(value)
@@ -89,9 +93,7 @@ class Session(object):
             kwargs["params"] = params
 
         overridden_headers = kwargs.get("headers") or {}
-
-        # Set the default User-Agent if not already defined.
-        kwargs["headers"] = {"User-Agent": USER_AGENT, **self.headers, **overridden_headers}
+        kwargs["headers"] = {**self.headers, **overridden_headers}
 
         payload = payload or {}
         if data is not None:

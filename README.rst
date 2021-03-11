@@ -229,7 +229,7 @@ Concurrency control
 
 The ``create_*()``, ``patch_*()``, and ``update_*()`` methods take a ``safe`` argument (default: ``True``).
 
-If ``True``, the client will ensure that the object wasn't modified on the server side since we fetched it. The timestamp will be implicitly read from the ``last_modified`` field in the passed ``data`` object, or taken explicitly from the ``if_match`` parameter.
+If ``True``, the client will ensure that the object doesn't exist already for creations, or wasn't modified on the server side since we fetched it. The timestamp will be implicitly read from the ``last_modified`` field in the passed ``data`` object, or taken explicitly from the ``if_match`` parameter.
 
 
 Batching operations

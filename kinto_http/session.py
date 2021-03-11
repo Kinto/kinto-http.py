@@ -82,7 +82,7 @@ class Session(object):
             kwargs.setdefault("auth", self.auth)
 
         if kwargs.get("params") is not None:
-  
+            params = dict()  
             for key, value in kwargs["params"].items():
                 if key.startswith("in_") or key.startswith("exclude_"):
                     params[key] = ",".join(value)

@@ -2,6 +2,7 @@ import unittest
 from unittest import mock
 import pytest
 import time
+from kinto_http.tests.functional import SERVER_URL
 
 from kinto_http import (
     KintoException,
@@ -35,7 +36,7 @@ class ClientTest(unittest.TestCase):
 
     def test_create_client_with_default_user_agent(self):
         self.client = Client(server_url="https://kinto.notmyidea.org/v1")
-        assert self.client.headers["User-Agent"] == USER_AGENT
+        assert self.client.session.headers["User-Agent"] == USER_AGENT
         
     def test_auth_from_access_token(self):
         r = mock.MagicMock()
@@ -1206,18 +1207,13 @@ class RecordTest(unittest.TestCase):
 
     def test_update_record_can_update_user_agent(self):
         new_agent_name = "new_agent" + str(time.time())
-        assert self.client.session.user_agent != new_agent_name
-        self.client.update_record(data={"id": "record"}, collection="coll", user_agent=new_agent_name)
-        assert self.client.session.headers["User-Agent"] == new_agent_name
-        self.session.request.assert_called_with(
-            "put",
-            "/buckets/buck/collections/coll/records/record",
-            data={"id": "record"},
-            permissions=None,
-            headers=None,
-        )
-
-
+        self.client = Client(server_url=SERVER_URL)
+        assert self.client.session.headers["User-Agent"] != new_agent_name
+        try:
+            self.client.update_record(data={"id": "record"}, bucket="buck",\
+                collection="coll", user_agent=new_agent_name)
+        except:
+            assert self.client.session.headers["User-Agent"] == new_agent_name
 
 class HistoryTest(unittest.TestCase):
     def setUp(self):

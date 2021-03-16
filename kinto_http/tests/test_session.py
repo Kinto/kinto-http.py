@@ -10,7 +10,6 @@ from datetime import date, datetime
 from kinto_http.session import Session, create_session
 from kinto_http.exceptions import KintoException, BackoffException
 from kinto_http.session import USER_AGENT
-from kinto_http.tests.functional import SERVER_URL, DEFAULT_AUTH
 from .support import get_200, get_503, get_403, get_http_response
 
 def fake_response(status_code):

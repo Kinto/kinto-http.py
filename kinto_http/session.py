@@ -2,13 +2,13 @@ import json
 import pkg_resources
 import sys
 import time
+import warnings
 from urllib.parse import urlparse
 
 import requests
 
 from kinto_http import utils
 from kinto_http.exceptions import KintoException, BackoffException
-
 
 kinto_http_version = pkg_resources.get_distribution("kinto_http").version
 requests_version = pkg_resources.get_distribution("requests").version
@@ -110,6 +110,8 @@ class Session(object):
         retry = self.nb_retry
         while retry >= 0:
             resp = requests.request(method, actual_url, **kwargs)
+            if "Alert" in resp.headers:
+                warnings.warn(resp.headers["Alert"], DeprecationWarning)
             backoff_seconds = resp.headers.get("Backoff")
             if backoff_seconds:
                 self.backoff = time.time() + int(backoff_seconds)

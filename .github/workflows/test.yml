@@ -13,8 +13,14 @@ jobs:
       matrix:
         toxenv: [py37, py38, py39, py39-master]
         include:
+          - toxenv: py37
+            python-version: "3.7"
           - toxenv: py38
             python-version: "3.8"
+          - toxenv: py39
+            python-version: "3.9"
+          - toxenv: py39-master
+            python-version: "3.9"
 
     steps:
       - uses: actions/checkout@v2

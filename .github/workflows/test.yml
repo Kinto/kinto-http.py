@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toxenv: [py38, py38-master]
+        toxenv: [py37, py38, py39, py39-master]
         include:
           - toxenv: py38
             python-version: "3.8"

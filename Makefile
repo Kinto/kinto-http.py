@@ -42,11 +42,10 @@ functional: install-dev need-kinto-running
 tests: install-dev need-kinto-running
 	$(VENV)/bin/py.test -f kinto_http/tests/ kinto_http/tests/functional.py
 
-flake8: install-dev
-	$(VENV)/bin/flake8 kinto_http
-
-black: install-dev
+format: install-dev
+	$(VENV)/bin/isort --profile=black --lines-after-imports=2 kinto_http
 	$(VENV)/bin/black kinto_http
+	$(VENV)/bin/flake8 kinto_http
 
 lint: install-dev
 	$(VENV)/bin/therapist run --use-tracked-files kinto_http

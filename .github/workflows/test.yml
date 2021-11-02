@@ -1,0 +1,66 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+name: Unit Testing
+jobs:
+  chore:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toxenv: [py37, py38, py39, py39-master]
+        include:
+          - toxenv: py37
+            python-version: "3.7"
+          - toxenv: py38
+            python-version: "3.8"
+          - toxenv: py39
+            python-version: "3.9"
+          - toxenv: py39-master
+            python-version: "3.9"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install virtualenv
+        run: |
+          pip install virtualenv
+          virtualenv --python=python3 .venv
+
+      - name: Print environment
+        run: |
+          source .venv/bin/activate
+          python --version
+          pip --version
+
+      - name: Install dependencies
+        run: |
+          source .venv/bin/activate
+          pip install tox
+          make install-dev
+
+      - name: Use kinto @ master
+        if: matrix.toxenv == 'py38-master'
+        run: pip install --pre -U https://github.com/Kinto/kinto/tarball/master
+
+      - name: Run server
+        run: |
+          make runkinto &
+          sleep 5  # to give kinto migrate a chance to finish
+
+      - name: Tox
+        run: |
+          source .venv/bin/activate
+          tox -e ${{ matrix.toxenv }}
+
+      - name: Coveralls
+        uses: AndreMiras/coveralls-python-action@develop
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,7 +1,9 @@
 import unittest
 from unittest import mock
-from .support import mock_response
+
 from kinto_http import Client
+
+from .support import mock_response
 
 
 class BucketLoggingTest(unittest.TestCase):

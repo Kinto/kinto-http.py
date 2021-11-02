@@ -2,8 +2,7 @@ import argparse
 import unittest
 from unittest import mock
 
-from kinto_http import cli_utils
-from kinto_http import BearerTokenAuth
+from kinto_http import BearerTokenAuth, cli_utils
 
 
 ALL_PARAMETERS = [

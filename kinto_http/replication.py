@@ -3,6 +3,7 @@ import logging
 
 from kinto_http import Client, cli_utils
 
+
 logger = logging.getLogger(__name__)
 
 

@@ -1,16 +1,18 @@
-import pkg_resources
-import pytest
 import sys
 import time
 import unittest
 import warnings
-from unittest import mock
 from datetime import date, datetime
+from unittest import mock
 
-from kinto_http.session import Session, create_session
-from kinto_http.exceptions import KintoException, BackoffException
-from kinto_http.session import USER_AGENT
-from .support import get_200, get_503, get_403, get_http_response
+import pkg_resources
+import pytest
+
+from kinto_http.exceptions import BackoffException, KintoException
+from kinto_http.session import USER_AGENT, Session, create_session
+
+from .support import get_200, get_403, get_503, get_http_response
+
 
 def fake_response(status_code):
     response = mock.MagicMock()
@@ -247,7 +249,9 @@ class SessionTest(unittest.TestCase):
     def test_deprecation_warning_on_deprecated_endpoint(self):
         response = fake_response(200)
         response.headers = {}
-        response.headers['Alert'] = str({'code':'testcode', 'message':'You are deprecated','url':'http://updateme.com'})
+        response.headers["Alert"] = str(
+            {"code": "testcode", "message": "You are deprecated", "url": "http://updateme.com"}
+        )
         self.requests_mock.request.return_value = response
         session = Session("http://localhost:8888/v1")
         with warnings.catch_warnings(record=True) as w:
@@ -256,6 +260,7 @@ class SessionTest(unittest.TestCase):
 
             assert len(w) == 1
             assert issubclass(w[-1].category, DeprecationWarning)
+
 
 class SessionJSONTest(unittest.TestCase):
     def setUp(self):
@@ -442,4 +447,3 @@ class RetryRequestTest(unittest.TestCase):
         time.sleep(1)  # Spend the backoff
         session.request("get", "/test")  # The second call reset the backoff
         self.assertIsNone(session.backoff)
-

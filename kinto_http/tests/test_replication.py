@@ -1,9 +1,8 @@
 import unittest
 from unittest import mock
 
+from kinto_http import Client, exceptions
 from kinto_http.replication import replicate
-from kinto_http import Client
-from kinto_http import exceptions
 
 from .support import mock_response
 

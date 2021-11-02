@@ -2,15 +2,22 @@ import configparser
 import hashlib
 import hmac
 import os.path
-import pytest
-import requests
 import unittest
 from unittest import mock
 from urllib.parse import urljoin
 
-from kinto_http import Client, BucketNotFound, CollectionNotFound, KintoException
-from kinto_http import replication
+import pytest
+import requests
+
+from kinto_http import (
+    BucketNotFound,
+    Client,
+    CollectionNotFound,
+    KintoException,
+    replication,
+)
 from kinto_http.patch_type import JSONPatch
+
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
 

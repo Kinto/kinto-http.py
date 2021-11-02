@@ -3,6 +3,7 @@ import json
 import re
 import unicodedata
 from datetime import date, datetime
+
 from unidecode import unidecode
 
 

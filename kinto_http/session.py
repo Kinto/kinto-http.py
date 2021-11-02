@@ -1,14 +1,15 @@
 import json
-import pkg_resources
 import sys
 import time
 import warnings
 from urllib.parse import urlparse
 
+import pkg_resources
 import requests
 
 from kinto_http import utils
-from kinto_http.exceptions import KintoException, BackoffException
+from kinto_http.exceptions import BackoffException, KintoException
+
 
 kinto_http_version = pkg_resources.get_distribution("kinto_http").version
 requests_version = pkg_resources.get_distribution("requests").version

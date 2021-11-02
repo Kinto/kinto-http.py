@@ -2,7 +2,7 @@ import argparse
 import getpass
 import logging
 
-from . import Client, BearerTokenAuth
+from . import BearerTokenAuth, Client
 
 
 def get_auth(auth):

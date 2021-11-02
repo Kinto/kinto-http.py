@@ -1,9 +1,10 @@
 import logging
 from collections import defaultdict
 
-from kinto_http.exceptions import KintoException, KintoBatchException
+from kinto_http.exceptions import KintoBatchException, KintoException
 
 from . import utils
+
 
 logger = logging.getLogger(__name__)
 

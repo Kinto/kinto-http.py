@@ -37,6 +37,7 @@ jobs:
       - name: Install dependencies
         run: |
           source .venv/bin/activate
+          pip install tox
           make install-dev
 
       - name: Use kinto @ master

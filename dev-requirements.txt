@@ -7,5 +7,4 @@ pytest-cov
 pytest-xdist
 kinto
 therapist
-tox
 unidecode

@@ -1,0 +1,64 @@
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+name: Unit Testing
+jobs:
+  chore:
+    name: Unit Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        toxenv: [py38, py38-master, flake8]
+        include:
+          - toxenv: py38
+            python-version: "3.8"
+
+          - toxenv: flake8
+            python-version: "3.X"
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install virtualenv
+        run: |
+          pip install virtualenv
+          virtualenv --python=python3 .venv
+
+      - name: Print environment
+        run: |
+          source .venv/bin/activate
+          python --version
+          pip --version
+
+      - name: Install dependencies
+        run: |
+          source .venv/bin/activate
+          pip install tox
+          make install-dev
+
+      - name: Use kinto @ master
+        if: matrix.toxenv == 'py38-master'
+        run: pip install --pre -U https://github.com/Kinto/kinto/tarball/master
+
+      - name: Run server
+        run: |
+          make runkinto &
+          sleep 5  # to give kinto migrate a chance to finish
+
+      - name: Tox
+        run: |
+          source .venv/bin/activate
+          tox -e ${{ matrix.toxenv }}
+
+      - name: Coveralls
+        uses: AndreMiras/coveralls-python-action@develop
+        if: matrix.toxenv != 'flake8'
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}

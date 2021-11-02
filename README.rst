@@ -1,8 +1,8 @@
 Kinto python client
 ###################
 
-.. image:: https://img.shields.io/travis/Kinto/kinto-http.py.svg
-        :target: https://travis-ci.org/Kinto/kinto-http.py
+.. image:: https://github.com/Kinto/kinto-http.py/actions/workflows/test.yml/badge.svg
+        :target: https://github.com/Kinto/kinto-http.py/actions
 
 .. image:: https://img.shields.io/pypi/v/kinto-http.svg
         :target: https://pypi.python.org/pypi/kinto-http

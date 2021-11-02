@@ -11,13 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        toxenv: [py38, py38-master, flake8]
+        toxenv: [py38, py38-master]
         include:
           - toxenv: py38
             python-version: "3.8"
-
-          - toxenv: flake8
-            python-version: "3.X"
 
     steps:
       - uses: actions/checkout@v2
@@ -59,6 +56,5 @@ jobs:
 
       - name: Coveralls
         uses: AndreMiras/coveralls-python-action@develop
-        if: matrix.toxenv != 'flake8'
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

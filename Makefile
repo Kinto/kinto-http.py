@@ -1,4 +1,4 @@
-VIRTUALENV = virtualenv --python=python3.7
+VIRTUALENV = virtualenv --python=python3
 VENV := $(shell echo $${VIRTUAL_ENV-.venv})
 PYTHON = $(VENV)/bin/python
 DEV_STAMP = $(VENV)/.dev_env_installed.stamp
@@ -34,13 +34,13 @@ runkinto: install-dev
 	$(VENV)/bin/kinto start --ini kinto_http/tests/config/kinto.ini
 
 tests-once: install-dev need-kinto-running
-	$(VENV)/bin/py.test kinto_http/tests/functional.py kinto_http/tests --cov-report term-missing --cov-fail-under 100 --cov kinto_http
+	$(VENV)/bin/pytest --cov-report term-missing --cov-fail-under 100 --cov kinto_http
 
 functional: install-dev need-kinto-running
-	$(VENV)/bin/py.test kinto_http/tests/functional.py
+	$(VENV)/bin/pytest -k "test_functional"
 
 tests: install-dev need-kinto-running
-	$(VENV)/bin/py.test -f kinto_http/tests/ kinto_http/tests/functional.py
+	$(VENV)/bin/pytest
 
 format: install-dev
 	$(VENV)/bin/isort --profile=black --lines-after-imports=2 kinto_http

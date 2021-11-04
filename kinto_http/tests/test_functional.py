@@ -313,7 +313,7 @@ class FunctionalTest(unittest.TestCase):
         )
         client.create_bucket()
         client.create_collection()
-        for i in range(10):
+        for _ in range(10):
             client.create_record(data={"foo": "bar"}, permissions={"read": ["account:alexis"]})
         # Kinto is running with kinto.paginate_by = 5
         records = client.get_records()
@@ -325,7 +325,7 @@ class FunctionalTest(unittest.TestCase):
         )
         client.create_bucket()
         client.create_collection()
-        for i in range(10):
+        for _ in range(10):
             client.create_record(data={"foo": "bar"}, permissions={"read": ["account:alexis"]})
 
         pages = list(client.get_paginated_records())

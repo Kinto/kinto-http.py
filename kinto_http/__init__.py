@@ -674,7 +674,7 @@ class Client(object):
 
     # Records
 
-    def get_records_timestamp(self, *, collection=None, bucket=None, **kwargs):
+    def get_records_timestamp(self, *, collection=None, bucket=None):
         endpoint = self.get_endpoint("records", bucket=bucket, collection=collection)
         if endpoint not in self._records_timestamp:
             record_resp, headers = self.session.request("head", endpoint)

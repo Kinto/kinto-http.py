@@ -72,6 +72,17 @@ some key arguments.
 
     client2 = client.clone(collection="orders")
 
+An asynchronous client is also available. It has all the same endpoints as the sync client except for the batch operations.
+
+.. code-block:: python
+
+    from kinto_http.aio import AsyncClient
+
+    auth = ('alexis', 'p4ssw0rd')
+
+    client = AsyncClient(server_url='http://localhost:8888/v1', auth=auth)
+    info = await client.server_info()
+    assert 'schema' in info['capabilities'], "Server doesn't support schema validation."
 
 Using a Bearer access token to authenticate (OpenID)
 ----------------------------------------------------
@@ -236,7 +247,7 @@ Batching operations
 -------------------
 
 Rather than issuing a request for each and every operation, it is possible to
-batch several operations in one request.
+batch several operations in one request (sync client only).
 
 Using the ``batch()`` method as a Python context manager (``with``):
 

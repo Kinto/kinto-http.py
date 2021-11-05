@@ -36,14 +36,14 @@ class AsyncClient(Client):
         return AsyncClient(**kwargs)
 
     @retry_timeout
-    async def server_info(self, *args, **kwargs) -> Dict:
+    async def server_info(self) -> Dict:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.server_info(*args, **kwargs))
+        return await loop.run_in_executor(None, lambda: self._client.server_info())
 
     @retry_timeout
-    async def get_bucket(self, *args, **kwargs) -> Dict:
+    async def get_bucket(self, *, id=None, **kwargs) -> Dict:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.get_bucket(*args, **kwargs))
+        return await loop.run_in_executor(None, lambda: self._client.get_bucket(id=id, **kwargs))
 
     @retry_timeout
     async def get_buckets(self, **kwargs) -> List[Dict]:
@@ -51,195 +51,431 @@ class AsyncClient(Client):
         return await loop.run_in_executor(None, lambda: self._client.get_buckets(**kwargs))
 
     @retry_timeout
-    async def create_bucket(self, *args, **kwargs) -> Dict:
+    async def create_bucket(
+        self, *, id=None, data=None, permissions=None, safe=True, if_not_exists=False
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.create_bucket(*args, **kwargs)
+            None,
+            lambda: self._client.create_bucket(
+                id=id, data=data, permissions=permissions, safe=safe, if_not_exists=if_not_exists
+            ),
         )
 
     @retry_timeout
-    async def update_bucket(self, *args, **kwargs) -> Dict:
+    async def update_bucket(
+        self, *, id=None, data=None, permissions=None, safe=True, if_match=None
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.update_bucket(*args, **kwargs)
+            None,
+            lambda: self._client.update_bucket(
+                id=id, data=data, permissions=permissions, safe=safe, if_match=if_match
+            ),
         )
 
     @retry_timeout
-    async def patch_bucket(self, *args, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.patch_bucket(*args, **kwargs))
-
-    @retry_timeout
-    async def delete_bucket(self, *args, **kwargs) -> Dict:
+    async def patch_bucket(
+        self,
+        *,
+        id=None,
+        changes=None,
+        data=None,
+        original=None,
+        permissions=None,
+        safe=True,
+        if_match=None,
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.delete_bucket(*args, **kwargs)
+            None,
+            lambda: self._client.patch_bucket(
+                id=id,
+                changes=changes,
+                data=data,
+                original=original,
+                permissions=permissions,
+                safe=safe,
+                if_match=if_match,
+            ),
         )
 
     @retry_timeout
-    async def delete_buckets(self, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.delete_buckets(**kwargs))
-
-    @retry_timeout
-    async def get_group(self, *args, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.get_group(*args, **kwargs))
-
-    @retry_timeout
-    async def get_groups(self, *args, **kwargs) -> List[Dict]:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.get_groups(*args, **kwargs))
-
-    @retry_timeout
-    async def create_group(self, *args, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.create_group(*args, **kwargs))
-
-    @retry_timeout
-    async def update_group(self, *args, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.update_group(*args, **kwargs))
-
-    @retry_timeout
-    async def patch_group(self, *args, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.patch_group(*args, **kwargs))
-
-    @retry_timeout
-    async def delete_group(self, *args, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.delete_group(*args, **kwargs))
-
-    @retry_timeout
-    async def delete_groups(self, *args, **kwargs) -> Dict:
+    async def delete_bucket(self, *, id=None, safe=True, if_match=None, if_exists=False) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.delete_groups(*args, **kwargs)
+            None,
+            lambda: self._client.delete_bucket(
+                id=id, safe=safe, if_match=if_match, if_exists=if_exists
+            ),
         )
 
     @retry_timeout
-    async def get_collection(self, *args, **kwargs) -> Dict:
+    async def delete_buckets(self, *, safe=True, if_match=None) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.get_collection(*args, **kwargs)
+            None, lambda: self._client.delete_buckets(safe=safe, if_match=if_match)
         )
 
     @retry_timeout
-    async def get_collections(self, *args, **kwargs) -> List[Dict]:
+    async def get_group(self, *, id, bucket=None) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.get_collections(*args, **kwargs)
+            None, lambda: self._client.get_group(id=id, bucket=bucket)
         )
 
     @retry_timeout
-    async def create_collection(self, *args, **kwargs) -> Dict:
+    async def get_groups(self, *, bucket=None, **kwargs) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.create_collection(*args, **kwargs)
+            None, lambda: self._client.get_groups(bucket=bucket, **kwargs)
         )
 
     @retry_timeout
-    async def update_collection(self, *args, **kwargs) -> Dict:
+    async def create_group(
+        self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.update_collection(*args, **kwargs)
+            None,
+            lambda: self._client.create_group(
+                id=id,
+                bucket=bucket,
+                data=data,
+                permissions=permissions,
+                safe=safe,
+                if_not_exists=if_not_exists,
+            ),
         )
 
     @retry_timeout
-    async def patch_collection(self, *args, **kwargs) -> Dict:
+    async def update_group(
+        self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.patch_collection(*args, **kwargs)
+            None,
+            lambda: self._client.update_group(
+                id=id,
+                bucket=bucket,
+                data=data,
+                permissions=permissions,
+                safe=safe,
+                if_match=if_match,
+            ),
         )
 
     @retry_timeout
-    async def delete_collection(self, *args, **kwargs) -> Dict:
+    async def patch_group(
+        self,
+        *,
+        id=None,
+        bucket=None,
+        changes=None,
+        data=None,
+        original=None,
+        permissions=None,
+        safe=True,
+        if_match=None,
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.delete_collection(*args, **kwargs)
+            None,
+            lambda: self._client.patch_group(
+                id=id,
+                bucket=bucket,
+                changes=changes,
+                data=data,
+                original=original,
+                permissions=permissions,
+                safe=safe,
+                if_match=if_match,
+            ),
         )
 
     @retry_timeout
-    async def delete_collections(self, *args, **kwargs) -> Dict:
+    async def delete_group(
+        self, *, id, bucket=None, safe=True, if_match=None, if_exists=False
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.delete_collections(*args, **kwargs)
+            None,
+            lambda: self._client.delete_group(
+                id=id, bucket=bucket, safe=safe, if_match=if_match, if_exists=if_exists
+            ),
         )
 
     @retry_timeout
-    async def get_record(self, *args, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.get_record(*args, **kwargs))
-
-    @retry_timeout
-    async def get_records(self, *args, **kwargs) -> List[Dict]:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.get_records(*args, **kwargs))
-
-    @retry_timeout
-    async def get_paginated_records(self, *args, **kwargs) -> List[Dict]:
+    async def delete_groups(self, *, bucket=None, safe=True, if_match=None) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.get_paginated_records(*args, **kwargs)
+            None, lambda: self._client.delete_groups(bucket=bucket, safe=safe, if_match=if_match)
         )
 
     @retry_timeout
-    async def get_records_timestamp(self, *args, **kwargs) -> str:
+    async def get_collection(self, *, id=None, bucket=None, **kwargs) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.get_records_timestamp(*args, **kwargs)
+            None, lambda: self._client.get_collection(id=id, bucket=bucket, **kwargs)
         )
 
     @retry_timeout
-    async def create_record(self, *args, **kwargs) -> Dict:
+    async def get_collections(self, *, bucket=None, **kwargs) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.create_record(*args, **kwargs)
+            None, lambda: self._client.get_collections(bucket=bucket, **kwargs)
         )
 
     @retry_timeout
-    async def update_record(self, *args, **kwargs) -> Dict:
+    async def create_collection(
+        self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.update_record(*args, **kwargs)
+            None,
+            lambda: self._client.create_collection(
+                id=id,
+                bucket=bucket,
+                data=data,
+                permissions=permissions,
+                safe=safe,
+                if_not_exists=if_not_exists,
+            ),
         )
 
     @retry_timeout
-    async def patch_record(self, *args, **kwargs) -> Dict:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.patch_record(*args, **kwargs))
-
-    @retry_timeout
-    async def delete_record(self, *args, **kwargs) -> Dict:
+    async def update_collection(
+        self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.delete_record(*args, **kwargs)
+            None,
+            lambda: self._client.update_collection(
+                id=id,
+                bucket=bucket,
+                data=data,
+                permissions=permissions,
+                safe=safe,
+                if_match=if_match,
+            ),
         )
 
     @retry_timeout
-    async def delete_records(self, *args, **kwargs) -> Dict:
+    async def patch_collection(
+        self,
+        *,
+        id=None,
+        bucket=None,
+        changes=None,
+        data=None,
+        original=None,
+        permissions=None,
+        safe=True,
+        if_match=None,
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.delete_records(*args, **kwargs)
+            None,
+            lambda: self._client.patch_collection(
+                id=id,
+                bucket=bucket,
+                changes=changes,
+                data=data,
+                original=original,
+                permissions=permissions,
+                safe=safe,
+                if_match=if_match,
+            ),
         )
 
     @retry_timeout
-    async def get_history(self, *args, **kwargs) -> List[Dict]:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.get_history(*args, **kwargs))
-
-    @retry_timeout
-    async def purge_history(self, *args, **kwargs) -> List[Dict]:
+    async def delete_collection(
+        self, *, id=None, bucket=None, safe=True, if_match=None, if_exists=False
+    ) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
-            None, lambda: self._client.purge_history(*args, **kwargs)
+            None,
+            lambda: self._client.delete_collection(
+                id=id, bucket=bucket, safe=safe, if_match=if_match, if_exists=if_exists
+            ),
         )
 
     @retry_timeout
-    async def get_endpoint(self, *args, **kwargs) -> str:
+    async def delete_collections(self, *, bucket=None, safe=True, if_match=None) -> Dict:
         loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, lambda: self._client.get_endpoint(*args, **kwargs))
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.delete_collections(bucket=bucket, safe=safe, if_match=if_match),
+        )
+
+    @retry_timeout
+    async def get_record(self, *, id, collection=None, bucket=None, **kwargs) -> Dict:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.get_record(id=id, collection=collection, bucket=bucket, **kwargs),
+        )
+
+    @retry_timeout
+    async def get_records(self, *, collection=None, bucket=None, **kwargs) -> List[Dict]:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, lambda: self._client.get_records(collection=collection, bucket=bucket, **kwargs)
+        )
+
+    @retry_timeout
+    async def get_paginated_records(self, *, collection=None, bucket=None, **kwargs) -> List[Dict]:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.get_paginated_records(
+                collection=collection, bucket=bucket, **kwargs
+            ),
+        )
+
+    @retry_timeout
+    async def get_records_timestamp(self, *, collection=None, bucket=None) -> str:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, lambda: self._client.get_records_timestamp(collection=collection, bucket=bucket)
+        )
+
+    @retry_timeout
+    async def create_record(
+        self,
+        *,
+        id=None,
+        bucket=None,
+        collection=None,
+        data=None,
+        permissions=None,
+        safe=True,
+        if_not_exists=False,
+    ) -> Dict:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.create_record(
+                id=id,
+                bucket=bucket,
+                collection=collection,
+                data=data,
+                permissions=permissions,
+                safe=safe,
+                if_not_exists=if_not_exists,
+            ),
+        )
+
+    @retry_timeout
+    async def update_record(
+        self,
+        *,
+        id=None,
+        collection=None,
+        bucket=None,
+        data=None,
+        permissions=None,
+        safe=True,
+        if_match=None,
+    ) -> Dict:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.update_record(
+                id=id,
+                collection=collection,
+                bucket=bucket,
+                data=data,
+                permissions=permissions,
+                safe=safe,
+                if_match=if_match,
+            ),
+        )
+
+    @retry_timeout
+    async def patch_record(
+        self,
+        *,
+        id=None,
+        collection=None,
+        bucket=None,
+        changes=None,
+        data=None,
+        original=None,
+        permissions=None,
+        safe=True,
+        if_match=None,
+    ) -> Dict:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.patch_record(
+                id=id,
+                collection=collection,
+                bucket=bucket,
+                changes=changes,
+                data=data,
+                original=original,
+                permissions=permissions,
+                safe=safe,
+                if_match=if_match,
+            ),
+        )
+
+    @retry_timeout
+    async def delete_record(
+        self, *, id, collection=None, bucket=None, safe=True, if_match=None, if_exists=False
+    ) -> Dict:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.delete_record(
+                id=id,
+                collection=collection,
+                bucket=bucket,
+                safe=safe,
+                if_match=if_match,
+                if_exists=if_exists,
+            ),
+        )
+
+    @retry_timeout
+    async def delete_records(
+        self, *, collection=None, bucket=None, safe=True, if_match=None
+    ) -> Dict:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.delete_records(
+                collection=collection, bucket=bucket, safe=safe, if_match=if_match
+            ),
+        )
+
+    @retry_timeout
+    async def get_history(self, *, bucket=None, **kwargs) -> List[Dict]:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, lambda: self._client.get_history(bucket=bucket, **kwargs)
+        )
+
+    @retry_timeout
+    async def purge_history(self, *, bucket=None, safe=True, if_match=None) -> List[Dict]:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, lambda: self._client.purge_history(bucket=bucket, safe=safe, if_match=if_match)
+        )
+
+    @retry_timeout
+    async def get_endpoint(
+        self, name, *, bucket=None, group=None, collection=None, id=None
+    ) -> str:
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._client.get_endpoint(
+                name, bucket=bucket, group=group, collection=collection, id=id
+            ),
+        )
 
     @retry_timeout
     async def get_monitor_changes(self, bust_cache=False, **kwargs) -> List[Dict]:

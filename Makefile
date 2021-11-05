@@ -19,7 +19,7 @@ $(INSTALL_STAMP): $(PYTHON) setup.py
 
 install-dev: $(INSTALL_STAMP) $(DEV_STAMP)
 $(DEV_STAMP): $(PYTHON) dev-requirements.txt
-	$(VENV)/bin/pip install --pre -Ur dev-requirements.txt
+	$(VENV)/bin/pip install -Ur dev-requirements.txt
 	touch $(DEV_STAMP)
 
 virtualenv: $(PYTHON)
@@ -39,7 +39,7 @@ tests-once: install-dev need-kinto-running
 functional: install-dev need-kinto-running
 	$(VENV)/bin/pytest -k "test_functional"
 
-tests: install-dev need-kinto-running
+tests: install-dev need-kinto-running lint
 	$(VENV)/bin/pytest
 
 format: install-dev

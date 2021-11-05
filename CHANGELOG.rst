@@ -7,7 +7,9 @@ This document describes changes between each past release.
 10.8.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**New features**
+
+- Asynchronous client is now available: ``from kinto_http.aio import AsyncClient`` (`#268 <https://github.com/Kinto/kinto-http.py/pull/268>`_)
 
 
 10.7.0 (2020-01-09)

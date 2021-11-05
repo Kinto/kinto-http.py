@@ -47,7 +47,7 @@ jobs:
           make install-dev
 
       - name: Use kinto @ master
-        if: matrix.toxenv == 'py38-master'
+        if: matrix.toxenv == 'py39-master'
         run: pip install --pre -U https://github.com/Kinto/kinto/tarball/master
 
       - name: Run server

@@ -5,8 +5,9 @@ from unittest.mock import MagicMock
 import pytest
 from pytest_mock import MockerFixture
 
-from kinto_http import DO_NOT_OVERWRITE, BearerTokenAuth, BucketNotFound, KintoException
-from kinto_http.aio import AsyncClient as Client
+from kinto_http import AsyncClient as Client
+from kinto_http import BearerTokenAuth, BucketNotFound, KintoException
+from kinto_http.constants import DO_NOT_OVERWRITE
 from kinto_http.patch_type import JSONPatch, MergePatch
 from kinto_http.session import create_session
 
@@ -30,30 +31,6 @@ async def test_get_endpoint(async_client_setup: Tuple[Client, MagicMock]):
         "records", bucket="homebrewing", collection="recipes"
     )
     assert actual_endpoint == "/buckets/homebrewing/collections/recipes/records"
-
-
-@pytest.mark.asyncio
-async def test_get_monitor_changes_with_no_changes(async_client_setup: Tuple[Client, MagicMock]):
-    client, _ = async_client_setup
-    actual_changes = await client.get_monitor_changes()
-    assert not actual_changes
-
-
-@pytest.mark.asyncio
-async def test_get_monitor_changes_with_value_error(async_client_setup: Tuple[Client, MagicMock]):
-    client, _ = async_client_setup
-    with pytest.raises(ValueError):
-        await client.get_monitor_changes(bust_cache=True, _expected=123)
-
-
-@pytest.mark.asyncio
-async def test_get_monitor_changes_with_bust_cache(record_setup: Tuple[Client, MagicMock]):
-    client, session = record_setup
-    mock_response(session, data=[{"id": 1234}])
-    actual_changes = await client.get_monitor_changes(bust_cache=True)
-    assert len(actual_changes) == 1
-    assert "id" in actual_changes[0]
-    assert actual_changes[0]["id"] == 1234
 
 
 def test_auth_from_access_token(mocker: MockerFixture):

@@ -7,8 +7,8 @@ import pytest
 import requests
 from pytest_mock import MockerFixture
 
+from kinto_http import AsyncClient as Client
 from kinto_http import BucketNotFound, CollectionNotFound, KintoException
-from kinto_http.aio import AsyncClient as Client
 from kinto_http.patch_type import JSONPatch
 
 

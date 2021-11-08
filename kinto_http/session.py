@@ -1,23 +1,13 @@
 import json
-import sys
 import time
 import warnings
 from urllib.parse import urlparse
 
-import pkg_resources
 import requests
 
 from kinto_http import utils
+from kinto_http.constants import USER_AGENT
 from kinto_http.exceptions import BackoffException, KintoException
-
-
-kinto_http_version = pkg_resources.get_distribution("kinto_http").version
-requests_version = pkg_resources.get_distribution("requests").version
-python_version = ".".join(map(str, sys.version_info[:3]))
-
-USER_AGENT = "kinto_http/{} requests/{} python/{}".format(
-    kinto_http_version, requests_version, python_version
-)
 
 
 def create_session(server_url=None, auth=None, session=None, **kwargs):

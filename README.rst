@@ -76,7 +76,7 @@ An asynchronous client is also available. It has all the same endpoints as the s
 
 .. code-block:: python
 
-    from kinto_http.aio import AsyncClient
+    from kinto_http import AsyncClient
 
     auth = ('alexis', 'p4ssw0rd')
 

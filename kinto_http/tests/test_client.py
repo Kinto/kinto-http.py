@@ -4,15 +4,15 @@ from unittest import mock
 import pytest
 
 from kinto_http import (
-    DO_NOT_OVERWRITE,
     BearerTokenAuth,
     BucketNotFound,
     Client,
     KintoBatchException,
     KintoException,
+    create_session,
 )
+from kinto_http.constants import DO_NOT_OVERWRITE
 from kinto_http.patch_type import JSONPatch, MergePatch
-from kinto_http.session import create_session
 
 from .support import build_response, get_http_error, mock_response
 
@@ -190,8 +190,9 @@ class ClientTest(unittest.TestCase):
     def test_batch_options_are_transmitted(self):
         settings = {"batch_max_requests": 25}
         self.session.request.side_effect = [({"settings": settings}, [])]
-        with mock.patch("kinto_http.create_session") as create_session:
+        with mock.patch("kinto_http.client.create_session") as create_session:
             with self.client.batch(bucket="moz", collection="test", retry=12, retry_after=20):
+                print(create_session.call_args_list)
                 _, last_call_kwargs = create_session.call_args_list[-1]
                 self.assertEqual(last_call_kwargs["retry"], 12)
                 self.assertEqual(last_call_kwargs["retry_after"], 20)

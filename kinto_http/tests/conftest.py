@@ -6,7 +6,7 @@ import pytest
 import requests
 from pytest_mock.plugin import MockerFixture
 
-from kinto_http.aio import AsyncClient as Client
+from kinto_http import AsyncClient as Client
 
 from .support import mock_response
 from .test_functional_async import DEFAULT_AUTH, SERVER_URL, create_user

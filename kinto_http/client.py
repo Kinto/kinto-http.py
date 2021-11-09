@@ -846,7 +846,7 @@ class Client(object):
         return "<KintoClient %s>" % absolute_endpoint
 
 
-class AsyncClient(Client):
+class AsyncClient(object):
     def __init__(
         self,
         *,
@@ -861,18 +861,23 @@ class AsyncClient(Client):
         ignore_batch_4xx=False,
         headers=None,
     ):
-        super().__init__(
+        self.endpoints = Endpoints()
+
+        session_kwargs = dict(
             server_url=server_url,
-            session=session,
             auth=auth,
-            bucket=bucket,
-            collection=collection,
+            session=session,
             retry=retry,
             retry_after=retry_after,
             timeout=timeout,
-            ignore_batch_4xx=ignore_batch_4xx,
             headers=headers,
         )
+        self.session = create_session(**session_kwargs)
+        self._bucket_name = bucket
+        self._collection_name = collection
+        self._server_settings = None
+        self._records_timestamp = {}
+        self._ignore_batch_4xx = ignore_batch_4xx
         self._client = Client(
             server_url=server_url,
             session=session,
@@ -1351,4 +1356,4 @@ class AsyncClient(Client):
             endpoint = self._client.get_endpoint("root")
 
         absolute_endpoint = utils.urljoin(self.session.server_url, endpoint)
-        return f"<KintoClient {absolute_endpoint}>"
+        return f"<KintoAsyncClient {absolute_endpoint}>"

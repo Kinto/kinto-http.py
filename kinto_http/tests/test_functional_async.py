@@ -1,50 +1,22 @@
-import hashlib
-import hmac
-from typing import Dict, Tuple
-from urllib.parse import urljoin
-
 import pytest
-import requests
 from pytest_mock import MockerFixture
 
-from kinto_http import AsyncClient as Client
 from kinto_http import BucketNotFound, CollectionNotFound, KintoException
 from kinto_http.patch_type import JSONPatch
 
-
-SERVER_URL = "http://localhost:8888/v1"
-DEFAULT_AUTH = ("user", "p4ssw0rd")
+from .support import get_user_id
 
 
-# Backported from kinto.core.utils
-def hmac_digest(secret, message, encoding="utf-8") -> hmac.HMAC:
-    """Return hex digest of a message HMAC using secret"""
-    if isinstance(secret, str):
-        secret = secret.encode(encoding)
-    return hmac.new(secret, message.encode(encoding), hashlib.sha256).hexdigest()
+pytestmark = pytest.mark.asyncio
 
 
-def create_user(server_url: str, credentials: Tuple[str, str]) -> Dict:
-    account_url = urljoin(server_url, "/accounts/{}".format(credentials[0]))
-    r = requests.put(account_url, json={"data": {"password": credentials[1]}}, auth=DEFAULT_AUTH)
-    r.raise_for_status()
-    return r.json()
-
-
-def get_user_id(server_url: str, credentials: Tuple[str, str]) -> str:
-    r = create_user(server_url, credentials)
-    return f"account:{r['data']['id']}"
-
-
-@pytest.mark.asyncio
 async def test_bucket_creation(functional_setup):
     client = functional_setup
     bucket = await client.create_bucket(id="mozilla")
-    user_id = get_user_id(SERVER_URL, DEFAULT_AUTH)
+    user_id = get_user_id(client.session.server_url, client.session.auth)
     assert user_id in bucket["permissions"]["write"]
 
 
-@pytest.mark.asyncio
 async def test_bucket_creation_if_not_exists(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -52,7 +24,6 @@ async def test_bucket_creation_if_not_exists(functional_setup):
     await client.create_bucket(id="mozilla", if_not_exists=True)
 
 
-@pytest.mark.asyncio
 async def test_buckets_retrieval(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -60,7 +31,6 @@ async def test_buckets_retrieval(functional_setup):
     assert len(buckets) == 1
 
 
-@pytest.mark.asyncio
 async def test_bucket_retrieval(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -69,7 +39,6 @@ async def test_bucket_retrieval(functional_setup):
     # present during retrieval.
 
 
-@pytest.mark.asyncio
 async def test_bucket_modification(functional_setup):
     client = functional_setup
     bucket = await client.create_bucket(id="mozilla", data={"version": 1})
@@ -82,14 +51,12 @@ async def test_bucket_modification(functional_setup):
     assert "version" not in bucket["data"]
 
 
-@pytest.mark.asyncio
 async def test_bucket_retrieval_fails_when_not_created(functional_setup):
     client = functional_setup
     with pytest.raises(BucketNotFound):
         await client.get_bucket(id="non-existent")
 
 
-@pytest.mark.asyncio
 async def test_bucket_deletion(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -98,7 +65,6 @@ async def test_bucket_deletion(functional_setup):
         await client.get_bucket(id="mozilla")
 
 
-@pytest.mark.asyncio
 async def test_bucket_deletion_if_exists(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -106,7 +72,6 @@ async def test_bucket_deletion_if_exists(functional_setup):
     await client.delete_bucket(id="mozilla", if_exists=True)
 
 
-@pytest.mark.asyncio
 async def test_buckets_deletion(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -116,14 +81,12 @@ async def test_buckets_deletion(functional_setup):
         await client.get_bucket(id="mozilla")
 
 
-@pytest.mark.asyncio
 async def test_buckets_deletion_when_no_buckets_exist(functional_setup):
     client = functional_setup
     deleted_buckets = await client.delete_buckets()
     assert len(deleted_buckets) == 0
 
 
-@pytest.mark.asyncio
 async def test_bucket_save(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla", permissions={"write": ["account:alexis"]})
@@ -131,7 +94,6 @@ async def test_bucket_save(functional_setup):
     assert "account:alexis" in bucket["permissions"]["write"]
 
 
-@pytest.mark.asyncio
 async def test_group_creation(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -146,7 +108,6 @@ async def test_group_creation(functional_setup):
     assert "blah" in group["permissions"]["write"]
 
 
-@pytest.mark.asyncio
 async def test_group_creation_if_not_exists(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -160,7 +121,6 @@ async def test_group_creation_if_not_exists(functional_setup):
     )
 
 
-@pytest.mark.asyncio
 async def test_group_creation_if_bucket_does_not_exist(functional_setup):
     client = functional_setup
     with pytest.raises(KintoException) as e:
@@ -173,7 +133,6 @@ async def test_group_creation_if_bucket_does_not_exist(functional_setup):
     )
 
 
-@pytest.mark.asyncio
 async def test_group_update(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -187,7 +146,6 @@ async def test_group_update(functional_setup):
     assert group["data"]["members"][1] == "foo"
 
 
-@pytest.mark.asyncio
 async def test_group_list(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -199,7 +157,6 @@ async def test_group_list(functional_setup):
     assert set([coll["id"] for coll in groups]) == set(["receipts", "assets"])
 
 
-@pytest.mark.asyncio
 async def test_group_deletion(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -208,7 +165,6 @@ async def test_group_deletion(functional_setup):
     assert len(await client.get_groups(bucket="mozilla")) == 0
 
 
-@pytest.mark.asyncio
 async def test_group_deletion_if_exists(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -217,7 +173,6 @@ async def test_group_deletion_if_exists(functional_setup):
     await client.delete_group(id="payments", bucket="mozilla", if_exists=True)
 
 
-@pytest.mark.asyncio
 async def test_group_deletion_can_still_raise_errors(functional_setup, mocker: MockerFixture):
     client = functional_setup
     error = KintoException("An error occured")
@@ -226,7 +181,6 @@ async def test_group_deletion_can_still_raise_errors(functional_setup, mocker: M
         await client.delete_group(id="payments", bucket="mozilla", if_exists=True)
 
 
-@pytest.mark.asyncio
 async def test_groups_deletion(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -236,7 +190,6 @@ async def test_groups_deletion(functional_setup):
     assert len(await client.get_groups(bucket="mozilla")) == 0
 
 
-@pytest.mark.asyncio
 async def test_groups_deletion_when_no_groups_exist(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -244,7 +197,6 @@ async def test_groups_deletion_when_no_groups_exist(functional_setup):
     assert len(deleted_groups) == 0
 
 
-@pytest.mark.asyncio
 async def test_collection_creation(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -257,7 +209,6 @@ async def test_collection_creation(functional_setup):
     assert "account:alexis" in collection["permissions"]["write"]
 
 
-@pytest.mark.asyncio
 async def test_collection_not_found(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -266,14 +217,12 @@ async def test_collection_not_found(functional_setup):
         await client.get_collection(id="payments", bucket="mozilla")
 
 
-@pytest.mark.asyncio
 async def test_collection_access_forbidden(functional_setup):
     client = functional_setup
     with pytest.raises(KintoException):
         await client.get_collection(id="payments", bucket="mozilla")
 
 
-@pytest.mark.asyncio
 async def test_collection_creation_if_not_exists(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -282,7 +231,6 @@ async def test_collection_creation_if_not_exists(functional_setup):
     await client.create_collection(id="payments", bucket="mozilla", if_not_exists=True)
 
 
-@pytest.mark.asyncio
 async def test_collection_list(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -296,7 +244,6 @@ async def test_collection_list(functional_setup):
     assert set([coll["id"] for coll in collections]) == set(["receipts", "assets"])
 
 
-@pytest.mark.asyncio
 async def test_collection_deletion(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -305,7 +252,6 @@ async def test_collection_deletion(functional_setup):
     assert len(await client.get_collections(bucket="mozilla")) == 0
 
 
-@pytest.mark.asyncio
 async def test_collection_deletion_if_exists(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -314,7 +260,6 @@ async def test_collection_deletion_if_exists(functional_setup):
     await client.delete_collection(id="payments", bucket="mozilla", if_exists=True)
 
 
-@pytest.mark.asyncio
 async def test_collection_deletion_can_still_raise_errors(functional_setup, mocker: MockerFixture):
     client = functional_setup
     error = KintoException("An error occured")
@@ -323,7 +268,6 @@ async def test_collection_deletion_can_still_raise_errors(functional_setup, mock
         await client.delete_collection(id="payments", bucket="mozilla", if_exists=True)
 
 
-@pytest.mark.asyncio
 async def test_collections_deletion(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -333,7 +277,6 @@ async def test_collections_deletion(functional_setup):
     assert len(await client.get_collections(bucket="mozilla")) == 0
 
 
-@pytest.mark.asyncio
 async def test_collections_deletion_when_no_collections_exist(functional_setup):
     client = functional_setup
     await client.create_bucket(id="mozilla")
@@ -341,11 +284,8 @@ async def test_collections_deletion_when_no_collections_exist(functional_setup):
     assert len(deleted_collections) == 0
 
 
-@pytest.mark.asyncio
 async def test_record_creation_and_retrieval(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     created = await client.create_record(
@@ -355,11 +295,8 @@ async def test_record_creation_and_retrieval(functional_setup):
     assert "account:alexis" in record["permissions"]["read"]
 
 
-@pytest.mark.asyncio
 async def test_records_list_retrieval(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     await client.create_record(data={"foo": "bar"}, permissions={"read": ["account:alexis"]})
@@ -367,11 +304,8 @@ async def test_records_list_retrieval(functional_setup):
     assert len(records) == 1
 
 
-@pytest.mark.asyncio
 async def test_records_timestamp_retrieval(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     record = await client.create_record(
@@ -381,11 +315,8 @@ async def test_records_timestamp_retrieval(functional_setup):
     assert str(etag) == str(record["data"]["last_modified"])
 
 
-@pytest.mark.asyncio
 async def test_records_paginated_list_retrieval(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     for _ in range(10):
@@ -395,11 +326,8 @@ async def test_records_paginated_list_retrieval(functional_setup):
     assert len(records) == 10
 
 
-@pytest.mark.asyncio
 async def test_records_generator_retrieval(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     for _ in range(10):
@@ -410,11 +338,8 @@ async def test_records_generator_retrieval(functional_setup):
     assert len(pages) == 2
 
 
-@pytest.mark.asyncio
 async def test_single_record_save(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     created = await client.create_record(
@@ -432,11 +357,8 @@ async def test_single_record_save(functional_setup):
     assert created["data"]["id"] == retrieved["data"]["id"]
 
 
-@pytest.mark.asyncio
 async def test_single_record_doesnt_overwrite(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     created = await client.create_record(
@@ -448,11 +370,8 @@ async def test_single_record_doesnt_overwrite(functional_setup):
         await client.create_record(data={"id": created["data"]["id"], "bar": "baz"})
 
 
-@pytest.mark.asyncio
 async def test_single_record_creation_if_not_exists(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     created = await client.create_record(data={"foo": "bar"})
@@ -461,11 +380,8 @@ async def test_single_record_creation_if_not_exists(functional_setup):
     )
 
 
-@pytest.mark.asyncio
 async def test_single_record_can_overwrite(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     created = await client.create_record(
@@ -475,11 +391,8 @@ async def test_single_record_can_overwrite(functional_setup):
     await client.create_record(data={"id": created["data"]["id"], "bar": "baz"}, safe=False)
 
 
-@pytest.mark.asyncio
 async def test_one_record_deletion(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     record = await client.create_record(data={"foo": "bar"})
@@ -488,11 +401,8 @@ async def test_one_record_deletion(functional_setup):
     assert len(await client.get_records()) == 0
 
 
-@pytest.mark.asyncio
 async def test_record_deletion_if_exists(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     record = await client.create_record(data={"foo": "bar"})
@@ -502,11 +412,8 @@ async def test_record_deletion_if_exists(functional_setup):
     assert deleted_if_exists is None
 
 
-@pytest.mark.asyncio
 async def test_multiple_record_deletion(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     await client.create_record(data={"foo": "bar"})
@@ -514,33 +421,28 @@ async def test_multiple_record_deletion(functional_setup):
     assert len(await client.get_records()) == 0
 
 
-@pytest.mark.asyncio
 async def test_records_deletion_when_no_records_exist(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
     deleted_records = await client.delete_records()
     assert len(deleted_records) == 0
 
 
-@pytest.mark.asyncio
 async def test_bucket_sharing(functional_setup):
     client = functional_setup
     alice_credentials = ("alice", "p4ssw0rd")
-    alice_userid = get_user_id(SERVER_URL, alice_credentials)
+    alice_userid = get_user_id(client.session.server_url, alice_credentials)
 
     # Create a bucket and share it with alice.
     await client.create_bucket(id="shared-bucket", permissions={"read": [alice_userid]})
 
-    alice_client = Client(server_url=SERVER_URL, auth=alice_credentials)
+    alice_client = client.clone(auth=alice_credentials)
     await alice_client.get_bucket(id="shared-bucket")
 
 
-@pytest.mark.asyncio
 async def test_updating_data_on_a_group(functional_setup):
-    client = Client(server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla")
+    client = functional_setup.clone(bucket="mozilla")
     await client.create_bucket()
     await client.create_group(id="payments", data={"members": []})
     await client.patch_group(id="payments", data={"secret": "psssssst!"})
@@ -548,11 +450,8 @@ async def test_updating_data_on_a_group(functional_setup):
     assert group["data"]["secret"] == "psssssst!"
 
 
-@pytest.mark.asyncio
 async def test_updating_data_on_a_collection(functional_setup):
-    client = Client(
-        server_url=SERVER_URL, auth=DEFAULT_AUTH, bucket="mozilla", collection="payments"
-    )
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
     await client.create_bucket()
     await client.create_collection()
 
@@ -561,11 +460,10 @@ async def test_updating_data_on_a_collection(functional_setup):
     assert collection["data"]["secret"] == "psssssst!"
 
 
-@pytest.mark.asyncio
 async def test_collection_sharing(functional_setup):
     client = functional_setup
     alice_credentials = ("alice", "p4ssw0rd")
-    alice_userid = get_user_id(SERVER_URL, alice_credentials)
+    alice_userid = get_user_id(client.session.server_url, alice_credentials)
 
     await client.create_bucket(id="bob-bucket")
     await client.create_collection(
@@ -573,15 +471,14 @@ async def test_collection_sharing(functional_setup):
     )
 
     # Try to read the collection as Alice.
-    alice_client = Client(server_url=SERVER_URL, auth=alice_credentials)
+    alice_client = client.clone(auth=alice_credentials)
     await alice_client.get_collection(id="shared", bucket="bob-bucket")
 
 
-@pytest.mark.asyncio
 async def test_record_sharing(functional_setup):
     client = functional_setup
     alice_credentials = ("alice", "p4ssw0rd")
-    alice_userid = get_user_id(SERVER_URL, alice_credentials)
+    alice_userid = get_user_id(client.session.server_url, alice_credentials)
 
     # Create a record, and share it with Alice.
     await client.create_bucket(id="bob-bucket")
@@ -594,7 +491,7 @@ async def test_record_sharing(functional_setup):
     )
 
     # Try to read the record as Alice
-    alice_client = Client(server_url=SERVER_URL, auth=alice_credentials)
+    alice_client = client.clone(auth=alice_credentials)
     record = await alice_client.get_record(
         id=record["data"]["id"], bucket="bob-bucket", collection="bob-personal-collection"
     )
@@ -602,7 +499,6 @@ async def test_record_sharing(functional_setup):
     assert record["data"]["foo"] == "bar"
 
 
-@pytest.mark.asyncio
 async def test_patch_record_jsonpatch(functional_setup):
     client = functional_setup
     await client.create_bucket(id="b1")

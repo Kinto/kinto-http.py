@@ -8,6 +8,7 @@ from pytest_mock.plugin import MockerFixture
 from kinto_http import AsyncClient, Client
 from kinto_http.constants import DEFAULT_AUTH, SERVER_URL
 from kinto_http.endpoints import Endpoints
+from kinto_http.exceptions import KintoException
 
 from .support import create_user, mock_response
 
@@ -17,6 +18,14 @@ def async_client_setup(mocker: MockerFixture) -> AsyncClient:
     session = mocker.MagicMock()
     mock_response(session)
     client = AsyncClient(session=session, bucket="mybucket")
+    return client
+
+
+@pytest.fixture
+def client_setup(mocker: MockerFixture) -> Client:
+    session = mocker.MagicMock()
+    mock_response(session)
+    client = Client(session=session)
     return client
 
 
@@ -57,3 +66,18 @@ def batch_setup(mocker: MockerFixture) -> Client:
     mocker.sentinel.resp = {"responses": []}
     client.session.request.return_value = (mocker.sentinel.resp, mocker.sentinel.headers)
     return client
+
+
+@pytest.fixture
+def exception_setup(mocker: MockerFixture) -> KintoException:
+    request = mocker.MagicMock()
+    request.method = "PUT"
+    request.path_url = "/pim"
+
+    response = mocker.MagicMock()
+    response.status_code = 400
+
+    exc = KintoException("Failure")
+    exc.request = request
+    exc.response = response
+    return exc

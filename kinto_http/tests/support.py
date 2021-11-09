@@ -49,6 +49,13 @@ def get_user_id(server_url: str, credentials: Tuple[str, str]) -> str:
     return f"account:{r['data']['id']}"
 
 
+def assert_option_strings(parser, *option_strings_list):
+    for option_strings in option_strings_list:
+        assert any([action.option_strings == option_strings for action in parser._actions]), (
+            "%s not found" % option_strings
+        )
+
+
 def build_response(data, headers=None):
     if headers is None:
         headers = {}

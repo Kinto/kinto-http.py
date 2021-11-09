@@ -16,13 +16,11 @@ from kinto_http import (
     KintoException,
     replication,
 )
+from kinto_http.constants import DEFAULT_AUTH, SERVER_URL
 from kinto_http.patch_type import JSONPatch
 
 
 __HERE__ = os.path.abspath(os.path.dirname(__file__))
-
-SERVER_URL = "http://localhost:8888/v1"
-DEFAULT_AUTH = ("user", "p4ssw0rd")
 
 
 # Backported from kinto.core.utils

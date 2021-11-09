@@ -1,38 +1,26 @@
-import unittest
-from unittest import mock
-
 from kinto_http import KintoException
 
 
-class BaseException(unittest.TestCase):
-    def test_assert_message_is_rendered_in_representation(self):
-        exc = KintoException("Failure")
-        self.assertIn("KintoException('Failure'", repr(exc))
-
-    def test_assert_message_is_rendered_in_string(self):
-        exc = KintoException("Failure")
-        self.assertIn("Failure", str(exc))
-
-    def test_assert_message_is_rendered_in_message(self):
-        exc = KintoException("Failure")
-        self.assertIn("Failure", exc.message)
+def test_assert_message_is_rendered_in_representation():
+    exc = KintoException("Failure")
+    assert "KintoException('Failure'" in repr(exc)
 
 
-class RequestException(unittest.TestCase):
-    def setUp(self):
-        request = mock.MagicMock()
-        request.method = "PUT"
-        request.path_url = "/pim"
+def test_assert_message_is_rendered_in_string():
+    exc = KintoException("Failure")
+    assert "Failure" in str(exc)
 
-        response = mock.MagicMock()
-        response.status_code = 400
 
-        self.exc = KintoException("Failure")
-        self.exc.request = request
-        self.exc.response = response
+def test_assert_message_is_rendered_in_message():
+    exc = KintoException("Failure")
+    assert "Failure" in exc.message
 
-    def test_assert_message_is_rendered_in_representation(self):
-        self.assertIn("KintoException('Failure'", repr(self.exc))
 
-    def test_assert_request_response_is_rendered_in_representation(self):
-        self.assertEqual("PUT /pim - 400 Failure", str(self.exc))
+def test_request_assert_message_is_rendered_in_representation(exception_setup: KintoException):
+    assert "KintoException('Failure')" == repr(exception_setup)
+
+
+def test_request_assert_request_response_is_rendered_in_representation(
+    exception_setup: KintoException,
+):
+    assert "PUT /pim - 400 Failure" == str(exception_setup)

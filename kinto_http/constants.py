@@ -22,3 +22,16 @@ DO_NOT_OVERWRITE = {"If-None-Match": "*"}
 VALID_SLUG_REGEXP = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$")
 SERVER_URL = "http://localhost:8888/v1"
 DEFAULT_AUTH = ("user", "p4ssw0rd")
+ALL_PARAMETERS = [
+    ["-h", "--help"],
+    ["-s", "--server"],
+    ["-a", "--auth"],
+    ["-b", "--bucket"],
+    ["-c", "--collection"],
+    ["--retry"],
+    ["--retry-after"],
+    ["--ignore-batch-4xx"],
+    ["-v", "--verbose"],
+    ["-q", "--quiet"],
+    ["-D", "--debug"],
+]

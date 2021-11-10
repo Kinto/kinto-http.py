@@ -76,10 +76,10 @@ async def test_client_can_receive_default_headers(mocker: MockerFixture):
     r = mocker.MagicMock()
     r.status_code = 200
     client = Client(server_url="https://kinto.io/v1", headers={"Allow-Access": "CDN"})
-    mock = mocker.patch("kinto_http.session.requests")
-    mock.request.return_value = r
+    mocked = mocker.patch("kinto_http.session.requests")
+    mocked.request.return_value = r
     await client.server_info()
-    assert "Allow-Access" in mock.request.call_args_list[0][1]["headers"]
+    assert "Allow-Access" in mocked.request.call_args_list[0][1]["headers"]
 
 
 def test_client_clone_with_auth(async_client_setup: Client):
@@ -666,15 +666,15 @@ async def test_update_collection_can_deduce_id_from_data(async_client_setup: Cli
     )
 
 
-async def test_record_id_is_given_after_creation(record_setup: Client):
-    client = record_setup
+async def test_record_id_is_given_after_creation(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session, data={"id": 5678})
     record = await client.create_record(data={"foo": "bar"})
     assert "id" in record["data"].keys()
 
 
-async def test_generated_record_id_is_an_uuid(record_setup: Client):
-    client = record_setup
+async def test_generated_record_id_is_an_uuid(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     await client.create_record(data={"foo": "bar"})
     id = client.session.request.mock_calls[0][1][1].split("/")[-1]
@@ -683,8 +683,8 @@ async def test_generated_record_id_is_an_uuid(record_setup: Client):
     assert re.match(uuid_regexp, id)
 
 
-async def test_records_handles_permissions(record_setup: Client, mocker: MockerFixture):
-    client = record_setup
+async def test_records_handles_permissions(record_async_setup: Client, mocker: MockerFixture):
+    client = record_async_setup
     mock_response(client.session)
     await client.create_record(
         data={"id": "1234", "foo": "bar"}, permissions=mocker.sentinel.permissions
@@ -698,8 +698,10 @@ async def test_records_handles_permissions(record_setup: Client, mocker: MockerF
     )
 
 
-async def test_collection_argument_takes_precedence(record_setup: Client, mocker: MockerFixture):
-    client = record_setup
+async def test_collection_argument_takes_precedence(
+    record_async_setup: Client, mocker: MockerFixture
+):
+    client = record_async_setup
     mock_response(client.session)
     # Specify a different collection name for the client and the operation.
     client = Client(session=client.session, bucket="mybucket", collection="wrong_collection")
@@ -719,9 +721,9 @@ async def test_collection_argument_takes_precedence(record_setup: Client, mocker
 
 
 async def test_record_id_is_derived_from_data_if_present(
-    record_setup: Client, mocker: MockerFixture
+    record_async_setup: Client, mocker: MockerFixture
 ):
-    client = record_setup
+    client = record_async_setup
     mock_response(client.session)
     await client.create_record(
         data={"id": "1234", "foo": "bar"}, permissions=mocker.sentinel.permissions
@@ -736,8 +738,8 @@ async def test_record_id_is_derived_from_data_if_present(
     )
 
 
-async def test_data_and_permissions_are_added_on_create(record_setup: Client):
-    client = record_setup
+async def test_data_and_permissions_are_added_on_create(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     data = {"foo": "bar"}
     permissions = {"read": ["mle"]}
@@ -750,8 +752,8 @@ async def test_data_and_permissions_are_added_on_create(record_setup: Client):
     )
 
 
-async def test_creation_sends_if_none_match_by_default(record_setup: Client):
-    client = record_setup
+async def test_creation_sends_if_none_match_by_default(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     data = {"foo": "bar"}
 
@@ -763,8 +765,8 @@ async def test_creation_sends_if_none_match_by_default(record_setup: Client):
     )
 
 
-async def test_creation_doesnt_add_if_none_match_when_overwrite(record_setup: Client):
-    client = record_setup
+async def test_creation_doesnt_add_if_none_match_when_overwrite(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     data = {"foo": "bar"}
 
@@ -776,16 +778,16 @@ async def test_creation_doesnt_add_if_none_match_when_overwrite(record_setup: Cl
     )
 
 
-async def test_records_issues_a_request_on_delete(record_setup: Client):
-    client = record_setup
+async def test_records_issues_a_request_on_delete(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     await client.delete_record(id="1234")
     url = "/buckets/mybucket/collections/mycollection/records/1234"
     client.session.request.assert_called_with("delete", url, headers=None)
 
 
-async def test_record_issues_a_request_on_retrieval(record_setup: Client):
-    client = record_setup
+async def test_record_issues_a_request_on_retrieval(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session, data={"foo": "bar"})
     record = await client.get_record(id="1234")
 
@@ -794,29 +796,29 @@ async def test_record_issues_a_request_on_retrieval(record_setup: Client):
     client.session.request.assert_called_with("get", url, params={})
 
 
-async def test_get_record_supports_queryparams(record_setup: Client):
-    client = record_setup
+async def test_get_record_supports_queryparams(record_async_setup: Client):
+    client = record_async_setup
     await client.get_record(id="1234", _expected="123")
     url = "/buckets/mybucket/collections/mycollection/records/1234"
     client.session.request.assert_called_with("get", url, params={"_expected": "123"})
 
 
-async def test_collection_can_retrieve_all_records(record_setup: Client):
-    client = record_setup
+async def test_collection_can_retrieve_all_records(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session, data=[{"id": "foo"}, {"id": "bar"}])
     records = await client.get_records()
     assert list(records) == [{"id": "foo"}, {"id": "bar"}]
 
 
-async def test_collection_can_retrieve_records_timestamp(record_setup: Client):
-    client = record_setup
+async def test_collection_can_retrieve_records_timestamp(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session, headers={"ETag": '"12345"'})
     timestamp = await client.get_records_timestamp()
     assert timestamp == "12345"
 
 
-async def test_records_timestamp_is_cached(record_setup: Client):
-    client = record_setup
+async def test_records_timestamp_is_cached(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session, data=[{"id": "foo"}, {"id": "bar"}], headers={"ETag": '"12345"'})
     await client.get_records()
     timestamp = await client.get_records_timestamp()
@@ -824,8 +826,8 @@ async def test_records_timestamp_is_cached(record_setup: Client):
     assert client.session.request.call_count == 1
 
 
-async def test_records_timestamp_is_cached_per_collection(record_setup: Client):
-    client = record_setup
+async def test_records_timestamp_is_cached_per_collection(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session, data=[{"id": "foo"}, {"id": "bar"}], headers={"ETag": '"12345"'})
     await client.get_records(collection="foo")
     mock_response(client.session, data=[{"id": "foo"}, {"id": "bar"}], headers={"ETag": '"67890"'})
@@ -838,8 +840,8 @@ async def test_records_timestamp_is_cached_per_collection(record_setup: Client):
     assert timestamp == "67890"
 
 
-async def test_pagination_is_followed(record_setup: Client):
-    client = record_setup
+async def test_pagination_is_followed(record_async_setup: Client):
+    client = record_async_setup
     # Mock the calls to request.
     link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
 
@@ -866,8 +868,8 @@ async def test_pagination_is_followed(record_setup: Client):
     ]
 
 
-async def test_pagination_is_followed_generator(record_setup: Client):
-    client = record_setup
+async def test_pagination_is_followed_generator(record_async_setup: Client):
+    client = record_async_setup
     # Mock the calls to request.
     link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
 
@@ -892,8 +894,8 @@ async def test_pagination_is_followed_generator(record_setup: Client):
         assert response[index] == page_records
 
 
-async def test_pagination_is_followed_for_number_of_pages(record_setup: Client):
-    client = record_setup
+async def test_pagination_is_followed_for_number_of_pages(record_async_setup: Client):
+    client = record_async_setup
     # Mock the calls to request.
     link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
 
@@ -918,8 +920,8 @@ async def test_pagination_is_followed_for_number_of_pages(record_setup: Client):
     ]
 
 
-async def test_pagination_is_not_followed_if_limit_is_specified(record_setup: Client):
-    client = record_setup
+async def test_pagination_is_not_followed_if_limit_is_specified(record_async_setup: Client):
+    client = record_async_setup
     # Mock the calls to request.
     link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
 
@@ -934,8 +936,8 @@ async def test_pagination_is_not_followed_if_limit_is_specified(record_setup: Cl
     assert list(records) == [{"id": "1", "value": "item1"}, {"id": "2", "value": "item2"}]
 
 
-async def test_pagination_supports_if_none_match(record_setup: Client):
-    client = record_setup
+async def test_pagination_supports_if_none_match(record_async_setup: Client):
+    client = record_async_setup
     link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
 
     client.session.request.side_effect = [
@@ -960,8 +962,8 @@ async def test_pagination_supports_if_none_match(record_setup: Client):
     )
 
 
-async def test_pagination_generator_if_none_match(record_setup: Client):
-    client = record_setup
+async def test_pagination_generator_if_none_match(record_async_setup: Client):
+    client = record_async_setup
     link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
 
     response = [
@@ -991,8 +993,8 @@ async def test_pagination_generator_if_none_match(record_setup: Client):
     )
 
 
-async def test_collection_can_delete_a_record(record_setup: Client):
-    client = record_setup
+async def test_collection_can_delete_a_record(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session, data={"id": 1234})
     resp = await client.delete_record(id=1234)
     assert resp == {"id": 1234}
@@ -1000,8 +1002,8 @@ async def test_collection_can_delete_a_record(record_setup: Client):
     client.session.request.assert_called_with("delete", url, headers=None)
 
 
-async def test_record_delete_if_match(record_setup: Client):
-    client = record_setup
+async def test_record_delete_if_match(record_async_setup: Client):
+    client = record_async_setup
     data = {}
     mock_response(client.session, data=data)
     deleted = await client.delete_record(
@@ -1012,8 +1014,8 @@ async def test_record_delete_if_match(record_setup: Client):
     client.session.request.assert_called_with("delete", url, headers={"If-Match": '"1234"'})
 
 
-async def test_record_delete_if_match_not_included_if_not_safe(record_setup: Client):
-    client = record_setup
+async def test_record_delete_if_match_not_included_if_not_safe(record_async_setup: Client):
+    client = record_async_setup
     data = {}
     mock_response(client.session, data=data)
     deleted = await client.delete_record(
@@ -1024,8 +1026,8 @@ async def test_record_delete_if_match_not_included_if_not_safe(record_setup: Cli
     client.session.request.assert_called_with("delete", url, headers=None)
 
 
-async def test_update_record_gets_the_id_from_data_if_exists(record_setup: Client):
-    client = record_setup
+async def test_update_record_gets_the_id_from_data_if_exists(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     await client.update_record(
         bucket="mybucket", collection="mycollection", data={"id": 1, "foo": "bar"}
@@ -1040,8 +1042,8 @@ async def test_update_record_gets_the_id_from_data_if_exists(record_setup: Clien
     )
 
 
-async def test_update_record_handles_if_match(record_setup: Client):
-    client = record_setup
+async def test_update_record_handles_if_match(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     await client.update_record(
         bucket="mybucket",
@@ -1060,8 +1062,8 @@ async def test_update_record_handles_if_match(record_setup: Client):
     )
 
 
-async def test_patch_record_uses_the_patch_method(record_setup: Client):
-    client = record_setup
+async def test_patch_record_uses_the_patch_method(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     await client.patch_record(
         bucket="mybucket", collection="mycollection", data={"id": 1, "foo": "bar"}
@@ -1075,8 +1077,8 @@ async def test_patch_record_uses_the_patch_method(record_setup: Client):
     )
 
 
-async def test_patch_record_recognizes_patchtype(record_setup: Client):
-    client = record_setup
+async def test_patch_record_recognizes_patchtype(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     await client.patch_record(
         bucket="mybucket",
@@ -1093,8 +1095,8 @@ async def test_patch_record_recognizes_patchtype(record_setup: Client):
     )
 
 
-async def test_patch_record_understands_jsonpatch(record_setup: Client):
-    client = record_setup
+async def test_patch_record_understands_jsonpatch(record_async_setup: Client):
+    client = record_async_setup
     mock_response(client.session)
     await client.patch_record(
         bucket="mybucket",
@@ -1111,20 +1113,20 @@ async def test_patch_record_understands_jsonpatch(record_setup: Client):
     )
 
 
-async def test_patch_record_requires_data_to_be_patch_type(record_setup: Client):
-    client = record_setup
+async def test_patch_record_requires_data_to_be_patch_type(record_async_setup: Client):
+    client = record_async_setup
     with pytest.raises(TypeError, match="couldn't understand patch body 5"):
         await client.patch_record(id=1, collection="testcoll", bucket="testbucket", changes=5)
 
 
-async def test_patch_record_requires_id(record_setup: Client):
-    client = record_setup
+async def test_patch_record_requires_id(record_async_setup: Client):
+    client = record_async_setup
     with pytest.raises(KeyError, match="Unable to patch record, need an id."):
         await client.patch_record(collection="testcoll", bucket="testbucket", data={})
 
 
-async def test_update_record_raises_if_no_id_is_given(record_setup: Client):
-    client = record_setup
+async def test_update_record_raises_if_no_id_is_given(record_async_setup: Client):
+    client = record_async_setup
     with pytest.raises(KeyError) as cm:
         await client.update_record(
             data={"foo": "bar"},  # Omit the id on purpose here.
@@ -1135,9 +1137,9 @@ async def test_update_record_raises_if_no_id_is_given(record_setup: Client):
 
 
 async def test_get_or_create_record_doesnt_raise_in_case_of_conflict(
-    record_setup, mocker: MockerFixture
+    record_async_setup, mocker: MockerFixture
 ):
-    client = record_setup
+    client = record_async_setup
     data = {"permissions": mocker.sentinel.permissions, "data": {"foo": "bar"}}
     client.session.request.side_effect = [get_http_error(status=412), (data, None)]
     returned_data = await client.create_record(
@@ -1146,8 +1148,8 @@ async def test_get_or_create_record_doesnt_raise_in_case_of_conflict(
     assert returned_data == data
 
 
-async def test_get_or_create_record_raise_in_other_cases(record_setup: Client):
-    client = record_setup
+async def test_get_or_create_record_raise_in_other_cases(record_async_setup: Client):
+    client = record_async_setup
     client.session.request.side_effect = get_http_error(status=500)
     with pytest.raises(KintoException):
         await client.create_record(
@@ -1159,8 +1161,8 @@ async def test_get_or_create_record_raise_in_other_cases(record_setup: Client):
         )
 
 
-async def test_create_record_raises_a_special_error_on_403(record_setup: Client):
-    client = record_setup
+async def test_create_record_raises_a_special_error_on_403(record_async_setup: Client):
+    client = record_async_setup
     client.session.request.side_effect = get_http_error(status=403)
     with pytest.raises(KintoException) as e:
         await client.create_record(bucket="buck", collection="coll", data={"foo": "bar"})
@@ -1172,8 +1174,8 @@ async def test_create_record_raises_a_special_error_on_403(record_setup: Client)
     assert e.value.message == expected_msg
 
 
-async def test_create_record_can_deduce_id_from_data(record_setup: Client):
-    client = record_setup
+async def test_create_record_can_deduce_id_from_data(record_async_setup: Client):
+    client = record_async_setup
     await client.create_record(data={"id": "record"}, bucket="buck", collection="coll")
     client.session.request.assert_called_with(
         "put",
@@ -1184,8 +1186,8 @@ async def test_create_record_can_deduce_id_from_data(record_setup: Client):
     )
 
 
-async def test_update_record_can_deduce_id_from_data(record_setup: Client):
-    client = record_setup
+async def test_update_record_can_deduce_id_from_data(record_async_setup: Client):
+    client = record_async_setup
     await client.update_record(data={"id": "record"}, bucket="buck", collection="coll")
     client.session.request.assert_called_with(
         "put",

@@ -1,4 +1,5 @@
 from typing import Dict, Tuple
+from unittest.mock import MagicMock
 from urllib.parse import urljoin
 
 import pytest
@@ -6,11 +7,12 @@ import requests
 from pytest_mock.plugin import MockerFixture
 
 from kinto_http import AsyncClient, Client
-from kinto_http.constants import DEFAULT_AUTH, SERVER_URL
+from kinto_http.constants import DEFAULT_AUTH, SERVER_URL, USER_AGENT
 from kinto_http.endpoints import Endpoints
 from kinto_http.exceptions import KintoException
+from kinto_http.session import Session
 
-from .support import create_user, mock_response
+from .support import create_user, get_200, get_503, mock_response
 
 
 @pytest.fixture
@@ -25,12 +27,12 @@ def async_client_setup(mocker: MockerFixture) -> AsyncClient:
 def client_setup(mocker: MockerFixture) -> Client:
     session = mocker.MagicMock()
     mock_response(session)
-    client = Client(session=session)
+    client = Client(session=session, bucket="mybucket")
     return client
 
 
 @pytest.fixture
-def record_setup(mocker: MockerFixture) -> AsyncClient:
+def record_async_setup(mocker: MockerFixture) -> AsyncClient:
     session = mocker.MagicMock()
     session.request.return_value = (mocker.sentinel.response, mocker.sentinel.count)
     client = AsyncClient(session=session, bucket="mybucket", collection="mycollection")
@@ -38,10 +40,34 @@ def record_setup(mocker: MockerFixture) -> AsyncClient:
 
 
 @pytest.fixture
-def functional_setup():
+def record_setup(mocker: MockerFixture) -> Client:
+    session = mocker.MagicMock()
+    session.request.return_value = (mocker.sentinel.response, mocker.sentinel.count)
+    client = Client(session=session, bucket="mybucket", collection="mycollection")
+    return client
+
+
+@pytest.fixture
+def functional_async_setup():
     # Setup
     # Create user and return client
     client = AsyncClient(server_url=SERVER_URL, auth=DEFAULT_AUTH)
+    create_user(SERVER_URL, DEFAULT_AUTH)
+
+    yield client
+
+    # Teardown
+    # Delete all the created objects
+    flush_url = urljoin(SERVER_URL, "/__flush__")
+    resp = requests.post(flush_url)
+    resp.raise_for_status()
+
+
+@pytest.fixture
+def functional_setup():
+    # Setup
+    # Create user and return client
+    client = Client(server_url=SERVER_URL, auth=DEFAULT_AUTH)
     create_user(SERVER_URL, DEFAULT_AUTH)
 
     yield client
@@ -81,3 +107,23 @@ def exception_setup(mocker: MockerFixture) -> KintoException:
     exc.request = request
     exc.response = response
     return exc
+
+
+@pytest.fixture
+def session_setup(mocker: MockerFixture) -> Tuple[MagicMock, Session]:
+    requests_mock = mocker.patch("kinto_http.session.requests")
+    requests_mock.request.headers = {"User-Agent": USER_AGENT}
+    requests_mock.request.post_json_headers = {
+        "User-Agent": USER_AGENT,
+        "Content-Type": "application/json",
+    }
+    requests_mock.request.return_value = get_200()
+    session = Session("https://example.org")
+    return requests_mock, session
+
+
+@pytest.fixture
+def session_retry_setup(session_setup: Tuple[MagicMock, Session]) -> Tuple[MagicMock, Session]:
+    requests_mock, session = session_setup
+    requests_mock.request.side_effect = [get_503()]
+    return requests_mock, session

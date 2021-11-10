@@ -38,7 +38,7 @@ def hmac_digest(secret, message, encoding="utf-8") -> hmac.HMAC:
 
 
 def create_user(server_url: str, credentials: Tuple[str, str]) -> Dict:
-    account_url = urljoin(server_url, "/accounts/{}".format(credentials[0]))
+    account_url = urljoin(server_url, f"/accounts/{credentials[0]}")
     r = requests.put(account_url, json={"data": {"password": credentials[1]}}, auth=DEFAULT_AUTH)
     r.raise_for_status()
     return r.json()
@@ -51,9 +51,9 @@ def get_user_id(server_url: str, credentials: Tuple[str, str]) -> str:
 
 def assert_option_strings(parser, *option_strings_list):
     for option_strings in option_strings_list:
-        assert any([action.option_strings == option_strings for action in parser._actions]), (
-            "%s not found" % option_strings
-        )
+        assert any(
+            [action.option_strings == option_strings for action in parser._actions]
+        ), f"{option_strings} not found"
 
 
 def build_response(data, headers=None):

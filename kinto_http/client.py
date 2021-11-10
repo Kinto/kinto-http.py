@@ -71,6 +71,7 @@ class Client(object):
         kwargs.setdefault("retry_after", self.session.retry_after)
         return Client(**kwargs)
 
+    @retry_timeout
     @contextmanager
     def batch(self, **kwargs):
         if self._server_settings is None:
@@ -100,6 +101,7 @@ class Client(object):
         }
         return self.endpoints.get(name, **kwargs)
 
+    @retry_timeout
     def _paginated(
         self, endpoint, records=None, *, if_none_match=None, pages=None, **kwargs
     ) -> List:
@@ -158,6 +160,7 @@ class Client(object):
 
         return (id, if_match)
 
+    @retry_timeout
     def _patch_method(
         self, endpoint, patch, safe=True, if_match=None, data=None, permissions=None
     ):
@@ -223,6 +226,7 @@ class Client(object):
 
     # Server Info
 
+    @retry_timeout
     def server_info(self) -> Dict:
         endpoint = self.get_endpoint("root")
         resp, _ = self.session.request("get", endpoint)
@@ -230,6 +234,7 @@ class Client(object):
 
     # Buckets
 
+    @retry_timeout
     def create_bucket(
         self, *, id=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
@@ -251,6 +256,7 @@ class Client(object):
         )
         return resp
 
+    @retry_timeout
     def update_bucket(
         self, *, id=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
@@ -268,6 +274,7 @@ class Client(object):
         )
         return resp
 
+    @retry_timeout
     def patch_bucket(
         self,
         *,
@@ -307,6 +314,7 @@ class Client(object):
         endpoint = self.get_endpoint("buckets")
         return self._paginated(endpoint, **kwargs)
 
+    @retry_timeout
     def get_bucket(self, *, id=None, **kwargs) -> Dict:
         endpoint = self.get_endpoint("bucket", bucket=id)
 
@@ -327,6 +335,7 @@ class Client(object):
             raise BucketNotFound(id or self._bucket_name, e)
         return resp
 
+    @retry_timeout
     def delete_bucket(self, *, id=None, safe=True, if_match=None, if_exists=False) -> Dict:
         if if_exists:
             return self._delete_if_exists("bucket", id=id, safe=safe, if_match=if_match)
@@ -338,6 +347,7 @@ class Client(object):
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
 
+    @retry_timeout
     def delete_buckets(self, *, safe=True, if_match=None) -> Dict:
         endpoint = self.get_endpoint("buckets")
         headers = self._get_cache_headers(safe, if_match=if_match)
@@ -353,6 +363,7 @@ class Client(object):
         endpoint = self.get_endpoint("groups", bucket=bucket)
         return self._paginated(endpoint, **kwargs)
 
+    @retry_timeout
     def create_group(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
@@ -388,6 +399,7 @@ class Client(object):
 
         return resp
 
+    @retry_timeout
     def update_group(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
@@ -408,6 +420,7 @@ class Client(object):
         )
         return resp
 
+    @retry_timeout
     def patch_group(
         self,
         *,
@@ -444,6 +457,7 @@ class Client(object):
             endpoint, changes, data=data, permissions=permissions, safe=safe, if_match=if_match
         )
 
+    @retry_timeout
     def get_group(self, *, id, bucket=None) -> Dict:
         endpoint = self.get_endpoint("group", bucket=bucket, group=id)
 
@@ -452,6 +466,7 @@ class Client(object):
         resp, _ = self.session.request("get", endpoint)
         return resp
 
+    @retry_timeout
     def delete_group(self, *, id, bucket=None, safe=True, if_match=None, if_exists=False) -> Dict:
         if if_exists:
             return self._delete_if_exists(
@@ -465,6 +480,7 @@ class Client(object):
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
 
+    @retry_timeout
     def delete_groups(self, *, bucket=None, safe=True, if_match=None) -> Dict:
         endpoint = self.get_endpoint("groups", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
@@ -480,6 +496,7 @@ class Client(object):
         endpoint = self.get_endpoint("collections", bucket=bucket)
         return self._paginated(endpoint, **kwargs)
 
+    @retry_timeout
     def create_collection(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
@@ -516,6 +533,7 @@ class Client(object):
 
         return resp
 
+    @retry_timeout
     def update_collection(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
@@ -536,6 +554,7 @@ class Client(object):
         )
         return resp
 
+    @retry_timeout
     def patch_collection(
         self,
         *,
@@ -575,6 +594,7 @@ class Client(object):
             endpoint, changes, data=data, permissions=permissions, safe=safe, if_match=if_match
         )
 
+    @retry_timeout
     def get_collection(self, *, id=None, bucket=None, **kwargs) -> Dict:
         endpoint = self.get_endpoint("collection", bucket=bucket, collection=id)
 
@@ -592,6 +612,7 @@ class Client(object):
             raise
         return resp
 
+    @retry_timeout
     def delete_collection(
         self, *, id=None, bucket=None, safe=True, if_match=None, if_exists=False
     ) -> Dict:
@@ -610,6 +631,7 @@ class Client(object):
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
 
+    @retry_timeout
     def delete_collections(self, *, bucket=None, safe=True, if_match=None) -> Dict:
         endpoint = self.get_endpoint("collections", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
@@ -632,6 +654,7 @@ class Client(object):
 
         return self._records_timestamp[endpoint]
 
+    @retry_timeout
     def get_records(self, *, collection=None, bucket=None, **kwargs) -> List[Dict]:
         """Returns all the records"""
         endpoint = self.get_endpoint("records", bucket=bucket, collection=collection)
@@ -658,6 +681,7 @@ class Client(object):
             next_page = headers["Next-Page"]
             yield from self._paginated_generator(next_page, if_none_match=if_none_match)
 
+    @retry_timeout
     def get_record(self, *, id, collection=None, bucket=None, **kwargs) -> Dict:
         endpoint = self.get_endpoint("record", id=id, bucket=bucket, collection=collection)
 
@@ -669,6 +693,7 @@ class Client(object):
         resp, _ = self.session.request("get", endpoint, params=kwargs)
         return resp
 
+    @retry_timeout
     def create_record(
         self,
         *,
@@ -719,6 +744,7 @@ class Client(object):
 
         return resp
 
+    @retry_timeout
     def update_record(
         self,
         *,
@@ -746,6 +772,7 @@ class Client(object):
         )
         return resp
 
+    @retry_timeout
     def patch_record(
         self,
         *,
@@ -790,6 +817,7 @@ class Client(object):
             endpoint, changes, data=data, permissions=permissions, safe=safe, if_match=if_match
         )
 
+    @retry_timeout
     def delete_record(
         self, *, id, collection=None, bucket=None, safe=True, if_match=None, if_exists=False
     ) -> Dict:
@@ -808,6 +836,7 @@ class Client(object):
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
 
+    @retry_timeout
     def delete_records(self, *, collection=None, bucket=None, safe=True, if_match=None) -> Dict:
         endpoint = self.get_endpoint("records", bucket=bucket, collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
@@ -820,11 +849,13 @@ class Client(object):
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
 
+    @retry_timeout
     def get_history(self, *, bucket=None, **kwargs) -> List[Dict]:
         endpoint = self.get_endpoint("history", bucket=bucket)
         logger.info("Get history from bucket %r" % bucket or self._bucket_name)
         return self._paginated(endpoint, **kwargs)
 
+    @retry_timeout
     def purge_history(self, *, bucket=None, safe=True, if_match=None) -> List[Dict]:
         endpoint = self.get_endpoint("history", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
@@ -903,22 +934,18 @@ class AsyncClient(object):
         kwargs.setdefault("retry_after", self.session.retry_after)
         return AsyncClient(**kwargs)
 
-    @retry_timeout
     async def server_info(self) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, lambda: self._client.server_info())
 
-    @retry_timeout
     async def get_bucket(self, *, id=None, **kwargs) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, lambda: self._client.get_bucket(id=id, **kwargs))
 
-    @retry_timeout
     async def get_buckets(self, **kwargs) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(None, lambda: self._client.get_buckets(**kwargs))
 
-    @retry_timeout
     async def create_bucket(
         self, *, id=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
@@ -930,7 +957,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def update_bucket(
         self, *, id=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
@@ -942,7 +968,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def patch_bucket(
         self,
         *,
@@ -968,7 +993,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def delete_bucket(self, *, id=None, safe=True, if_match=None, if_exists=False) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
@@ -978,28 +1002,24 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def delete_buckets(self, *, safe=True, if_match=None) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.delete_buckets(safe=safe, if_match=if_match)
         )
 
-    @retry_timeout
     async def get_group(self, *, id, bucket=None) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.get_group(id=id, bucket=bucket)
         )
 
-    @retry_timeout
     async def get_groups(self, *, bucket=None, **kwargs) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.get_groups(bucket=bucket, **kwargs)
         )
 
-    @retry_timeout
     async def create_group(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
@@ -1016,7 +1036,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def update_group(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
@@ -1033,7 +1052,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def patch_group(
         self,
         *,
@@ -1061,7 +1079,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def delete_group(
         self, *, id, bucket=None, safe=True, if_match=None, if_exists=False
     ) -> Dict:
@@ -1073,28 +1090,24 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def delete_groups(self, *, bucket=None, safe=True, if_match=None) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.delete_groups(bucket=bucket, safe=safe, if_match=if_match)
         )
 
-    @retry_timeout
     async def get_collection(self, *, id=None, bucket=None, **kwargs) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.get_collection(id=id, bucket=bucket, **kwargs)
         )
 
-    @retry_timeout
     async def get_collections(self, *, bucket=None, **kwargs) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.get_collections(bucket=bucket, **kwargs)
         )
 
-    @retry_timeout
     async def create_collection(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
@@ -1111,7 +1124,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def update_collection(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
@@ -1128,7 +1140,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def patch_collection(
         self,
         *,
@@ -1156,7 +1167,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def delete_collection(
         self, *, id=None, bucket=None, safe=True, if_match=None, if_exists=False
     ) -> Dict:
@@ -1168,7 +1178,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def delete_collections(self, *, bucket=None, safe=True, if_match=None) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
@@ -1176,7 +1185,6 @@ class AsyncClient(object):
             lambda: self._client.delete_collections(bucket=bucket, safe=safe, if_match=if_match),
         )
 
-    @retry_timeout
     async def get_record(self, *, id, collection=None, bucket=None, **kwargs) -> Dict:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
@@ -1184,14 +1192,12 @@ class AsyncClient(object):
             lambda: self._client.get_record(id=id, collection=collection, bucket=bucket, **kwargs),
         )
 
-    @retry_timeout
     async def get_records(self, *, collection=None, bucket=None, **kwargs) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.get_records(collection=collection, bucket=bucket, **kwargs)
         )
 
-    @retry_timeout
     async def get_paginated_records(self, *, collection=None, bucket=None, **kwargs) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
@@ -1201,14 +1207,12 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def get_records_timestamp(self, *, collection=None, bucket=None) -> str:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.get_records_timestamp(collection=collection, bucket=bucket)
         )
 
-    @retry_timeout
     async def create_record(
         self,
         *,
@@ -1234,7 +1238,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def update_record(
         self,
         *,
@@ -1260,7 +1263,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def patch_record(
         self,
         *,
@@ -1290,7 +1292,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def delete_record(
         self, *, id, collection=None, bucket=None, safe=True, if_match=None, if_exists=False
     ) -> Dict:
@@ -1307,7 +1308,6 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def delete_records(
         self, *, collection=None, bucket=None, safe=True, if_match=None
     ) -> Dict:
@@ -1319,21 +1319,18 @@ class AsyncClient(object):
             ),
         )
 
-    @retry_timeout
     async def get_history(self, *, bucket=None, **kwargs) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.get_history(bucket=bucket, **kwargs)
         )
 
-    @retry_timeout
     async def purge_history(self, *, bucket=None, safe=True, if_match=None) -> List[Dict]:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(
             None, lambda: self._client.purge_history(bucket=bucket, safe=safe, if_match=if_match)
         )
 
-    @retry_timeout
     async def get_endpoint(
         self, name, *, bucket=None, group=None, collection=None, id=None
     ) -> str:

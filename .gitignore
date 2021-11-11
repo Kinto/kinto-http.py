@@ -5,3 +5,4 @@ kinto_http.egg-info/
 .venv/
 .tox
 .pytest_cache/
+.vscode/

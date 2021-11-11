@@ -4,26 +4,34 @@ from setuptools import setup, find_packages
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-with codecs.open(os.path.join(here, "README.rst"), encoding="utf-8") as f:
-    README = f.read()
 
-REQUIREMENTS = ["requests>=2.8.1", "unidecode"]
+def read_file(filename):
+    """Open a related file and return its content."""
+    with codecs.open(os.path.join(here, filename), encoding="utf-8") as f:
+        content = f.read()
+    return content
 
-test_requirements = [
-    "pytest",
-    "pytest-cache",
-    "pytest-cov",
-    "pytest-sugar",
-    "pytest-xdist",
-    "kinto",
-    "unidecode",
+
+README = read_file("README.rst")
+CHANGELOG = read_file("CHANGELOG.rst")
+
+INSTALL_REQUIRES = [
+    x.replace(" \\", "")
+    for x in read_file("./requirements.txt").split("\n")
+    if not x.startswith(" ")
+]
+
+TESTS_REQUIRE = [
+    x.replace(" \\", "")
+    for x in read_file("./dev-requirements.txt").split("\n")
+    if not x.startswith(" ")
 ]
 
 setup(
     name="kinto-http",
-    version='10.8.0.dev0',
+    version="10.8.0.dev0",
     description="Kinto client",
-    long_description=README,
+    long_description=README + "\n\n" + CHANGELOG,
     license="Apache License (2.0)",
     classifiers=[
         "Programming Language :: Python",
@@ -42,7 +50,7 @@ setup(
     packages=find_packages(),
     include_package_data=True,
     zip_safe=False,
-    install_requires=REQUIREMENTS,
+    install_requires=INSTALL_REQUIRES,
     test_suite="kinto_http.tests",
-    tests_require=test_requirements,
+    tests_require=TESTS_REQUIRE,
 )

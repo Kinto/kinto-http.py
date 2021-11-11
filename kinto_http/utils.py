@@ -6,8 +6,7 @@ from datetime import date, datetime
 
 from unidecode import unidecode
 
-
-VALID_SLUG_REGEXP = re.compile(r"^[a-zA-Z0-9][a-zA-Z0-9_-]*$")
+from kinto_http.constants import VALID_SLUG_REGEXP
 
 
 def slugify(value):

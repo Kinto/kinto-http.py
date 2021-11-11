@@ -1,5 +1,12 @@
+import hashlib
+import hmac
+from typing import Dict, Tuple
 from unittest import mock
+from urllib.parse import urljoin
 
+import requests
+
+from kinto_http.constants import DEFAULT_AUTH
 from kinto_http.exceptions import KintoException
 
 
@@ -20,6 +27,33 @@ def get_record(id=None, data=None, permissions=None):
     record.data = data or {"foo": "bar"}
     record.permissions = permissions or {"read": ["Niko", "Mat"]}
     return record
+
+
+# Backported from kinto.core.utils
+def hmac_digest(secret, message, encoding="utf-8") -> hmac.HMAC:
+    """Return hex digest of a message HMAC using secret"""
+    if isinstance(secret, str):
+        secret = secret.encode(encoding)
+    return hmac.new(secret, message.encode(encoding), hashlib.sha256).hexdigest()
+
+
+def create_user(server_url: str, credentials: Tuple[str, str]) -> Dict:
+    account_url = urljoin(server_url, f"/accounts/{credentials[0]}")
+    r = requests.put(account_url, json={"data": {"password": credentials[1]}}, auth=DEFAULT_AUTH)
+    r.raise_for_status()
+    return r.json()
+
+
+def get_user_id(server_url: str, credentials: Tuple[str, str]) -> str:
+    r = create_user(server_url, credentials)
+    return f"account:{r['data']['id']}"
+
+
+def assert_option_strings(parser, *option_strings_list):
+    for option_strings in option_strings_list:
+        assert any(
+            [action.option_strings == option_strings for action in parser._actions]
+        ), f"{option_strings} not found"
 
 
 def build_response(data, headers=None):

@@ -7,7 +7,13 @@ This document describes changes between each past release.
 10.8.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**New features**
+
+- Asynchronous client is now available: ``from kinto_http import AsyncClient`` (`#268 <https://github.com/Kinto/kinto-http.py/pull/268>`_)
+
+**Internal changes**
+
+- Replaced ``unittest`` with ``pytest``
 
 
 10.7.0 (2020-01-09)
@@ -71,14 +77,14 @@ This document describes changes between each past release.
 **New features**
 
 - Created new method on client to get paginated records ``get_paginated_records``. (#175)
-- Allow additional querystring params in `get_*()` methods
+- Allow additional querystring params in ``get_*()`` methods
 
 10.1.1 (2018-11-13)
 ===================
 
 **Bug fixes**
 
-- Fix JSON support for `in_` and `exclude_`. (#188)
+- Fix JSON support for ``in_`` and ``exclude_``. (#188)
 
 
 10.1.0 (2018-11-05)
@@ -210,7 +216,7 @@ In order to ignore those errors as before, instantiate the client with ``ignore_
 7.2.0 (2017-03-17)
 ==================
 
-- Only provide the `data` JSON field when data is provided. (#122)
+- Only provide the ``data`` JSON field when data is provided. (#122)
 
 
 7.1.0 (2017-03-16)

@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.8.0 (unreleased)
+10.8.0 (2021-12-03)
 ===================
 
 **New features**

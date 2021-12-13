@@ -52,7 +52,7 @@ jobs:
 
       - name: Run server
         run: |
-          make runkinto &
+          make run-kinto &
           sleep 5  # to give kinto migrate a chance to finish
 
       - name: Tox

@@ -51,7 +51,7 @@ git remote add {your_name} git@github.com:{your_name}/kinto-http.py.git
  -  `make tests-once` to run the tests with the current venv.
  -  `make tests` to run all the tests (with python3, flake8, and functional tests)
 
-You may need to use `make runkinto` before running the functional tests.
+You may need to use `make run-kinto` before running the functional tests.
 If you want to run the functional tests only, you can use `make functional`.
 
 ## Submitting Changes

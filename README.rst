@@ -493,7 +493,7 @@ In one terminal, run a Kinto server:
 
 ::
 
-    $ make runkinto
+    $ make run-kinto
 
 In another, run the tests against it:
 

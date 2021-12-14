@@ -27,9 +27,9 @@ $(PYTHON):
 	$(VIRTUALENV) $(VENV)
 
 need-kinto-running:
-	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make runkinto' before starting tests." && exit 1)
+	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make run-kinto' before starting tests." && exit 1)
 
-runkinto: install-dev
+run-kinto: install-dev
 	$(VENV)/bin/kinto migrate --ini kinto_http/tests/config/kinto.ini
 	$(VENV)/bin/kinto start --ini kinto_http/tests/config/kinto.ini
 

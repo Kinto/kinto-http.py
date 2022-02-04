@@ -346,8 +346,8 @@ def test_single_record_save(functional_setup):
 
     retrieved = client.get_record(id=created["data"]["id"])
     assert "account:alexis" in retrieved["permissions"]["read"]
-    assert retrieved["data"]["foo"] == u"bar"
-    assert retrieved["data"]["bar"] == u"baz"
+    assert retrieved["data"]["foo"] == "bar"
+    assert retrieved["data"]["bar"] == "baz"
     assert created["data"]["id"] == retrieved["data"]["id"]
 
 

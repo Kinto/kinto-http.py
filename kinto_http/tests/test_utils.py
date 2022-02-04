@@ -6,15 +6,15 @@ def test_slugify_converts_integers():
 
 
 def test_slugify_replaces_spaces_by_hyphens():
-    assert utils.slugify(u"text with spaces") == "text-with-spaces"
+    assert utils.slugify("text with spaces") == "text-with-spaces"
 
 
 def test_slugify_removes_unknown_characters():
-    assert utils.slugify(u"chars!") == "chars"
+    assert utils.slugify("chars!") == "chars"
 
 
 def test_slugify_replaces_equivalent_chars():
-    assert utils.slugify(u"chârs") == "chars"
+    assert utils.slugify("chârs") == "chars"
 
 
 def test_slugify_do_no_modify_valid_ids():

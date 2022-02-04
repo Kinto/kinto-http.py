@@ -4,7 +4,7 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.9.0 (unreleased)
+10.9.0 (2022-02-04)
 ===================
 
 **New features**

@@ -7,8 +7,9 @@ This document describes changes between each past release.
 10.9.0 (unreleased)
 ===================
 
-- Nothing changed yet.
+**New features**
 
+- Access client configured bucket and collection names at ``client.bucket_name`` and ``client.collection_name`` respectively.
 
 10.8.0 (2021-12-03)
 ===================

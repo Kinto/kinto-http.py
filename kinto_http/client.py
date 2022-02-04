@@ -53,8 +53,8 @@ class Client(object):
             headers=headers,
         )
         self.session = create_session(**session_kwargs)
-        self._bucket_name = bucket
-        self._collection_name = collection
+        self.bucket_name = bucket
+        self.collection_name = collection
         self._server_settings = None
         self._records_timestamp = {}
         self._ignore_batch_4xx = ignore_batch_4xx
@@ -65,8 +65,8 @@ class Client(object):
             kwargs.setdefault("auth", self.session.auth)
         else:
             kwargs.setdefault("session", self.session)
-        kwargs.setdefault("bucket", self._bucket_name)
-        kwargs.setdefault("collection", self._collection_name)
+        kwargs.setdefault("bucket", self.bucket_name)
+        kwargs.setdefault("collection", self.collection_name)
         kwargs.setdefault("retry", self.session.nb_retry)
         kwargs.setdefault("retry_after", self.session.retry_after)
         return Client(**kwargs)
@@ -94,8 +94,8 @@ class Client(object):
     def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None) -> str:
         """Return the endpoint with named parameters."""
         kwargs = {
-            "bucket": bucket or self._bucket_name,
-            "collection": collection or self._collection_name,
+            "bucket": bucket or self.bucket_name,
+            "collection": collection or self.collection_name,
             "group": group,
             "id": id,
         }
@@ -249,7 +249,7 @@ class Client(object):
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self.get_endpoint("bucket", bucket=id)
 
-        logger.info("Create bucket %r" % id or self._bucket_name)
+        logger.info("Create bucket %r" % id or self.bucket_name)
 
         resp, _ = self.session.request(
             "put", endpoint, data=data, permissions=permissions, headers=headers
@@ -267,7 +267,7 @@ class Client(object):
         endpoint = self.get_endpoint("bucket", bucket=id)
         headers = self._get_cache_headers(safe, data, if_match)
 
-        logger.info("Update bucket %r" % id or self._bucket_name)
+        logger.info("Update bucket %r" % id or self.bucket_name)
 
         resp, _ = self.session.request(
             "put", endpoint, data=data, permissions=permissions, headers=headers
@@ -304,7 +304,7 @@ class Client(object):
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         endpoint = self.get_endpoint("bucket", bucket=id)
-        logger.info("Patch bucket %r" % (id or self._bucket_name,))
+        logger.info("Patch bucket %r" % (id or self.bucket_name,))
 
         return self._patch_method(
             endpoint, changes, data=data, permissions=permissions, safe=safe, if_match=if_match
@@ -318,7 +318,7 @@ class Client(object):
     def get_bucket(self, *, id=None, **kwargs) -> Dict:
         endpoint = self.get_endpoint("bucket", bucket=id)
 
-        logger.info("Get bucket %r" % id or self._bucket_name)
+        logger.info("Get bucket %r" % id or self.bucket_name)
 
         try:
             resp, _ = self.session.request("get", endpoint, params=kwargs)
@@ -332,7 +332,7 @@ class Client(object):
                 e = KintoException(msg, e)
                 raise e
 
-            raise BucketNotFound(id or self._bucket_name, e)
+            raise BucketNotFound(id or self.bucket_name, e)
         return resp
 
     @retry_timeout
@@ -342,7 +342,7 @@ class Client(object):
         endpoint = self.get_endpoint("bucket", bucket=id)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
-        logger.info("Delete bucket %r" % id or self._bucket_name)
+        logger.info("Delete bucket %r" % id or self.bucket_name)
 
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
@@ -381,7 +381,7 @@ class Client(object):
         headers = DO_NOT_OVERWRITE if safe else None
         endpoint = self.get_endpoint("group", bucket=bucket, group=id)
 
-        logger.info("Create group %r in bucket %r" % (id, bucket or self._bucket_name))
+        logger.info("Create group %r in bucket %r" % (id, bucket or self.bucket_name))
 
         try:
             resp, _ = self.session.request(
@@ -413,7 +413,7 @@ class Client(object):
         endpoint = self.get_endpoint("group", bucket=bucket, group=id)
         headers = self._get_cache_headers(safe, data, if_match)
 
-        logger.info("Update group %r in bucket %r" % (id, bucket or self._bucket_name))
+        logger.info("Update group %r in bucket %r" % (id, bucket or self.bucket_name))
 
         resp, _ = self.session.request(
             "put", endpoint, data=data, permissions=permissions, headers=headers
@@ -451,7 +451,7 @@ class Client(object):
 
         (id, if_match) = self._extract_original_info(original, id, if_match)
         endpoint = self.get_endpoint("group", bucket=bucket, group=id)
-        logger.info("Patch group %r in bucket %r" % (id, bucket or self._bucket_name))
+        logger.info("Patch group %r in bucket %r" % (id, bucket or self.bucket_name))
 
         return self._patch_method(
             endpoint, changes, data=data, permissions=permissions, safe=safe, if_match=if_match
@@ -461,7 +461,7 @@ class Client(object):
     def get_group(self, *, id, bucket=None) -> Dict:
         endpoint = self.get_endpoint("group", bucket=bucket, group=id)
 
-        logger.info("Get group %r in bucket %r" % (id, bucket or self._bucket_name))
+        logger.info("Get group %r in bucket %r" % (id, bucket or self.bucket_name))
 
         resp, _ = self.session.request("get", endpoint)
         return resp
@@ -475,7 +475,7 @@ class Client(object):
         endpoint = self.get_endpoint("group", bucket=bucket, group=id)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
-        logger.info("Delete group %r in bucket %r" % (id, bucket or self._bucket_name))
+        logger.info("Delete group %r in bucket %r" % (id, bucket or self.bucket_name))
 
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
@@ -485,7 +485,7 @@ class Client(object):
         endpoint = self.get_endpoint("groups", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
-        logger.info("Delete groups in bucket %r" % bucket or self._bucket_name)
+        logger.info("Delete groups in bucket %r" % bucket or self.bucket_name)
 
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
@@ -514,7 +514,7 @@ class Client(object):
 
         logger.info(
             "Create collection %r in bucket %r"
-            % (id or self._collection_name, bucket or self._bucket_name)
+            % (id or self.collection_name, bucket or self.bucket_name)
         )
 
         try:
@@ -546,7 +546,7 @@ class Client(object):
 
         logger.info(
             "Update collection %r in bucket %r"
-            % (id or self._collection_name, bucket or self._bucket_name)
+            % (id or self.collection_name, bucket or self.bucket_name)
         )
 
         resp, _ = self.session.request(
@@ -587,7 +587,7 @@ class Client(object):
         endpoint = self.get_endpoint("collection", bucket=bucket, collection=id)
         logger.info(
             "Patch collection %r in bucket %r"
-            % (id or self._collection_name, bucket or self._bucket_name)
+            % (id or self.collection_name, bucket or self.bucket_name)
         )
 
         return self._patch_method(
@@ -600,7 +600,7 @@ class Client(object):
 
         logger.info(
             "Get collection %r in bucket %r"
-            % (id or self._collection_name, bucket or self._bucket_name)
+            % (id or self.collection_name, bucket or self.bucket_name)
         )
 
         try:
@@ -608,7 +608,7 @@ class Client(object):
         except KintoException as e:
             error_resp_code = e.response.status_code
             if error_resp_code == 404:
-                raise CollectionNotFound(id or self._collection_name, e)
+                raise CollectionNotFound(id or self.collection_name, e)
             raise
         return resp
 
@@ -625,7 +625,7 @@ class Client(object):
 
         logger.info(
             "Delete collection %r in bucket %r"
-            % (id or self._collection_name, bucket or self._bucket_name)
+            % (id or self.collection_name, bucket or self.bucket_name)
         )
 
         resp, _ = self.session.request("delete", endpoint, headers=headers)
@@ -636,7 +636,7 @@ class Client(object):
         endpoint = self.get_endpoint("collections", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
-        logger.info("Delete collections in bucket %r" % bucket or self._bucket_name)
+        logger.info("Delete collections in bucket %r" % bucket or self.bucket_name)
 
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
@@ -687,7 +687,7 @@ class Client(object):
 
         logger.info(
             "Get record with id %r from collection %r in bucket %r"
-            % (id, collection or self._collection_name, bucket or self._bucket_name)
+            % (id, collection or self.collection_name, bucket or self.bucket_name)
         )
 
         resp, _ = self.session.request("get", endpoint, params=kwargs)
@@ -725,7 +725,7 @@ class Client(object):
 
         logger.info(
             "Create record with id %r in collection %r in bucket %r"
-            % (id, collection or self._collection_name, bucket or self._bucket_name)
+            % (id, collection or self.collection_name, bucket or self.bucket_name)
         )
 
         try:
@@ -764,7 +764,7 @@ class Client(object):
 
         logger.info(
             "Update record with id %r in collection %r in bucket %r"
-            % (id, collection or self._collection_name, bucket or self._bucket_name)
+            % (id, collection or self.collection_name, bucket or self.bucket_name)
         )
 
         resp, _ = self.session.request(
@@ -810,7 +810,7 @@ class Client(object):
 
         logger.info(
             "Patch record with id %r in collection %r in bucket %r"
-            % (id, collection or self._collection_name, bucket or self._bucket_name)
+            % (id, collection or self.collection_name, bucket or self.bucket_name)
         )
 
         return self._patch_method(
@@ -830,7 +830,7 @@ class Client(object):
 
         logger.info(
             "Delete record with id %r from collection %r in bucket %r"
-            % (id, collection or self._collection_name, bucket or self._bucket_name)
+            % (id, collection or self.collection_name, bucket or self.bucket_name)
         )
 
         resp, _ = self.session.request("delete", endpoint, headers=headers)
@@ -843,7 +843,7 @@ class Client(object):
 
         logger.info(
             "Delete records from collection %r in bucket %r"
-            % (collection or self._collection_name, bucket or self._bucket_name)
+            % (collection or self.collection_name, bucket or self.bucket_name)
         )
 
         resp, _ = self.session.request("delete", endpoint, headers=headers)
@@ -852,24 +852,24 @@ class Client(object):
     @retry_timeout
     def get_history(self, *, bucket=None, **kwargs) -> List[Dict]:
         endpoint = self.get_endpoint("history", bucket=bucket)
-        logger.info("Get history from bucket %r" % bucket or self._bucket_name)
+        logger.info("Get history from bucket %r" % bucket or self.bucket_name)
         return self._paginated(endpoint, **kwargs)
 
     @retry_timeout
     def purge_history(self, *, bucket=None, safe=True, if_match=None) -> List[Dict]:
         endpoint = self.get_endpoint("history", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
-        logger.info("Purge History of bucket %r" % bucket or self._bucket_name)
+        logger.info("Purge History of bucket %r" % bucket or self.bucket_name)
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
 
     def __repr__(self) -> str:
-        if self._collection_name:
+        if self.collection_name:
             endpoint = self.get_endpoint(
-                "collection", bucket=self._bucket_name, collection=self._collection_name
+                "collection", bucket=self.bucket_name, collection=self.collection_name
             )
-        elif self._bucket_name:
-            endpoint = self.get_endpoint("bucket", bucket=self._bucket_name)
+        elif self.bucket_name:
+            endpoint = self.get_endpoint("bucket", bucket=self.bucket_name)
         else:
             endpoint = self.get_endpoint("root")
 
@@ -904,8 +904,8 @@ class AsyncClient(object):
             headers=headers,
         )
         self.session = create_session(**session_kwargs)
-        self._bucket_name = bucket
-        self._collection_name = collection
+        self.bucket_name = bucket
+        self.collection_name = collection
         self._server_settings = None
         self._records_timestamp = {}
         self._ignore_batch_4xx = ignore_batch_4xx
@@ -928,8 +928,8 @@ class AsyncClient(object):
             kwargs.setdefault("auth", self.session.auth)
         else:
             kwargs.setdefault("session", self.session)
-        kwargs.setdefault("bucket", self._bucket_name)
-        kwargs.setdefault("collection", self._collection_name)
+        kwargs.setdefault("bucket", self.bucket_name)
+        kwargs.setdefault("collection", self.collection_name)
         kwargs.setdefault("retry", self.session.nb_retry)
         kwargs.setdefault("retry_after", self.session.retry_after)
         return AsyncClient(**kwargs)
@@ -1343,12 +1343,12 @@ class AsyncClient(object):
         )
 
     def __repr__(self) -> str:
-        if self._collection_name:
+        if self.collection_name:
             endpoint = self._client.get_endpoint(
-                "collection", bucket=self._bucket_name, collection=self._collection_name
+                "collection", bucket=self.bucket_name, collection=self.collection_name
             )
-        elif self._bucket_name:
-            endpoint = self._client.get_endpoint("bucket", bucket=self._bucket_name)
+        elif self.bucket_name:
+            endpoint = self._client.get_endpoint("bucket", bucket=self.bucket_name)
         else:
             endpoint = self._client.get_endpoint("root")
 

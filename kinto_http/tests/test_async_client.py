@@ -69,7 +69,7 @@ async def test_client_uses_default_bucket_if_not_specified(async_client_setup: C
 
 def test_client_uses_passed_bucket_if_specified():
     client = Client(server_url=SERVER_URL, bucket="buck")
-    assert client._bucket_name == "buck"
+    assert client.bucket_name == "buck"
 
 
 async def test_client_can_receive_default_headers(mocker: MockerFixture):
@@ -91,8 +91,8 @@ def test_client_clone_with_auth(async_client_setup: Client):
     assert client.session.auth != client_clone.session.auth
     assert client.session.nb_retry == client_clone.session.nb_retry
     assert client.session.retry_after == client_clone.session.retry_after
-    assert client._bucket_name == client_clone._bucket_name
-    assert client._collection_name == client_clone._collection_name
+    assert client.bucket_name == client_clone.bucket_name
+    assert client.collection_name == client_clone.collection_name
 
 
 def test_client_clone_with_server_url(async_client_setup: Client):
@@ -104,8 +104,8 @@ def test_client_clone_with_server_url(async_client_setup: Client):
     assert client.session.auth == client_clone.session.auth
     assert client.session.nb_retry == client_clone.session.nb_retry
     assert client.session.retry_after == client_clone.session.retry_after
-    assert client._bucket_name == client_clone._bucket_name
-    assert client._collection_name == client_clone._collection_name
+    assert client.bucket_name == client_clone.bucket_name
+    assert client.collection_name == client_clone.collection_name
 
 
 def test_client_clone_with_new_session(async_client_setup: Client):
@@ -116,8 +116,8 @@ def test_client_clone_with_new_session(async_client_setup: Client):
     assert client.session != client_clone.session
     assert client.session.server_url != client_clone.session.server_url
     assert client.session.auth != client_clone.session.auth
-    assert client._bucket_name == client_clone._bucket_name
-    assert client._collection_name == client_clone._collection_name
+    assert client.bucket_name == client_clone.bucket_name
+    assert client.collection_name == client_clone.collection_name
 
 
 def test_client_clone_with_auth_and_server_url(async_client_setup: Client):
@@ -130,8 +130,8 @@ def test_client_clone_with_auth_and_server_url(async_client_setup: Client):
     assert client.session.auth != client_clone.session.auth
     assert client.session.nb_retry == client_clone.session.nb_retry
     assert client.session.retry_after == client_clone.session.retry_after
-    assert client._bucket_name == client_clone._bucket_name
-    assert client._collection_name == client_clone._collection_name
+    assert client.bucket_name == client_clone.bucket_name
+    assert client.collection_name == client_clone.collection_name
 
 
 def test_client_clone_with_existing_session(async_client_setup: Client):
@@ -140,8 +140,8 @@ def test_client_clone_with_existing_session(async_client_setup: Client):
     assert client.session == client_clone.session
     assert client.session.server_url == client_clone.session.server_url
     assert client.session.auth == client_clone.session.auth
-    assert client._bucket_name == client_clone._bucket_name
-    assert client._collection_name == client_clone._collection_name
+    assert client.bucket_name == client_clone.bucket_name
+    assert client.collection_name == client_clone.collection_name
 
 
 def test_client_clone_with_new_bucket_and_collection(async_client_setup: Client):
@@ -152,10 +152,10 @@ def test_client_clone_with_new_bucket_and_collection(async_client_setup: Client)
     assert client.session.auth == client_clone.session.auth
     assert client.session.nb_retry == client_clone.session.nb_retry
     assert client.session.retry_after == client_clone.session.retry_after
-    assert client._bucket_name != client_clone._bucket_name
-    assert client._collection_name != client_clone._collection_name
-    assert client_clone._bucket_name == "bucket_blah"
-    assert client_clone._collection_name == "coll_blah"
+    assert client.bucket_name != client_clone.bucket_name
+    assert client.collection_name != client_clone.collection_name
+    assert client_clone.bucket_name == "bucket_blah"
+    assert client_clone.collection_name == "coll_blah"
 
 
 def test_client_clone_with_auth_and_server_url_bucket_and_collection(async_client_setup: Client):
@@ -169,12 +169,12 @@ def test_client_clone_with_auth_and_server_url_bucket_and_collection(async_clien
     assert client.session != client_clone.session
     assert client.session.server_url != client_clone.session.server_url
     assert client.session.auth != client_clone.session.auth
-    assert client._bucket_name != client_clone._bucket_name
-    assert client._collection_name != client_clone._collection_name
+    assert client.bucket_name != client_clone.bucket_name
+    assert client.collection_name != client_clone.collection_name
     assert client_clone.session.auth == ("reviewer", "")
     assert client_clone.session.server_url == SERVER_URL
-    assert client_clone._bucket_name == "bucket_blah"
-    assert client_clone._collection_name == "coll_blah"
+    assert client_clone.bucket_name == "bucket_blah"
+    assert client_clone.collection_name == "coll_blah"
 
 
 async def test_put_is_issued_on_creation(async_client_setup: Client):

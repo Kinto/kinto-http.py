@@ -7,7 +7,10 @@ This document describes changes between each past release.
 10.10.0 (unreleased)
 ====================
 
-- Nothing changed yet.
+**New features**
+
+- Use Bearer token Auth object if specified string for ``auth`` contains ``Bearer``
+- Use Basic Auth if specified string for ``auth`` contains ``:``
 
 
 10.9.0 (2022-02-04)

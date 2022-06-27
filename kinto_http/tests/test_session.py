@@ -227,9 +227,15 @@ def test_auth_can_be_passed_as_basic_header(session_setup: Tuple[MagicMock, Sess
     assert session.auth.token == "abcdef"
 
 
-def test_auth_can_be_an_arbitrary_string(session_setup: Tuple[MagicMock, Session]):
-    session = create_session(auth="Some abcdef")
-    assert session.auth == "Some abcdef"
+def test_auth_cannot_be_an_arbitrary_string(session_setup: Tuple[MagicMock, Session]):
+    with pytest.raises(ValueError) as exc:
+        create_session(auth="Some abcdef")
+    assert "Unsupported `auth`" in str(exc.value)
+
+
+def test_auth_can_be_an_arbitrary_callable(session_setup: Tuple[MagicMock, Session]):
+    session = create_session(auth=lambda request: request)
+    assert callable(session.auth)
 
 
 def test_body_is_none_on_304(session_setup: Tuple[MagicMock, Session]):

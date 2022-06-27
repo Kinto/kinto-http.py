@@ -29,7 +29,7 @@ TESTS_REQUIRE = [
 
 setup(
     name="kinto-http",
-    version="10.10.0",
+    version="10.11.0.dev0",
     description="Kinto client",
     long_description=README + "\n\n" + CHANGELOG,
     license="Apache License (2.0)",

@@ -5,6 +5,7 @@ from urllib.parse import urlparse
 
 import requests
 
+import kinto_http
 from kinto_http import utils
 from kinto_http.constants import USER_AGENT
 from kinto_http.exceptions import BackoffException, KintoException
@@ -31,6 +32,20 @@ def create_session(server_url=None, auth=None, session=None, **kwargs):
     if session is None and server_url is None and auth is None:
         msg = "You need to either set session or auth + server_url"
         raise AttributeError(msg)
+
+    if auth is not None and isinstance(auth, str):
+        if ":" in auth:
+            auth = tuple(auth.split(":", 1))
+        elif "bearer" in auth.lower():
+            # eg, "Bearer ghruhgrwyhg"
+            _type, token = auth.split(" ", 1)
+            auth = kinto_http.BearerTokenAuth(token, type=_type)
+        else:
+            raise ValueError(
+                "Unsupported `auth` parameter value. Must be a tuple() or string "
+                "in the form of `user:pass` or `Bearer xyz`"
+            )
+
     if session is None:
         session = Session(server_url=server_url, auth=auth, **kwargs)
     return session

@@ -9,6 +9,7 @@ import pkg_resources
 import pytest
 from pytest_mock.plugin import MockerFixture
 
+import kinto_http
 from kinto_http.constants import USER_AGENT
 from kinto_http.exceptions import BackoffException, KintoException
 from kinto_http.session import Session, create_session
@@ -207,6 +208,34 @@ def test_creates_a_session_if_needed(mocker: MockerFixture):
 def test_use_given_session_if_provided(mocker: MockerFixture):
     session = create_session(session=mocker.sentinel.session)
     assert session == mocker.sentinel.session
+
+
+def test_auth_can_be_passed_as_tuple(session_setup: Tuple[MagicMock, Session]):
+    session = create_session(auth=("admin", "pass"))
+    assert session.auth == ("admin", "pass")
+
+
+def test_auth_can_be_passed_as_colon_separate(session_setup: Tuple[MagicMock, Session]):
+    session = create_session(auth="admin:pass")
+    assert session.auth == ("admin", "pass")
+
+
+def test_auth_can_be_passed_as_basic_header(session_setup: Tuple[MagicMock, Session]):
+    session = create_session(auth="Bearer+OIDC abcdef")
+    assert isinstance(session.auth, kinto_http.BearerTokenAuth)
+    assert session.auth.type == "Bearer+OIDC"
+    assert session.auth.token == "abcdef"
+
+
+def test_auth_cannot_be_an_arbitrary_string(session_setup: Tuple[MagicMock, Session]):
+    with pytest.raises(ValueError) as exc:
+        create_session(auth="Some abcdef")
+    assert "Unsupported `auth`" in str(exc.value)
+
+
+def test_auth_can_be_an_arbitrary_callable(session_setup: Tuple[MagicMock, Session]):
+    session = create_session(auth=lambda request: request)
+    assert callable(session.auth)
 
 
 def test_body_is_none_on_304(session_setup: Tuple[MagicMock, Session]):

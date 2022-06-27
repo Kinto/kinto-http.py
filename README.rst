@@ -96,7 +96,13 @@ Using a Bearer access token to authenticate (OpenID)
 
 The authorization header is prefixed with ``Bearer`` by default. If the ``header_type``
 is `customized on the server <https://kinto.readthedocs.io/en/stable/configuration/settings.html#openid-connect>`_,
-the client must specify the expected type: ``kinto_http.BearerTokenAuth("XYPJTNsFKV2" type="Bearer+OIDC")``
+the client must specify the expected type: ``kinto_http.BearerTokenAuth("XYPJTNsFKV2", type="Bearer+OIDC")``
+
+.. note::
+
+    Passing a string containing ``Bearer`` will be instantiate a ``kinto_http.BearerTokenAuth()`` object automatically.
+
+    In other words, ``kinto_http.Client(auth="Bearer+OIDC XYPJTNsFKV2")`` is equivalent to ``kinto_http.Client(auth=kinto_http.BearerTokenAuth("XYPJTNsFKV2", type="Bearer+OIDC"))``
 
 
 Custom headers

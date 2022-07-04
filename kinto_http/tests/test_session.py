@@ -227,6 +227,11 @@ def test_auth_can_be_passed_as_basic_header(session_setup: Tuple[MagicMock, Sess
     assert session.auth.token == "abcdef"
 
 
+def test_auth_cannot_be_an_empty_string(session_setup: Tuple[MagicMock, Session]):
+    session = create_session(auth="")
+    assert session.auth == ""
+
+
 def test_auth_cannot_be_an_arbitrary_string(session_setup: Tuple[MagicMock, Session]):
     with pytest.raises(ValueError) as exc:
         create_session(auth="Some abcdef")

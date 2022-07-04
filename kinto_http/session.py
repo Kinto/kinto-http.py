@@ -33,7 +33,7 @@ def create_session(server_url=None, auth=None, session=None, **kwargs):
         msg = "You need to either set session or auth + server_url"
         raise AttributeError(msg)
 
-    if auth is not None and isinstance(auth, str):
+    if auth and isinstance(auth, str):
         if ":" in auth:
             auth = tuple(auth.split(":", 1))
         elif "bearer" in auth.lower():

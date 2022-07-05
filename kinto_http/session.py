@@ -40,7 +40,7 @@ def create_session(server_url=None, auth=None, session=None, **kwargs):
             # eg, "Bearer ghruhgrwyhg"
             _type, token = auth.split(" ", 1)
             auth = kinto_http.BearerTokenAuth(token, type=_type)
-        else:
+        elif auth:  # not empty
             raise ValueError(
                 "Unsupported `auth` parameter value. Must be a tuple() or string "
                 "in the form of `user:pass` or `Bearer xyz`"

@@ -7,7 +7,9 @@ This document describes changes between each past release.
 10.11.0 (unreleased)
 ====================
 
-- Nothing changed yet.
+**Bug fixes**
+
+- Fix breaking change introduced in previous version, accept empty string in ``auth`` parameter
 
 
 10.10.0 (2022-06-27)

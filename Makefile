@@ -59,9 +59,3 @@ distclean: clean
 
 maintainer-clean: distclean
 	rm -fr .venv/ .tox/
-
-build-requirements:
-	$(VIRTUALENV) $(TEMPDIR)
-	$(TEMPDIR)/bin/pip install -U pip
-	$(TEMPDIR)/bin/pip install -Ue .
-	$(TEMPDIR)/bin/pip freeze | grep -v -- '-e' > requirements.txt

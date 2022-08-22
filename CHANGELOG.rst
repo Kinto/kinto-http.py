@@ -4,10 +4,10 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-10.11.0 (unreleased)
-====================
+11.0.0 (2022-08-22)
+===================
 
-- Nothing changed yet.
+- Remove pinned versions in dependencies
 
 
 10.10.1 (2022-07-05)

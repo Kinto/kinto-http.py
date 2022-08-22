@@ -16,9 +16,9 @@ README = read_file("README.rst")
 CHANGELOG = read_file("CHANGELOG.rst")
 
 INSTALL_REQUIRES = [
-    x.replace(" \\", "")
-    for x in read_file("./requirements.txt").split("\n")
-    if not x.startswith(" ")
+    "requests",
+    "backoff",
+    "unidecode",
 ]
 
 TESTS_REQUIRE = [

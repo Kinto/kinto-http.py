@@ -4,10 +4,13 @@ CHANGELOG
 This document describes changes between each past release.
 
 
-11.0.1 (unreleased)
+11.0.1 (2023-04-05)
 ===================
 
-- Nothing changed yet.
+**Bug fixes**
+
+- Fix ``clone()`` method with subclasses (#307)
+- Do not send body in ``GET`` requests (#306)
 
 
 11.0.0 (2022-08-22)

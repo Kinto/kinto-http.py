@@ -59,7 +59,7 @@ class BatchSession(object):
 
     def _build_requests(self):
         requests = []
-        for (method, url, payload, headers) in self.requests:
+        for method, url, payload, headers in self.requests:
             # Strip the prefix in batch requests.
             request = {"method": method.upper(), "path": url.replace("v1/", "")}
 

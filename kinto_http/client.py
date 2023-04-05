@@ -238,7 +238,6 @@ class Client(object):
     def create_bucket(
         self, *, id=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
-
         if id is None and data:
             id = data.get("id", None)
 
@@ -260,7 +259,6 @@ class Client(object):
     def update_bucket(
         self, *, id=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
-
         if id is None and data:
             id = data.get("id", None)
 
@@ -367,7 +365,6 @@ class Client(object):
     def create_group(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
-
         if id is None and data:
             id = data.get("id", None)
 
@@ -403,7 +400,6 @@ class Client(object):
     def update_group(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
-
         if id is None and data:
             id = data.get("id", None)
 
@@ -500,7 +496,6 @@ class Client(object):
     def create_collection(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
     ) -> Dict:
-
         if id is None and data:
             id = data.get("id", None)
 
@@ -537,7 +532,6 @@ class Client(object):
     def update_collection(
         self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
     ) -> Dict:
-
         if id is None and data:
             id = data.get("id", None)
 
@@ -705,7 +699,6 @@ class Client(object):
         safe=True,
         if_not_exists=False,
     ) -> Dict:
-
         id = id or data.get("id", None)
         if if_not_exists:
             return self._create_if_not_exists(

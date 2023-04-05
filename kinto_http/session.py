@@ -101,7 +101,7 @@ class Session(object):
 
         payload = payload or {}
 
-        if method.lower() == "get" and data is not None:
+        if method.lower() == "get" and (payload or data):
             raise KintoException("GET requests are not allowed to have a body!")
 
         if data is not None:

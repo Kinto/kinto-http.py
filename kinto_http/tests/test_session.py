@@ -52,6 +52,21 @@ def test_timeout_can_be_set_to_value(session_setup: Tuple[MagicMock, Session]):
     )
 
 
+def test_get_does_not_send_body(session_setup: Tuple[MagicMock, Session]):
+    requests_mock, _ = session_setup
+    response = get_200()
+    requests_mock.request.return_value = response
+    session = Session("https://example.org", timeout=4)
+    assert session.auth is None
+    session.request("GET", "/test")
+    requests_mock.request.assert_called_with(
+        "GET",
+        "https://example.org/test",
+        timeout=4,
+        headers=requests_mock.request.headers,
+    )
+
+
 def test_no_auth_is_used_by_default(session_setup: Tuple[MagicMock, Session]):
     requests_mock, session = session_setup
     response = get_200()
@@ -129,7 +144,7 @@ def test_get_request_with_data_raises_exception(session_setup: Tuple[MagicMock, 
     response = get_200()
     requests_mock.request.return_value = response
 
-    with pytest.raises(KintoException) as err:
+    with pytest.raises(KintoException):
         session.request("GET", "/", data={"foo": "bar"})
 
 

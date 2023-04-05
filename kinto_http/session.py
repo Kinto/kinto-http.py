@@ -100,15 +100,23 @@ class Session(object):
         kwargs["headers"] = {"User-Agent": USER_AGENT, **self.headers, **overridden_headers}
 
         payload = payload or {}
+
+        if method.lower() == "get" and data is not None:
+            raise KintoException("GET requests are not allowed to have a body!")
+
         if data is not None:
             payload["data"] = data
+
         if permissions is not None:
             if hasattr(permissions, "as_dict"):
                 permissions = permissions.as_dict()
+
             payload["permissions"] = permissions
-        if method not in ("get", "head"):
+
+        if method.lower() not in ("get", "head"):
             if "files" in kwargs:
                 kwargs.setdefault("data", payload)
+
             else:
                 kwargs.setdefault("data", utils.json_dumps(payload))
                 kwargs["headers"].setdefault("Content-Type", "application/json")
@@ -116,6 +124,7 @@ class Session(object):
         retry = self.nb_retry
         while retry >= 0:
             resp = requests.request(method, actual_url, **kwargs)
+
             if "Alert" in resp.headers:
                 warnings.warn(resp.headers["Alert"], DeprecationWarning)
             backoff_seconds = resp.headers.get("Backoff")

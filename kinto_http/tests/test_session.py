@@ -124,6 +124,15 @@ def test_raises_exception_if_headers_not_dict(session_setup: Tuple[MagicMock, Se
         session.request("get", "/test", headers=4)
 
 
+def test_get_request_with_data_raises_exception(session_setup: Tuple[MagicMock, Session]):
+    requests_mock, session = session_setup
+    response = get_200()
+    requests_mock.request.return_value = response
+
+    with pytest.raises(KintoException) as err:
+        session.request("GET", "/", data={"foo": "bar"})
+
+
 def test_passed_data_is_encoded_to_json(session_setup: Tuple[MagicMock, Session]):
     requests_mock, session = session_setup
     response = get_200()

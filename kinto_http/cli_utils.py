@@ -61,7 +61,6 @@ def add_parser_options(
     include_collection=True,
     **kwargs
 ):
-
     if parser is None:
         parser = argparse.ArgumentParser(**kwargs)
 

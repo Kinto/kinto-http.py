@@ -246,6 +246,17 @@ def test_client_can_receive_default_headers(mocker: MockerFixture):
     assert "Allow-Access" in mocked.request.call_args_list[0][1]["headers"]
 
 
+def test_client_clone_from_subclass():
+    class SubClient(Client):
+        def qwack(self):
+            return True
+
+    client = SubClient(server_url="https://duck.com", bucket="bar")
+    client2 = client.clone(bucket="foo")
+    assert client2.qwack()
+    assert client2.bucket_name == "foo"
+
+
 def test_client_clone_with_auth(client_setup: Client):
     client = client_setup
     client_clone = client.clone(auth=("reviewer", ""))

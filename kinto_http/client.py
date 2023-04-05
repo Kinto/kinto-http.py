@@ -69,7 +69,7 @@ class Client(object):
         kwargs.setdefault("collection", self.collection_name)
         kwargs.setdefault("retry", self.session.nb_retry)
         kwargs.setdefault("retry_after", self.session.retry_after)
-        return Client(**kwargs)
+        return self.__class__(**kwargs)
 
     @retry_timeout
     @contextmanager
@@ -925,7 +925,7 @@ class AsyncClient(object):
         kwargs.setdefault("collection", self.collection_name)
         kwargs.setdefault("retry", self.session.nb_retry)
         kwargs.setdefault("retry_after", self.session.retry_after)
-        return AsyncClient(**kwargs)
+        return self.__class__(**kwargs)
 
     async def server_info(self) -> Dict:
         loop = asyncio.get_event_loop()

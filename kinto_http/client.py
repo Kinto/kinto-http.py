@@ -916,7 +916,7 @@ class AsyncClient(Client):
 
             get_method = getattr(super(), "get_%s" % resource)
             return get_method(**get_kwargs)
-    
+
     # have to redefine this because of the use of getattr. We want to make sure
     #  that we get the synchronous version of the delete_ method
     def _delete_if_exists(self, resource, **kwargs):

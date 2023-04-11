@@ -894,7 +894,16 @@ def async_client(cls):
 
 @async_client
 class AsyncClient(Client):
-    # have to redefine this because of the use of getattr. We want to make sure
+    """Wraps most public methods of the Client in an event_loop.run_in_executor
+    call to make them async-compatible
+
+    Note: One limitation of this approach is that all methods that aren't
+    wrapped by the `async_client` need to be awaited. This means that public
+    methods can't call other public methods from within the class. We had to
+    patch `_create_if_not_exists` and `_delete_if_exists` below that reason.
+    """
+
+    #  have to redefine this because of the use of getattr. We want to make sure
     #  that we get the synchronous version of the create_ or get_ method
     def _create_if_not_exists(self, resource, **kwargs):
         try:

@@ -7,7 +7,10 @@ This document describes changes between each past release.
 11.0.2 (unreleased)
 ===================
 
-- Nothing changed yet.
+**Internal Changes**
+
+- Drop support of Python 3.7
+- Update list of Python versions to run CI tests
 
 
 11.0.1 (2023-04-05)

@@ -29,16 +29,17 @@ TESTS_REQUIRE = [
 
 setup(
     name="kinto-http",
-    version="11.0.1.dev0",
+    version="11.0.2.dev0",
     description="Kinto client",
     long_description=README + "\n\n" + CHANGELOG,
     license="Apache License (2.0)",
     classifiers=[
         "Programming Language :: Python",
         "Programming Language :: Python :: 3",
-        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Programming Language :: Python :: Implementation :: CPython",
         "Topic :: Internet :: WWW/HTTP",
         "License :: OSI Approved :: Apache Software License",

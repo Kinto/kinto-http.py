@@ -26,9 +26,6 @@ Repository = "https://github.com/Kinto/kinto-http.py"
 [tool.setuptools.dynamic]
 dependencies = { file = ["requirements.in"] }
 
-[tool.setuptools.packages.find]
-include = ["kinto_http"]
-
 [build-system]
 requires = ["setuptools>=64", "setuptools_scm>=8"]
 build-backend = "setuptools.build_meta"
@@ -50,7 +47,7 @@ generate-hashes = true
 
 [tool.coverage.run]
 omit = [
-    "kinto_http/tests/*",
+    "tests/*",
 ]
 relative_files = true
 

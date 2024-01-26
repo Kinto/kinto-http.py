@@ -19,8 +19,8 @@ need-kinto-running:
 	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make run-kinto' before starting tests." && exit 1)
 
 run-kinto: install
-	$(VENV)/bin/kinto migrate --ini kinto_http/tests/config/kinto.ini
-	$(VENV)/bin/kinto start --ini kinto_http/tests/config/kinto.ini
+	$(VENV)/bin/kinto migrate --ini tests/config/kinto.ini
+	$(VENV)/bin/kinto start --ini tests/config/kinto.ini
 
 .PHONY: tests
 test: tests
@@ -33,16 +33,16 @@ functional: install need-kinto-running
 
 .PHONY: lint
 lint: install
-	$(VENV)/bin/ruff check kinto_http/ tests
-	$(VENV)/bin/ruff format --check kinto_http/ tests
+	$(VENV)/bin/ruff check src tests
+	$(VENV)/bin/ruff format --check src tests
 
 .PHONY: format
 format: install
-	$(VENV)/bin/ruff check --fix kinto_http/ tests
-	$(VENV)/bin/ruff format kinto_http/ tests
+	$(VENV)/bin/ruff check --fix src tests
+	$(VENV)/bin/ruff format src tests
 
 .IGNORE: clean
 clean:
-	find kinto_http -name '*.pyc' -delete
-	find kinto_http -name '__pycache__' -type d -exec rm -fr {} \;
+	find src -name '__pycache__' -type d -exec rm -fr {} \;
+	find tests -name '__pycache__' -type d -exec rm -fr {} \;
 	rm -rf .venv .coverage *.egg-info .pytest_cache .ruff_cache build dist

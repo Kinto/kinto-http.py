@@ -46,9 +46,6 @@ dev = [
 generate-hashes = true
 
 [tool.coverage.run]
-omit = [
-    "tests/*",
-]
 relative_files = true
 
 [tool.ruff]

@@ -492,8 +492,8 @@ The script now accepts basic options:
     -D, --debug           Show all messages, including debug messages.
 
 
-Run tests
-=========
+Development
+===========
 
 In one terminal, run a Kinto server:
 
@@ -506,6 +506,13 @@ In another, run the tests against it:
 ::
 
     $ make tests
+
+Optionally, configure `git` to use `.git-blame-ignore-revs` to remove noisy commits from `git blame` (e.g. running formatters or moving files):
+
+::
+
+
+    git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 
 Releasing

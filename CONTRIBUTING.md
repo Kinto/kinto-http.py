@@ -57,8 +57,8 @@ If you want to run the functional tests only, you can use `make functional`.
 ## Submitting Changes
 
 ```bash
-git checkout master
-git pull origin master
+git checkout main
+git pull origin main
 git checkout -b issue_number-bug-title
 git commit # Your changes
 git push -u {your_name} issue_number-bug-title

@@ -7,7 +7,7 @@ Kinto python client
 .. image:: https://img.shields.io/pypi/v/kinto-http.svg
         :target: https://pypi.python.org/pypi/kinto-http
 
-.. image:: https://coveralls.io/repos/Kinto/kinto-http.py/badge.svg?branch=master
+.. image:: https://coveralls.io/repos/Kinto/kinto-http.py/badge.svg?branch=main
         :target: https://coveralls.io/r/Kinto/kinto-http.py
 
 

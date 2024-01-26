@@ -495,30 +495,4 @@ The script now accepts basic options:
 Development
 ===========
 
-In one terminal, run a Kinto server:
-
-::
-
-    $ make run-kinto
-
-In another, run the tests against it:
-
-::
-
-    $ make tests
-
-Optionally, configure `git` to use `.git-blame-ignore-revs` to remove noisy commits from `git blame` (e.g. running formatters or moving files):
-
-::
-
-
-    git config blame.ignoreRevsFile .git-blame-ignore-revs
-
-
-Releasing
-=========
-
-1. Create a release on Github on https://github.com/Kinto/kinto-http.py/releases/new
-2. Create a new tag `X.Y.Z` (*This tag will be created from the target when you publish this release.*)
-3. Generate release notes
-4. Publish release
+See [contributing docs](.github/CONTRIBUTING.md)

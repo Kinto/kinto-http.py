@@ -1,7 +1,7 @@
 How to contribute
 =================
 
-Thanks for your interest in contributing to Kinto!
+Thanks for your interest in contributing to the Kinto client!
 
 ## Reporting Bugs
 
@@ -15,28 +15,6 @@ If you are reporting a bug, please include:
 
 ## Ready to contribute?
 
-### System Requirements
-
-Depending on the platform and chosen configuration, some libraries or extra services are required.
-
-The following commands will install necessary tools for cryptography and Python packaging like Virtualenv.
-
-#### Linux
-On Debian / Ubuntu based systems:
-
-```bash
-apt-get install libffi-dev libssl-dev python-dev python-virtualenv
-```
-
-#### OS X
-Assuming [brew](http://brew.sh/) is installed:
-
-```bash
-brew install libffi openssl pkg-config python
-
-pip install virtualenv
-```
-
 ### Getting Started
 
  -  Fork the repo on GitHub and clone locally:
@@ -46,12 +24,20 @@ git clone git@github.com:Kinto/kinto-http.py.git
 git remote add {your_name} git@github.com:{your_name}/kinto-http.py.git
 ```
 
+Optionally, configure `git` to use `.git-blame-ignore-revs` to remove noisy commits from `git blame` (e.g. running formatters or moving files):
+
+::
+
+
+    git config blame.ignoreRevsFile .git-blame-ignore-revs
+
+
 ## Testing
 
- -  `make tests-once` to run the tests with the current venv.
- -  `make tests` to run all the tests (with python3, flake8, and functional tests)
+ - Run `make run-kinto` in a separate terminal
 
-You may need to use `make run-kinto` before running the functional tests.
+ -  `make tests` to run all the tests
+
 If you want to run the functional tests only, you can use `make functional`.
 
 ## Submitting Changes
@@ -68,3 +54,11 @@ Then you can create a Pull-Request.
 Please create your pull-request as soon as you have at least one commit even if it has only failing tests. This will allow us to help and give guidance.
 
 You will be able to update your pull-request by pushing commits to your branch.
+
+
+## Releasing
+
+1. Create a release on Github on https://github.com/Kinto/kinto-http.py/releases/new
+2. Create a new tag `X.Y.Z` (*This tag will be created from the target when you publish this release.*)
+3. Generate release notes
+4. Publish release

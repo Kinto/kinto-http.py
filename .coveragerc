@@ -1,3 +1,0 @@
-[run]
-omit = kinto_http/tests/*
-relative_files = True

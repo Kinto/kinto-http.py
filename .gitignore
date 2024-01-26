@@ -1,8 +1,7 @@
 .cache
 *.pyc
-kinto_http.egg-info/
+*.egg-info/
 .coverage
 .venv/
-.tox
 .pytest_cache/
 .vscode/

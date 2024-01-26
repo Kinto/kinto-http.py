@@ -59,7 +59,7 @@ def add_parser_options(
     default_collection=None,
     include_bucket=True,
     include_collection=True,
-    **kwargs
+    **kwargs,
 ):
     if parser is None:
         parser = argparse.ArgumentParser(**kwargs)

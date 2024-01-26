@@ -1,8 +1,6 @@
 import re
 
 import pytest
-from pytest_mock.plugin import MockerFixture
-
 from kinto_http import (
     BearerTokenAuth,
     BucketNotFound,
@@ -13,6 +11,7 @@ from kinto_http import (
 )
 from kinto_http.constants import DO_NOT_OVERWRITE, SERVER_URL
 from kinto_http.patch_type import JSONPatch, MergePatch
+from pytest_mock.plugin import MockerFixture
 
 from .support import build_response, get_http_error, mock_response
 

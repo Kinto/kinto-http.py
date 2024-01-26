@@ -37,19 +37,5 @@ jobs:
       - name: Run unit tests
         run: make test
 
-      - name: Coveralls Parallel
+      - name: Coveralls
         uses: coverallsapp/github-action@v2
-        with:
-          flag-name: run-${{ join(matrix.*, '-') }}
-          parallel: true
-
-  finish:
-    needs: unit-tests
-    if: ${{ always() }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: Coveralls Finished
-      uses: coverallsapp/github-action@v2
-      with:
-        parallel-finished: true
-        carryforward: "python-version-3.8,python-version-3.9,python-version-3.10,python-version-3.11"

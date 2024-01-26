@@ -495,4 +495,4 @@ The script now accepts basic options:
 Development
 ===========
 
-See [contributing docs](.github/CONTRIBUTING.md)
+See `contributing docs <./.github/CONTRIBUTING.md>`_

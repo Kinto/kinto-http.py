@@ -5,14 +5,13 @@ from datetime import date, datetime
 from typing import Tuple
 from unittest.mock import MagicMock
 
+import kinto_http
 import pkg_resources
 import pytest
-from pytest_mock.plugin import MockerFixture
-
-import kinto_http
 from kinto_http.constants import USER_AGENT
 from kinto_http.exceptions import BackoffException, KintoException
 from kinto_http.session import Session, create_session
+from pytest_mock.plugin import MockerFixture
 
 from .support import get_200, get_403, get_503, get_http_response
 
@@ -162,7 +161,7 @@ def test_passed_data_is_encoded_to_json(session_setup: Tuple[MagicMock, Session]
 
 
 def test_passed_data_is_passed_as_is_when_files_are_posted(
-    session_setup: Tuple[MagicMock, Session]
+    session_setup: Tuple[MagicMock, Session],
 ):
     requests_mock, session = session_setup
     response = get_200()
@@ -353,7 +352,7 @@ def test_passed_datetime_data_is_encoded_to_json(session_setup: Tuple[MagicMock,
 
 
 def test_passed_random_python_data_fails_to_be_encoded_to_json(
-    session_setup: Tuple[MagicMock, Session]
+    session_setup: Tuple[MagicMock, Session],
 ):
     _, session = session_setup
     with pytest.raises(TypeError) as exc:
@@ -513,7 +512,7 @@ def test_forced_retry_after_overrides_value_of_header(
 
 
 def test_raises_exception_if_backoff_time_not_spent(
-    session_retry_setup: Tuple[MagicMock, Session]
+    session_retry_setup: Tuple[MagicMock, Session],
 ):
     requests_mock, session = session_retry_setup
     response = get_200()

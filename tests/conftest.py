@@ -4,13 +4,12 @@ from urllib.parse import urljoin
 
 import pytest
 import requests
-from pytest_mock.plugin import MockerFixture
-
 from kinto_http import AsyncClient, Client
 from kinto_http.constants import DEFAULT_AUTH, SERVER_URL, USER_AGENT
 from kinto_http.endpoints import Endpoints
 from kinto_http.exceptions import KintoException
 from kinto_http.session import Session
+from pytest_mock.plugin import MockerFixture
 
 from .support import create_user, get_200, get_503, mock_response
 

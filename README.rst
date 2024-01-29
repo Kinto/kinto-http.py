@@ -492,24 +492,7 @@ The script now accepts basic options:
     -D, --debug           Show all messages, including debug messages.
 
 
-Run tests
-=========
+Development
+===========
 
-In one terminal, run a Kinto server:
-
-::
-
-    $ make run-kinto
-
-In another, run the tests against it:
-
-::
-
-    $ make tests
-
-
-(Optional) Install a git hook:
-
-::
-
-    therapist install
+See `contributing docs <./.github/CONTRIBUTING.md>`_

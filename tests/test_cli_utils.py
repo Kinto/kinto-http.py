@@ -1,9 +1,8 @@
 import argparse
 
-from pytest_mock import MockerFixture
-
 from kinto_http import BearerTokenAuth, cli_utils
 from kinto_http.constants import ALL_PARAMETERS
+from pytest_mock import MockerFixture
 
 from .support import assert_option_strings
 

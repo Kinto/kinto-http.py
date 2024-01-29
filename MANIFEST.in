@@ -1,5 +1,0 @@
-include *.rst README.rst CHANGELOG.rst tox.ini Makefile .coveragerc
-include *.txt
-include LICENSE
-include CONTRIBUTING.md
-recursive-include kinto_http *.ini

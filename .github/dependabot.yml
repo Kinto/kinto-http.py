@@ -8,3 +8,11 @@ updates:
   groups:
     all-dependencies:
       update-types: ["major", "minor", "patch"]
+- package-ecosystem: "github-actions"
+  directory: "/"
+  schedule:
+    interval: weekly
+  open-pull-requests-limit: 99
+  groups:
+    all-dependencies:
+      update-types: ["major", "minor", "patch"]

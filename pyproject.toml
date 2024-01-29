@@ -1,17 +1,73 @@
-[tool.black]
+[project]
+dynamic = ["version", "dependencies"]
+name = "kinto-http"
+description = "Kinto client"
+readme = "README.rst"
+license = {file = "LICENSE"}
+classifiers = [
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: Implementation :: CPython",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: WSGI :: Application",
+    "License :: OSI Approved :: Apache Software License"
+]
+keywords = ["web services"]
+authors = [
+  {name = "Mozilla Services", email = "developers@kinto-storage.org"},
+]
+
+[project.urls]
+Repository = "https://github.com/Kinto/kinto-http.py"
+
+[tool.setuptools_scm]
+# can be empty if no extra settings are needed, presence enables setuptools_scm
+
+[tool.setuptools.dynamic]
+dependencies = { file = ["requirements.in"] }
+
+[build-system]
+requires = ["setuptools>=64", "setuptools_scm>=8"]
+build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+dev = [
+    "kinto",
+    "ruff",
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cache",
+    "pytest-cov",
+    "pytest-mock",
+    "pytest-xdist",
+]
+
+[tool.pip-tools]
+generate-hashes = true
+
+[tool.coverage.run]
+relative_files = true
+
+[tool.ruff]
 line-length = 99
-include = '\.pyi?$'
-exclude = '''
-/(
-    \.git
-  | \.hg
-  | \.mypy_cache
-  | \.tox
-  | \.venv
-  | _build
-  | buck-out
-  | build
-  | dist
-  | __pycache__
-)/
-'''
+extend-exclude = [
+    "__pycache__",
+    ".venv/",
+]
+
+[tool.ruff.lint]
+select = [
+    # pycodestyle
+    "E", "W",
+    # flake8
+    "F",
+    # isort
+    "I",
+]
+ignore = [
+    # `format` will wrap lines.
+    "E501",
+]
+
+[tool.ruff.lint.isort]
+lines-after-imports = 2

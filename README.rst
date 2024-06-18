@@ -7,10 +7,6 @@ Kinto python client
 .. image:: https://img.shields.io/pypi/v/kinto-http.svg
         :target: https://pypi.python.org/pypi/kinto-http
 
-.. image:: https://coveralls.io/repos/Kinto/kinto-http.py/badge.svg?branch=main
-        :target: https://coveralls.io/r/Kinto/kinto-http.py
-
-
 *kinto-http* is the Python library to interact with a *Kinto* server.
 
 There is also a similar `client in JavaScript <https://github.com/kinto/kinto-http.js>`_.

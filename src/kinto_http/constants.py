@@ -1,6 +1,6 @@
+import importlib.metadata
 import re
 import sys
-import importlib.metadata
 
 
 kinto_http_version = importlib.metadata.version("kinto_http")

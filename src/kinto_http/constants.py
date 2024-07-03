@@ -1,11 +1,10 @@
+import importlib.metadata
 import re
 import sys
 
-import pkg_resources
 
-
-kinto_http_version = pkg_resources.get_distribution("kinto_http").version
-requests_version = pkg_resources.get_distribution("requests").version
+kinto_http_version = importlib.metadata.version("kinto_http")
+requests_version = importlib.metadata.version("requests")
 python_version = ".".join(map(str, sys.version_info[:3]))
 
 USER_AGENT = "kinto_http/{} requests/{} python/{}".format(

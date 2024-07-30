@@ -861,6 +861,35 @@ class Client(object):
         resp, _ = self.session.request("delete", endpoint, headers=headers)
         return resp["data"]
 
+    @retry_timeout
+    def add_attachment(self, record=None, bucket=None, collection=None):
+        filename = os.path.basename(filepath)
+        filecontent = open(filepath, "rb").read()
+        mimetype, _ = mimetypes.guess_type(filepath)
+        multipart = [("attachment", (filename, filecontent, mimetype))]
+
+        endpoint = self._get_endpoint("attachment", id=id, bucket=bucket, collection=collection, permissions=None, data=None)
+        resp = requests.post(
+            endpoint,
+            data={
+                "data": json.dumps(data),
+                "permissions": json.dumps(permissions),
+            },
+            files=multipart,
+            headers={"Authorization": AUTHZ}
+        )
+        resp.raise_for_status()
+
+    @retry_timeout
+    def remove_attachment(self, ):
+        endpoint = self._get_endpoint("attachment", id=id, bucket=bucket, collection=collection, permissions=None, data=None)
+        requests.delete(
+            endpoint,
+            headers={"Authorization": AUTHZ}
+        )
+        resp.raise_for_status()
+
+
     def __repr__(self) -> str:
         if self.collection_name:
             endpoint = self._get_endpoint(

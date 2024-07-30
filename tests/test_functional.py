@@ -536,3 +536,48 @@ def test_replication(functional_setup):
     replication.replicate(origin, destination)
     records = client.get_records(bucket="destination", collection="coll")
     assert len(records) == 10
+
+
+def test_adding_an_attachment(functional_setup, tmp_path):
+    client = functional_setup
+    with client.batch(bucket="mozilla", collection="payments") as batch:
+        batch.create_bucket()
+        batch.create_collection()
+
+    p = tmp_path / "file.txt"
+    p.write_text("hello")
+
+    client.add_attachment(
+        id="abc",
+        filepath=p,
+        bucket="mozilla",
+        collection="payments",
+        data={"secret": "psssssst!"},
+        permissions={"write": ["system.Everyone"]},
+        mimetype="text/custom",
+    )
+
+    record = client.get_record(bucket="mozilla", collection="payments", id="abc")
+    assert "attachment" in record["data"]
+    assert record["data"]["attachment"]["filename"] == "file.txt"
+    assert record["data"]["attachment"]["mimetype"] == "text/custom"
+    assert "secret" in record["data"]
+    assert "system.Everyone" in record["permissions"]["write"]
+
+
+def test_removing_an_attachment(functional_setup, tmp_path):
+    client = functional_setup.clone(bucket="mozilla", collection="payments")
+    with client.batch() as batch:
+        batch.create_bucket()
+        batch.create_collection()
+    p = tmp_path / "file.txt"
+    p.write_text("hello")
+    client.add_attachment(
+        id="abc",
+        filepath=p,
+    )
+
+    client.remove_attachment(id="abc")
+
+    record = client.get_record(id="abc")
+    assert record["data"]["attachment"] is None

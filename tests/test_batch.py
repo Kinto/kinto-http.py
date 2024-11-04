@@ -1,8 +1,9 @@
 import pytest
+from pytest_mock.plugin import MockerFixture
+
 from kinto_http import Client
 from kinto_http.batch import BatchSession
 from kinto_http.exceptions import KintoException
-from pytest_mock.plugin import MockerFixture
 
 
 def test_requests_are_stacked(batch_setup: Client, mocker: MockerFixture):

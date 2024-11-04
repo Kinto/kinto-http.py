@@ -5,6 +5,7 @@ from unittest import mock
 from urllib.parse import urljoin
 
 import requests
+
 from kinto_http.constants import DEFAULT_AUTH
 from kinto_http.exceptions import KintoException
 

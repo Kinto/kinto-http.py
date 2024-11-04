@@ -2,6 +2,7 @@ import os.path
 from unittest import mock
 
 import pytest
+
 from kinto_http import BucketNotFound, CollectionNotFound, KintoException, replication
 from kinto_http.patch_type import JSONPatch
 

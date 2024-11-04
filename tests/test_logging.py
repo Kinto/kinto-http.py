@@ -1,5 +1,6 @@
-from kinto_http import Client
 from pytest_mock.plugin import MockerFixture
+
+from kinto_http import Client
 
 
 def test_create_bucket_logs_info_message(client_setup: Client, mocker: MockerFixture):

@@ -1,7 +1,8 @@
 import pytest
+from pytest_mock import MockerFixture
+
 from kinto_http import BucketNotFound, CollectionNotFound, KintoException
 from kinto_http.patch_type import JSONPatch
-from pytest_mock import MockerFixture
 
 from .support import get_user_id
 

@@ -1,6 +1,7 @@
 from typing import Dict, Tuple
 
 import pytest
+
 from kinto_http import KintoException
 from kinto_http.endpoints import Endpoints
 

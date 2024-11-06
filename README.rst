@@ -100,6 +100,17 @@ the client must specify the expected type: ``kinto_http.BearerTokenAuth("XYPJTNs
 
     In other words, ``kinto_http.Client(auth="Bearer+OIDC XYPJTNsFKV2")`` is equivalent to ``kinto_http.Client(auth=kinto_http.BearerTokenAuth("XYPJTNsFKV2", type="Bearer+OIDC"))``
 
+Using the browser to authenticate via OAuth
+-------------------------------------------
+
+.. code-block:: python
+
+    import kinto_http
+
+    client = kinto_http.Client(server_url='http://localhost:8888/v1', auth=kinto_http.BrowserOAuth())
+
+The client will open a browser page and will catch the Bearer token obtained after the OAuth dance.
+
 
 Custom headers
 --------------

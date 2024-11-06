@@ -15,6 +15,7 @@ from kinto_http.batch import BatchSession
 from kinto_http.constants import DO_NOT_OVERWRITE
 from kinto_http.endpoints import Endpoints
 from kinto_http.exceptions import BucketNotFound, CollectionNotFound, KintoException
+from kinto_http.login import BrowserOAuth
 from kinto_http.patch_type import BasicPatch, PatchType
 from kinto_http.session import create_session
 
@@ -44,6 +45,9 @@ class Client(object):
         headers=None,
     ):
         self.endpoints = Endpoints()
+
+        if isinstance(auth, BrowserOAuth):
+            auth.server_url = server_url
 
         session_kwargs = dict(
             server_url=server_url,

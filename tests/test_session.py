@@ -5,13 +5,14 @@ from datetime import date, datetime
 from typing import Tuple
 from unittest.mock import MagicMock
 
-import kinto_http
 import pkg_resources
 import pytest
+from pytest_mock.plugin import MockerFixture
+
+import kinto_http
 from kinto_http.constants import USER_AGENT
 from kinto_http.exceptions import BackoffException, KintoException
 from kinto_http.session import Session, create_session
-from pytest_mock.plugin import MockerFixture
 
 from .support import get_200, get_403, get_503, get_http_response
 

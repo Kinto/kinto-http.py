@@ -391,6 +391,22 @@ The history of a bucket can also be purged with:
     client.purge_history(bucket='default')
 
 
+Attachments
+-----------
+
+If the `kinto-attachment plugin <https://github.com/Kinto/kinto-attachment/>`_ is enabled, it is possible to add attachments on records:
+
+.. code-block:: python
+
+    client.add_attachment(id="record-id", filepath="/path/to/image.png")
+
+Or remove them:
+
+.. code-block:: python
+
+    client.remove_attachment(id="record-id")
+
+
 Endpoint URLs
 -------------
 

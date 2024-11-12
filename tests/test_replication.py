@@ -1,6 +1,7 @@
+from pytest_mock import MockerFixture
+
 from kinto_http import Client, exceptions
 from kinto_http.replication import replicate
-from pytest_mock import MockerFixture
 
 from .support import mock_response
 

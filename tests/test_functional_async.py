@@ -1,7 +1,8 @@
 import pytest
+from pytest_mock import MockerFixture
+
 from kinto_http import BucketNotFound, CollectionNotFound, KintoException
 from kinto_http.patch_type import JSONPatch
-from pytest_mock import MockerFixture
 
 from .support import get_user_id
 
@@ -518,3 +519,45 @@ async def test_patch_record_jsonpatch(functional_async_setup):
     assert record["data"]["hello"] == "world"
     assert record["data"]["goodnight"] == "moon"
     assert record["permissions"]["read"] == ["alice"]
+
+
+async def test_adding_an_attachment(functional_async_setup, tmp_path):
+    client = functional_async_setup.clone(bucket="mozilla", collection="payments")
+    await client.create_bucket()
+    await client.create_collection()
+
+    p = tmp_path / "file.txt"
+    p.write_text("hello")
+
+    await client.add_attachment(
+        id="abc",
+        filepath=p,
+        data={"secret": "psssssst!"},
+        permissions={"write": ["system.Everyone"]},
+        mimetype="text/custom",
+    )
+
+    record = await client.get_record(id="abc")
+    assert "attachment" in record["data"]
+    assert record["data"]["attachment"]["filename"] == "file.txt"
+    assert record["data"]["attachment"]["mimetype"] == "text/custom"
+    assert "secret" in record["data"]
+    assert "system.Everyone" in record["permissions"]["write"]
+
+
+async def test_removing_an_attachment(functional_async_setup, tmp_path):
+    client = functional_async_setup.clone(bucket="mozilla", collection="payments")
+    await client.create_bucket()
+    await client.create_collection()
+
+    p = tmp_path / "file.txt"
+    p.write_text("hello")
+    await client.add_attachment(
+        id="abc",
+        filepath=p,
+    )
+
+    await client.remove_attachment(id="abc")
+
+    record = await client.get_record(id="abc")
+    assert record["data"]["attachment"] is None

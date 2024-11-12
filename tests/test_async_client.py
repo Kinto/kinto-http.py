@@ -1,12 +1,13 @@
 import re
 
 import pytest
+from pytest_mock import MockerFixture
+
 from kinto_http import AsyncClient as Client
 from kinto_http import BearerTokenAuth, BucketNotFound, KintoException
 from kinto_http.constants import DO_NOT_OVERWRITE, SERVER_URL
 from kinto_http.patch_type import JSONPatch, MergePatch
 from kinto_http.session import create_session
-from pytest_mock import MockerFixture
 
 from .support import build_response, get_http_error, mock_response
 

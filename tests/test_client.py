@@ -1,6 +1,8 @@
 import re
 
 import pytest
+from pytest_mock.plugin import MockerFixture
+
 from kinto_http import (
     BearerTokenAuth,
     BucketNotFound,
@@ -11,7 +13,6 @@ from kinto_http import (
 )
 from kinto_http.constants import DO_NOT_OVERWRITE, SERVER_URL
 from kinto_http.patch_type import JSONPatch, MergePatch
-from pytest_mock.plugin import MockerFixture
 
 from .support import build_response, get_http_error, mock_response
 
@@ -1391,3 +1392,25 @@ def test_purging_of_history(client_setup: Client):
     client.purge_history(bucket="mybucket")
     url = "/buckets/mybucket/history"
     client.session.request.assert_called_with("delete", url, headers=None)
+
+
+def test_add_attachment_guesses_mimetype(record_setup: Client, tmp_path):
+    client = record_setup
+    mock_response(client.session)
+
+    p = tmp_path / "file.txt"
+    p.write_text("hello")
+    client.add_attachment(
+        id="abc",
+        bucket="a",
+        collection="b",
+        filepath=p,
+    )
+
+    client.session.request.assert_called_with(
+        "post",
+        "/buckets/a/collections/b/records/abc/attachment",
+        data=None,
+        permissions=None,
+        files=[("attachment", ("file.txt", b"hello", "text/plain"))],
+    )

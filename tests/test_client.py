@@ -1414,3 +1414,22 @@ def test_add_attachment_guesses_mimetype(record_setup: Client, tmp_path):
         permissions=None,
         files=[("attachment", ("file.txt", b"hello", "text/plain"))],
     )
+
+
+def test_get_permissions(client_setup: Client):
+    client = client_setup
+    mock_response(client.session)
+
+    client.get_permissions()
+    url = "/permissions"
+    client.session.request.assert_called_with("get", url, params={"_sort": "id"})
+
+    client.get_permissions(exclude_resource_names=("record", "group"))
+    client.session.request.assert_called_with(
+        "get",
+        url,
+        params={
+            "exclude_resource_name": "record,group",
+            "_sort": "id",
+        },
+    )

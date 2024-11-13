@@ -589,4 +589,4 @@ def test_get_permissions(functional_setup):
     perms = client.get_permissions()
 
     perms_by_uri = {p["uri"]: p for p in perms}
-    assert perms_by_uri["/accounts/user"]["permissions"] == ["read", "write"]
+    assert set(perms_by_uri["/accounts/user"]["permissions"]) == {"read", "write"}

@@ -11,6 +11,7 @@ class Endpoints(object):
     endpoints = {
         "root": "{root}/",
         "batch": "{root}/batch",
+        "permissions": "{root}/permissions",
         "buckets": "{root}/buckets",
         "bucket": "{root}/buckets/{bucket}",
         "history": "{root}/buckets/{bucket}/history",

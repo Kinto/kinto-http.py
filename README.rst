@@ -196,6 +196,19 @@ The objects permissions can be specified or modified by passing a ``permissions`
     client.update_record(data=record)
 
 
+In order to obtain a list of all the permissions, on every object, use the ``get_permissions()`` method:
+
+.. code-block:: python
+
+    all_perms = client.get_permissions(exclude_resource_names=("record",))
+
+    has_collection_perms = any(
+        p for p in all_perms
+        if p["collection_id"] == "my-collection"
+        and "write" in p["permissions"]
+    )
+
+
 Get or create
 -------------
 

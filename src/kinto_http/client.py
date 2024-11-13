@@ -667,6 +667,16 @@ class Client(object):
 
         return self._paginated_generator(endpoint, **kwargs)
 
+    @retry_timeout
+    def get_permissions(self, exclude_resource_names=None, **kwargs):
+        endpoint = self._get_endpoint("permissions")
+        params = kwargs.setdefault("params", {})
+        params.setdefault("_sort", "id")
+        if exclude_resource_names:
+            params["exclude_resource_name"] = ",".join(exclude_resource_names)
+        body, _ = self.session.request("get", endpoint, **kwargs)
+        return body["data"]
+
     def _paginated_generator(self, endpoint, *, if_none_match=None, **kwargs):
         headers = {}
         if if_none_match is not None:

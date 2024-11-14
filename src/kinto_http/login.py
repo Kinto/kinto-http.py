@@ -15,7 +15,7 @@ class RequestHandler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         # Ignore non-auth requests (eg. favicon.ico).
-        if "/auth" not in self.path:
+        if "/auth" not in self.path:  # pragma: no cover
             self.send_response(404)
             self.end_headers()
             return
@@ -63,9 +63,7 @@ class BrowserOAuth(requests.auth.AuthBase):
         if self.provider is None:
             provider_info = openid_info["providers"][0]
         else:
-            provider_info = [p for p in provider_info["providers"] if p["name"] == self.provider][
-                0
-            ]
+            provider_info = [p for p in openid_info["providers"] if p["name"] == self.provider][0]
 
         # Spawn a local server on a random port, in order to receive the OAuth dance
         # redirection and JWT token content.

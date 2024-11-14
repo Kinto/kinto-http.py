@@ -89,8 +89,11 @@ def test_uses_first_openid_provider(mock_oauth_dance, http_server):
     auth(req)
     assert "Bearer fake-token" in req.headers["Authorization"]
 
-    # Can be called infinitely
+    # Can be called infinitely and does not rely on remote server.
+    http_server.shutdown()
+    req = requests.Request()
     auth(req)
+    assert "Bearer fake-token" in req.headers["Authorization"]
 
 
 def test_uses_specified_openid_provider(mock_oauth_dance, http_server):

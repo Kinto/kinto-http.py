@@ -10,12 +10,14 @@ from kinto_http.exceptions import (
     KintoBatchException,
     KintoException,
 )
+from kinto_http.login import BrowserOAuth
 from kinto_http.session import Session, create_session
 
 
 logger = logging.getLogger("kinto_http")
 
 __all__ = (
+    "BrowserOAuth",
     "BearerTokenAuth",
     "Endpoints",
     "Session",

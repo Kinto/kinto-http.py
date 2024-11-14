@@ -48,6 +48,12 @@ class Client(object):
     ):
         self.endpoints = Endpoints()
 
+        try:
+            # See `BrowserOAuth` in login.py (for example).
+            auth.server_url = server_url
+        except AttributeError:
+            pass
+
         session_kwargs = dict(
             server_url=server_url,
             auth=auth,

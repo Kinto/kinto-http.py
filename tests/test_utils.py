@@ -179,3 +179,61 @@ def test_records_equal_only_ignored_fields():
     a = {"last_modified": 123, "schema": "v1"}
     b = {"last_modified": 456, "schema": "v2"}
     assert utils.records_equal(a, b)
+
+
+def test_collection_diff_create():
+    src = [{"id": 1, "name": "Alice"}]
+    dest = []
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == [{"id": 1, "name": "Alice"}]
+    assert to_update == []
+    assert to_delete == []
+
+
+def test_collection_diff_update():
+    src = [{"id": 1, "name": "Alice"}]
+    dest = [{"id": 1, "name": "Bob"}]
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == []
+    assert to_update == [({"id": 1, "name": "Bob"}, {"id": 1, "name": "Alice"})]
+    assert to_delete == []
+
+
+def test_collection_diff_delete():
+    src = []
+    dest = [{"id": 1, "name": "Alice"}]
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == []
+    assert to_update == []
+    assert to_delete == [{"id": 1, "name": "Alice"}]
+
+
+def test_collection_diff_mixed():
+    src = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}, {"id": 3, "name": "Charlie"}]
+    dest = [
+        {"id": 2, "name": "Bob"},
+        {"id": 3, "name": "CharlieUpdated"},
+        {"id": 4, "name": "Dave"},
+    ]
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == [{"id": 1, "name": "Alice"}]
+    assert to_update == [({"id": 3, "name": "CharlieUpdated"}, {"id": 3, "name": "Charlie"})]
+    assert to_delete == [{"id": 4, "name": "Dave"}]
+
+
+def test_collection_diff_no_changes():
+    src = [{"id": 1, "name": "Alice"}]
+    dest = [{"id": 1, "name": "Alice"}]
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == []
+    assert to_update == []
+    assert to_delete == []
+
+
+def test_collection_diff_empty_collections():
+    src = []
+    dest = []
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == []
+    assert to_update == []
+    assert to_delete == []

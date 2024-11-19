@@ -92,3 +92,21 @@ def records_equal(a, b):
     ac = {k: v for k, v in a.items() if k not in ignore_fields}
     bc = {k: v for k, v in b.items() if k not in ignore_fields}
     return ac == bc
+
+
+def collection_diff(src, dest):
+    """
+    Compare two lists of records.
+    """
+    dest_by_id = {r["id"]: r for r in dest}
+    to_create = []
+    to_update = []
+    for r in src:
+        record = dest_by_id.pop(r["id"], None)
+        if record is None:
+            to_create.append(r)
+        elif not records_equal(r, record):
+            r.pop("last_modified", None)
+            to_update.append((record, r))
+    to_delete = list(dest_by_id.values())
+    return to_create, to_update, to_delete

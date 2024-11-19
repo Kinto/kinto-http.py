@@ -81,3 +81,14 @@ def sort_records(records, sort):
     return sorted(
         records, key=lambda r: tuple(reversed(way, r.get(field)) for way, field in sort_fields)
     )
+
+
+def records_equal(a, b):
+    """
+    Compare records attributes, ignoring those assigned automatically
+    by the server.
+    """
+    ignore_fields = ("last_modified", "schema")
+    ac = {k: v for k, v in a.items() if k not in ignore_fields}
+    bc = {k: v for k, v in b.items() if k not in ignore_fields}
+    return ac == bc

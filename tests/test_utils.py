@@ -143,3 +143,39 @@ def test_sort_mixed_numeric_and_string():
         {"name": "Charlie", "age": 25},
     ]
     assert result == expected
+
+
+def test_records_equal_identical_records():
+    a = {"id": 1, "name": "Alice", "last_modified": 123, "schema": "v1"}
+    b = {"id": 1, "name": "Alice", "last_modified": 456, "schema": "v2"}
+    assert utils.records_equal(a, b)
+
+
+def test_records_equal_different_records():
+    a = {"id": 1, "name": "Alice", "last_modified": 123}
+    b = {"id": 2, "name": "Bob", "last_modified": 456}
+    assert not utils.records_equal(a, b)
+
+
+def test_records_equal_missing_fields():
+    a = {"id": 1, "name": "Alice", "last_modified": 123}
+    b = {"id": 1, "name": "Alice"}
+    assert utils.records_equal(a, b)
+
+
+def test_records_equal_extra_fields():
+    a = {"id": 1, "name": "Alice", "extra": "field"}
+    b = {"id": 1, "name": "Alice"}
+    assert not utils.records_equal(a, b)
+
+
+def test_records_equal_empty_records():
+    a = {}
+    b = {}
+    assert utils.records_equal(a, b)
+
+
+def test_records_equal_only_ignored_fields():
+    a = {"last_modified": 123, "schema": "v1"}
+    b = {"last_modified": 456, "schema": "v2"}
+    assert utils.records_equal(a, b)

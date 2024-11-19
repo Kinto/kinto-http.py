@@ -53,3 +53,93 @@ def test_quote_strips_extra_quotes():
 
 def test_quotes_can_take_integers():
     assert utils.quote(1234) == '"1234"'
+
+
+def test_sort_single_field_ascending():
+    records = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 20},
+    ]
+    result = utils.sort_records(records, "name")
+    expected = [
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 20},
+        {"name": "Charlie", "age": 25},
+    ]
+    assert result == expected
+
+
+def test_sort_single_field_descending():
+    records = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 20},
+    ]
+    result = utils.sort_records(records, "-name")
+    expected = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Bob", "age": 20},
+        {"name": "Alice", "age": 30},
+    ]
+    assert result == expected
+
+
+def test_sort_multiple_fields():
+    records = [
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 25},
+        {"name": "Alice", "age": 20},
+    ]
+    result = utils.sort_records(records, "name,-age")
+    expected = [
+        {"name": "Alice", "age": 30},
+        {"name": "Alice", "age": 20},
+        {"name": "Bob", "age": 25},
+    ]
+    assert result == expected
+
+
+def test_sort_missing_field():
+    records = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice"},
+        {"name": "Bob", "age": 20},
+    ]
+    result = utils.sort_records(records, "age")
+    expected = [
+        {"name": "Bob", "age": 20},
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice"},  # Missing "age" is treated as default
+    ]
+    assert result == expected
+
+
+def test_sort_numeric_field_descending():
+    records = [
+        {"name": "Charlie", "score": 85},
+        {"name": "Alice", "score": 95},
+        {"name": "Bob", "score": 111},
+    ]
+    result = utils.sort_records(records, "-score")
+    expected = [
+        {"name": "Bob", "score": 111},
+        {"name": "Alice", "score": 95},
+        {"name": "Charlie", "score": 85},
+    ]
+    assert result == expected
+
+
+def test_sort_mixed_numeric_and_string():
+    records = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice", "age": 20},
+        {"name": "Bob", "age": 20},
+    ]
+    result = utils.sort_records(records, "age,-name")
+    expected = [
+        {"name": "Bob", "age": 20},
+        {"name": "Alice", "age": 20},
+        {"name": "Charlie", "age": 25},
+    ]
+    assert result == expected

@@ -1,12 +1,16 @@
 import functools
 import json
 import re
+import sys
 import unicodedata
 from datetime import date, datetime
 
 from unidecode import unidecode
 
 from kinto_http.constants import VALID_SLUG_REGEXP
+
+
+MAX_LENGTH_INT = len(str(sys.maxsize * 2 + 1))
 
 
 def slugify(value):
@@ -57,3 +61,23 @@ def json_iso_datetime(obj):
 
 
 json_dumps = functools.partial(json.dumps, default=json_iso_datetime)
+
+
+def sort_records(records, sort):
+    """
+    Sort records following the same format as the server ``name,-last_modified``.
+    """
+
+    def reversed(way, value):
+        if isinstance(value, (int, float)):
+            value = str(way * value).zfill(MAX_LENGTH_INT)
+        if isinstance(value, str):
+            return "".join(chr(255 - ord(c)) for c in value) if way < 0 else value
+        return str(value)
+
+    sort_fields = [
+        (-1, f.strip()[1:]) if f.startswith("-") else (1, f.strip()) for f in sort.split(",")
+    ]
+    return sorted(
+        records, key=lambda r: tuple(reversed(way, r.get(field)) for way, field in sort_fields)
+    )

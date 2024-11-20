@@ -53,3 +53,187 @@ def test_quote_strips_extra_quotes():
 
 def test_quotes_can_take_integers():
     assert utils.quote(1234) == '"1234"'
+
+
+def test_sort_single_field_ascending():
+    records = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 20},
+    ]
+    result = utils.sort_records(records, "name")
+    expected = [
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 20},
+        {"name": "Charlie", "age": 25},
+    ]
+    assert result == expected
+
+
+def test_sort_single_field_descending():
+    records = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 20},
+    ]
+    result = utils.sort_records(records, "-name")
+    expected = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Bob", "age": 20},
+        {"name": "Alice", "age": 30},
+    ]
+    assert result == expected
+
+
+def test_sort_multiple_fields():
+    records = [
+        {"name": "Alice", "age": 30},
+        {"name": "Bob", "age": 25},
+        {"name": "Alice", "age": 20},
+    ]
+    result = utils.sort_records(records, "name,-age")
+    expected = [
+        {"name": "Alice", "age": 30},
+        {"name": "Alice", "age": 20},
+        {"name": "Bob", "age": 25},
+    ]
+    assert result == expected
+
+
+def test_sort_missing_field():
+    records = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice"},
+        {"name": "Bob", "age": 20},
+    ]
+    result = utils.sort_records(records, "age")
+    expected = [
+        {"name": "Bob", "age": 20},
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice"},  # Missing "age" is treated as default
+    ]
+    assert result == expected
+
+
+def test_sort_numeric_field_descending():
+    records = [
+        {"name": "Charlie", "score": 85},
+        {"name": "Alice", "score": 95},
+        {"name": "Bob", "score": 111},
+    ]
+    result = utils.sort_records(records, "-score")
+    expected = [
+        {"name": "Bob", "score": 111},
+        {"name": "Alice", "score": 95},
+        {"name": "Charlie", "score": 85},
+    ]
+    assert result == expected
+
+
+def test_sort_mixed_numeric_and_string():
+    records = [
+        {"name": "Charlie", "age": 25},
+        {"name": "Alice", "age": 20},
+        {"name": "Bob", "age": 20},
+    ]
+    result = utils.sort_records(records, "age,-name")
+    expected = [
+        {"name": "Bob", "age": 20},
+        {"name": "Alice", "age": 20},
+        {"name": "Charlie", "age": 25},
+    ]
+    assert result == expected
+
+
+def test_records_equal_identical_records():
+    a = {"id": 1, "name": "Alice", "last_modified": 123, "schema": "v1"}
+    b = {"id": 1, "name": "Alice", "last_modified": 456, "schema": "v2"}
+    assert utils.records_equal(a, b)
+
+
+def test_records_equal_different_records():
+    a = {"id": 1, "name": "Alice", "last_modified": 123}
+    b = {"id": 2, "name": "Bob", "last_modified": 456}
+    assert not utils.records_equal(a, b)
+
+
+def test_records_equal_missing_fields():
+    a = {"id": 1, "name": "Alice", "last_modified": 123}
+    b = {"id": 1, "name": "Alice"}
+    assert utils.records_equal(a, b)
+
+
+def test_records_equal_extra_fields():
+    a = {"id": 1, "name": "Alice", "extra": "field"}
+    b = {"id": 1, "name": "Alice"}
+    assert not utils.records_equal(a, b)
+
+
+def test_records_equal_empty_records():
+    a = {}
+    b = {}
+    assert utils.records_equal(a, b)
+
+
+def test_records_equal_only_ignored_fields():
+    a = {"last_modified": 123, "schema": "v1"}
+    b = {"last_modified": 456, "schema": "v2"}
+    assert utils.records_equal(a, b)
+
+
+def test_collection_diff_create():
+    src = [{"id": 1, "name": "Alice"}]
+    dest = []
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == [{"id": 1, "name": "Alice"}]
+    assert to_update == []
+    assert to_delete == []
+
+
+def test_collection_diff_update():
+    src = [{"id": 1, "name": "Alice"}]
+    dest = [{"id": 1, "name": "Bob"}]
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == []
+    assert to_update == [({"id": 1, "name": "Bob"}, {"id": 1, "name": "Alice"})]
+    assert to_delete == []
+
+
+def test_collection_diff_delete():
+    src = []
+    dest = [{"id": 1, "name": "Alice"}]
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == []
+    assert to_update == []
+    assert to_delete == [{"id": 1, "name": "Alice"}]
+
+
+def test_collection_diff_mixed():
+    src = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}, {"id": 3, "name": "Charlie"}]
+    dest = [
+        {"id": 2, "name": "Bob"},
+        {"id": 3, "name": "CharlieUpdated"},
+        {"id": 4, "name": "Dave"},
+    ]
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == [{"id": 1, "name": "Alice"}]
+    assert to_update == [({"id": 3, "name": "CharlieUpdated"}, {"id": 3, "name": "Charlie"})]
+    assert to_delete == [{"id": 4, "name": "Dave"}]
+
+
+def test_collection_diff_no_changes():
+    src = [{"id": 1, "name": "Alice"}]
+    dest = [{"id": 1, "name": "Alice"}]
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == []
+    assert to_update == []
+    assert to_delete == []
+
+
+def test_collection_diff_empty_collections():
+    src = []
+    dest = []
+    to_create, to_update, to_delete = utils.collection_diff(src, dest)
+    assert to_create == []
+    assert to_update == []
+    assert to_delete == []

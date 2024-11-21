@@ -881,6 +881,33 @@ class Client(object):
         return resp["data"]
 
     @retry_timeout
+    def download_attachment(
+        self,
+        record,
+        filepath=None,
+        chunk_size=8 * 1024,
+    ):
+        if "attachment" not in record:
+            raise ValueError("Specified record has no attachment")
+
+        server_info = self.server_info()
+        base_url = server_info["capabilities"]["attachments"]["base_url"]
+        location = record["attachment"]["location"]
+        url = base_url + location
+
+        if filepath is None:
+            filepath = record["attachment"]["filename"]
+        elif os.path.isdir(filepath):
+            filepath = os.path.join(filepath, record["attachment"]["filename"])
+
+        with open(filepath, "wb") as f:
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                for chunk in r.iter_content(chunk_size=chunk_size):
+                    f.write(chunk)
+        return filepath
+
+    @retry_timeout
     def add_attachment(
         self,
         id,

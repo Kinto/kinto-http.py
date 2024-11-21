@@ -22,6 +22,7 @@ class Endpoints(object):
         "records": "{root}/buckets/{bucket}/collections/{collection}/records",  # NOQA
         "record": "{root}/buckets/{bucket}/collections/{collection}/records/{id}",  # NOQA
         "attachment": "{root}/buckets/{bucket}/collections/{collection}/records/{id}/attachment",  # NOQA
+        "changeset": "{root}/buckets/{bucket}/collections/{collection}/changeset",  # NOQA
     }
 
     def __init__(self, root=""):

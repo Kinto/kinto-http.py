@@ -1,3 +1,4 @@
+import os
 import re
 
 import pytest
@@ -1392,6 +1393,34 @@ def test_purging_of_history(client_setup: Client):
     client.purge_history(bucket="mybucket")
     url = "/buckets/mybucket/history"
     client.session.request.assert_called_with("delete", url, headers=None)
+
+
+def test_download_attachment(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+
+    client.session.request.return_value = (
+        {"capabilities": {"attachments": {"base_url": "https://cdn/"}}},
+        {},
+    )
+
+    mock_requests_get = mocker.patch("kinto_http.requests.get")
+    mock_response = mocker.MagicMock()
+    mock_response.iter_content = mocker.MagicMock(return_value=[b"chunk1", b"chunk2", b"chunk3"])
+    mock_response.raise_for_status = mocker.MagicMock()
+    mock_requests_get.return_value.__enter__.return_value = mock_response
+
+    with pytest.raises(ValueError):
+        client.download_attachment({})
+
+    record = {"attachment": {"location": "file.bin", "filename": "local.bin"}}
+
+    path = client.download_attachment(record)
+    assert path == "local.bin"
+    with open(path) as f:
+        assert f.read() == "chunk1chunk2chunk3"
+
+    path = client.download_attachment(record, filepath="/tmp")
+    assert os.path.exists("/tmp/local.bin")
 
 
 def test_add_attachment_guesses_mimetype(record_setup: Client, tmp_path):

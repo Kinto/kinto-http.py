@@ -5,6 +5,7 @@ import json
 import logging
 import mimetypes
 import os
+import random
 import uuid
 from collections import OrderedDict
 from contextlib import contextmanager
@@ -939,6 +940,61 @@ class Client(object):
         endpoint = self._get_endpoint("attachment", id=id, bucket=bucket, collection=collection)
         resp, _ = self.session.request("delete", endpoint)
         return resp
+
+    def get_changeset(self, bucket=None, collection=None, bust_cache=False, **kwargs):
+        kwargs.setdefault(
+            "_expected", random.randint(999999000000, 999999999999) if bust_cache else 0
+        )
+        endpoint = self._get_endpoint("changeset", bucket=bucket, collection=collection)
+        resp, _ = self.session.request("get", endpoint, params=kwargs)
+        return resp
+
+    def request_review(self, message, id=None, bucket=None, **kwargs):
+        return self.patch_collection(
+            id=id,
+            bucket=bucket,
+            data={
+                **kwargs.pop("data", {}),
+                "status": "to-review",
+                "last_editor_comment": message,
+            },
+            **kwargs,
+        )
+
+    def decline_changes(self, message, id=None, bucket=None, **kwargs):
+        return self.patch_collection(
+            id=id,
+            bucket=bucket,
+            data={
+                **kwargs.pop("data", {}),
+                "status": "work-in-progress",
+                "last_reviewer_comment": message,
+            },
+            **kwargs,
+        )
+
+    def approve_changes(self, id=None, bucket=None, **kwargs):
+        return self.patch_collection(
+            id=id,
+            bucket=bucket,
+            data={
+                **kwargs.pop("data", {}),
+                "status": "to-sign",
+            },
+            **kwargs,
+        )
+
+    def rollback_changes(self, message, id=None, bucket=None, **kwargs):
+        return self.patch_collection(
+            id=id,
+            bucket=bucket,
+            data={
+                **kwargs.pop("data", {}),
+                "status": "to-rollback",
+                "last_editor_comment": message,
+            },
+            **kwargs,
+        )
 
     def __repr__(self) -> str:
         if self.collection_name:

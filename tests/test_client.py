@@ -1462,3 +1462,105 @@ def test_get_permissions(client_setup: Client):
             "_sort": "id",
         },
     )
+
+
+def test_get_changeset_default(client_setup: Client):
+    client = client_setup
+    client.collection_name = "foo"
+    mock_response(client.session)
+
+    client.get_changeset()
+    client.session.request.assert_called_with(
+        "get", "/buckets/mybucket/collections/foo/changeset", params={"_expected": 0}
+    )
+
+
+def test_get_changeset_bust(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+    mock_response(client.session)
+    mocked_random = mocker.patch("kinto_http.client.random")
+    mocked_random.randint.return_value = 42
+
+    client.get_changeset(collection="bar", bust_cache=True)
+    client.session.request.assert_called_with(
+        "get", "/buckets/mybucket/collections/bar/changeset", params={"_expected": 42}
+    )
+
+
+def test_get_changeset_params(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+    mock_response(client.session)
+
+    client.get_changeset(bucket="foo", collection="bar", _since='"42"')
+    client.session.request.assert_called_with(
+        "get", "/buckets/foo/collections/bar/changeset", params={"_expected": 0, "_since": '"42"'}
+    )
+
+
+def test_request_review(client_setup: Client, mocker: MockerFixture):
+    client = client_setup.clone(collection="cid")
+    mock_response(client.session)
+
+    client.request_review("r?")
+    client.session.request.assert_called_with(
+        "patch",
+        "/buckets/mybucket/collections/cid",
+        headers={"Content-Type": "application/json"},
+        payload={"data": {"last_editor_comment": "r?", "status": "to-review"}},
+    )
+
+
+def test_request_review_advanced(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+    mock_response(client.session)
+
+    client.request_review("r?", id="cid", data={"field": "foo"}, if_match='"42"')
+    client.session.request.assert_called_with(
+        "patch",
+        "/buckets/mybucket/collections/cid",
+        headers={"Content-Type": "application/json", "If-Match": '"42"'},
+        payload={"data": {"field": "foo", "last_editor_comment": "r?", "status": "to-review"}},
+    )
+
+
+def test_approve_changes(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+    mock_response(client.session)
+
+    client.approve_changes(id="cid", data={"field": "foo"}, if_match='"42"')
+    client.session.request.assert_called_with(
+        "patch",
+        "/buckets/mybucket/collections/cid",
+        headers={"Content-Type": "application/json", "If-Match": '"42"'},
+        payload={"data": {"field": "foo", "status": "to-sign"}},
+    )
+
+
+def test_decline_changes(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+    mock_response(client.session)
+
+    client.decline_changes(message="r-", id="cid", data={"field": "foo"}, if_match='"42"')
+    client.session.request.assert_called_with(
+        "patch",
+        "/buckets/mybucket/collections/cid",
+        headers={"Content-Type": "application/json", "If-Match": '"42"'},
+        payload={
+            "data": {"field": "foo", "last_reviewer_comment": "r-", "status": "work-in-progress"}
+        },
+    )
+
+
+def test_rollback_changes(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+    mock_response(client.session)
+
+    client.rollback_changes(message="cancel", id="cid", data={"field": "foo"}, if_match='"42"')
+    client.session.request.assert_called_with(
+        "patch",
+        "/buckets/mybucket/collections/cid",
+        headers={"Content-Type": "application/json", "If-Match": '"42"'},
+        payload={
+            "data": {"field": "foo", "last_editor_comment": "cancel", "status": "to-rollback"}
+        },
+    )

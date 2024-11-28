@@ -1,14 +1,19 @@
 import json
+import logging
 import time
 import warnings
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 import requests
+from urllib3.response import HTTPResponse
 
 import kinto_http
 from kinto_http import utils
 from kinto_http.constants import USER_AGENT
 from kinto_http.exceptions import BackoffException, KintoException
+
+
+logger = logging.getLogger(__name__)
 
 
 def create_session(server_url=None, auth=None, session=None, **kwargs):
@@ -55,7 +60,14 @@ class Session(object):
     """Handles all the interactions with the network."""
 
     def __init__(
-        self, server_url, auth=None, timeout=False, headers=None, retry=0, retry_after=None
+        self,
+        server_url,
+        auth=None,
+        timeout=False,
+        headers=None,
+        retry=0,
+        retry_after=None,
+        dry_mode=False,
     ):
         self.backoff = None
         self.server_url = server_url
@@ -64,6 +76,7 @@ class Session(object):
         self.retry_after = retry_after
         self.timeout = timeout
         self.headers = headers or {}
+        self.dry_mode = dry_mode
 
     def request(self, method, endpoint, data=None, permissions=None, payload=None, **kwargs):
         current_time = time.time()
@@ -123,7 +136,15 @@ class Session(object):
 
         retry = self.nb_retry
         while retry >= 0:
-            resp = requests.request(method, actual_url, **kwargs)
+            if self.dry_mode:
+                qs = ("?" + urlencode(kwargs["params"])) if "params" in kwargs else ""
+                logger.debug(f"(dry mode) {method} {actual_url}{qs}")
+                resp = HTTPResponse(
+                    status=200, headers={"Content-Type": "application/json"}, body=b"{}"
+                )
+                resp.status_code = resp.status
+            else:
+                resp = requests.request(method, actual_url, **kwargs)
 
             if "Alert" in resp.headers:
                 warnings.warn(resp.headers["Alert"], DeprecationWarning)

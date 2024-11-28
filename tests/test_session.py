@@ -1,3 +1,4 @@
+import logging
 import sys
 import time
 import warnings
@@ -545,3 +546,14 @@ def test_next_request_without_the_header_clear_the_backoff(
     time.sleep(1)  # Spend the backoff
     session.request("get", "/test")  # The second call reset the backoff
     assert session.backoff is None
+
+
+def test_dry_mode_logs_debug(caplog):
+    caplog.set_level(logging.DEBUG)
+
+    session = Session(server_url="https://foo:42", dry_mode=True)
+    body, headers = session.request("GET", "/test", params={"_since": "333"})
+
+    assert body == {}
+    assert headers == {"Content-Type": "application/json"}
+    assert caplog.messages == ["(dry mode) GET https://foo:42/test?_since=333"]

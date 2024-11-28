@@ -80,6 +80,15 @@ An asynchronous client is also available. It has all the same endpoints as the s
     info = await client.server_info()
     assert 'schema' in info['capabilities'], "Server doesn't support schema validation."
 
+
+Dry Mode
+--------
+
+The ``dry_mode`` parameter can be set to simulate requests without actually sending them over the network.
+When enabled, dry mode ensures that no external calls are made, making it useful for testing or debugging.
+Instead of performing real HTTP operations, the client logs the requests with ``DEBUG`` level.
+
+
 Using a Bearer access token to authenticate (OpenID)
 ----------------------------------------------------
 

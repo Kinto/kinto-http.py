@@ -590,3 +590,16 @@ def test_get_permissions(functional_setup):
 
     perms_by_uri = {p["uri"]: p for p in perms}
     assert set(perms_by_uri["/accounts/user"]["permissions"]) == {"read", "write"}
+
+
+def test_dry_mode(functional_setup):
+    client = functional_setup.clone(server_url="http://not-a-valid-domain:42", dry_mode=True)
+
+    with client.batch() as batch:
+        batch.create_bucket()
+        batch.create_collection(id="cid")
+
+    r1, r2 = batch.results()
+
+    assert r1 == {}
+    assert r2 == {}

@@ -46,6 +46,7 @@ class Client(object):
         timeout=None,
         ignore_batch_4xx=False,
         headers=None,
+        dry_mode=False,
     ):
         self.endpoints = Endpoints()
 
@@ -63,6 +64,7 @@ class Client(object):
             retry_after=retry_after,
             timeout=timeout,
             headers=headers,
+            dry_mode=dry_mode,
         )
         self.session = create_session(**session_kwargs)
         self.bucket_name = bucket
@@ -88,9 +90,11 @@ class Client(object):
     def batch(self, **kwargs):
         if self._server_settings is None:
             resp, _ = self.session.request("GET", self._get_endpoint("root"))
-            self._server_settings = resp["settings"]
+            self._server_settings = resp["settings"] if not self.session.dry_mode else {}
 
-        batch_max_requests = self._server_settings["batch_max_requests"]
+        batch_max_requests = (
+            self._server_settings["batch_max_requests"] if not self.session.dry_mode else 999999
+        )
         batch_session = BatchSession(
             self, batch_max_requests=batch_max_requests, ignore_4xx_errors=self._ignore_batch_4xx
         )

@@ -79,6 +79,10 @@ class BatchSession(object):
                 method="POST", endpoint=self.endpoints.get("batch"), payload={"requests": chunk}
             )
             resp, headers = self.session.request(**kwargs)
+            if self.session.dry_mode:
+                resp.setdefault(
+                    "responses", [{"status": 200, "body": {}} for i in range(len(chunk))]
+                )
             for i, response in enumerate(resp["responses"]):
                 status_code = response["status"]
 

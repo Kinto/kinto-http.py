@@ -16,34 +16,37 @@ from .support import create_user, get_200, get_503, mock_response
 
 
 @pytest.fixture
-def async_client_setup(mocker: MockerFixture) -> AsyncClient:
+def mocked_session(mocker: MockerFixture):
     session = mocker.MagicMock()
-    mock_response(session)
-    client = AsyncClient(session=session, bucket="mybucket")
+    session.dry_mode = False
+    return session
+
+
+@pytest.fixture
+def async_client_setup(mocked_session, mocker: MockerFixture) -> AsyncClient:
+    mock_response(mocked_session)
+    client = AsyncClient(session=mocked_session, bucket="mybucket")
     return client
 
 
 @pytest.fixture
-def client_setup(mocker: MockerFixture) -> Client:
-    session = mocker.MagicMock()
-    mock_response(session)
-    client = Client(session=session, bucket="mybucket")
+def client_setup(mocked_session, mocker: MockerFixture) -> Client:
+    mock_response(mocked_session)
+    client = Client(session=mocked_session, bucket="mybucket")
     return client
 
 
 @pytest.fixture
-def record_async_setup(mocker: MockerFixture) -> AsyncClient:
-    session = mocker.MagicMock()
-    session.request.return_value = (mocker.sentinel.response, mocker.sentinel.count)
-    client = AsyncClient(session=session, bucket="mybucket", collection="mycollection")
+def record_async_setup(mocked_session, mocker: MockerFixture) -> AsyncClient:
+    mocked_session.request.return_value = (mocker.sentinel.response, mocker.sentinel.count)
+    client = AsyncClient(session=mocked_session, bucket="mybucket", collection="mycollection")
     return client
 
 
 @pytest.fixture
-def record_setup(mocker: MockerFixture) -> Client:
-    session = mocker.MagicMock()
-    session.request.return_value = (mocker.sentinel.response, mocker.sentinel.count)
-    client = Client(session=session, bucket="mybucket", collection="mycollection")
+def record_setup(mocked_session, mocker: MockerFixture) -> Client:
+    mocked_session.request.return_value = (mocker.sentinel.response, mocker.sentinel.count)
+    client = Client(session=mocked_session, bucket="mybucket", collection="mycollection")
     return client
 
 
@@ -87,10 +90,11 @@ def endpoints_setup() -> Tuple[Endpoints, Dict]:
 
 
 @pytest.fixture
-def batch_setup(mocker: MockerFixture) -> Client:
-    client = mocker.MagicMock()
+def batch_setup(mocked_session, mocker: MockerFixture) -> Client:
     mocker.sentinel.resp = {"responses": []}
-    client.session.request.return_value = (mocker.sentinel.resp, mocker.sentinel.headers)
+    mocked_session.request.return_value = (mocker.sentinel.resp, mocker.sentinel.headers)
+    client = mocker.MagicMock()
+    client.session = mocked_session
     return client
 
 

@@ -923,20 +923,20 @@ class Client(object):
         permissions=None,
         mimetype=None,
     ):
-        with open(filepath, "rb") as f:
-            filecontent = f.read()
         filename = os.path.basename(filepath)
         if mimetype is None:
             mimetype, _ = mimetypes.guess_type(filepath)
-        multipart = [("attachment", (filename, filecontent, mimetype))]
         endpoint = self._get_endpoint("attachment", id=id, bucket=bucket, collection=collection)
-        resp, _ = self.session.request(
-            "post",
-            endpoint,
-            data=json.dumps(data) if data is not None else None,
-            permissions=json.dumps(permissions) if permissions is not None else None,
-            files=multipart,
-        )
+
+        with open(filepath, "rb") as file:
+            resp, _ = self.session.request(
+                "post",
+                endpoint,
+                data=json.dumps(data) if data is not None else None,
+                permissions=json.dumps(permissions) if permissions is not None else None,
+                files=[("attachment", (filename, file, mimetype))],
+            )
+
         return resp
 
     @retry_timeout

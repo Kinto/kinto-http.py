@@ -3,6 +3,7 @@ import re
 
 import pytest
 from pytest_mock.plugin import MockerFixture
+from unittest.mock import patch, mock_open
 
 from kinto_http import (
     BearerTokenAuth,
@@ -1429,20 +1430,21 @@ def test_add_attachment_guesses_mimetype(record_setup: Client, tmp_path):
 
     p = tmp_path / "file.txt"
     p.write_text("hello")
-    client.add_attachment(
-        id="abc",
-        bucket="a",
-        collection="b",
-        filepath=p,
-    )
+    with patch("builtins.open", mock_open(read_data="hello")) as mock_file:
+        client.add_attachment(
+            id="abc",
+            bucket="a",
+            collection="b",
+            filepath=p,
+        )
 
-    client.session.request.assert_called_with(
-        "post",
-        "/buckets/a/collections/b/records/abc/attachment",
-        data=None,
-        permissions=None,
-        files=[("attachment", ("file.txt", b"hello", "text/plain"))],
-    )
+        client.session.request.assert_called_with(
+            "post",
+            "/buckets/a/collections/b/records/abc/attachment",
+            data=None,
+            permissions=None,
+            files=[("attachment", ("file.txt", mock_file.return_value, "text/plain"))],
+        )
 
 
 def test_get_permissions(client_setup: Client):

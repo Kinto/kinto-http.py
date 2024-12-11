@@ -1428,14 +1428,12 @@ def test_add_attachment_guesses_mimetype(record_setup: Client, tmp_path):
     client = record_setup
     mock_response(client.session)
 
-    p = tmp_path / "file.txt"
-    p.write_text("hello")
     with patch("builtins.open", mock_open(read_data="hello")) as mock_file:
         client.add_attachment(
             id="abc",
             bucket="a",
             collection="b",
-            filepath=p,
+            filepath="file.txt",
         )
 
         client.session.request.assert_called_with(

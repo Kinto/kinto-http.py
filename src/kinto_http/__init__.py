@@ -37,5 +37,6 @@ class BearerTokenAuth(requests.auth.AuthBase):
         self.type = type or "Bearer"
 
     def __call__(self, r):
+        # Sets auth-scheme  to either Bearer or Basic 
         r.headers["Authorization"] = "{} {}".format(self.type, self.token)
         return r

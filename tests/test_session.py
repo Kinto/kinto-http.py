@@ -254,7 +254,7 @@ def test_auth_can_be_passed_as_basic_header(session_setup: Tuple[MagicMock, Sess
 
 def test_auth_can_be_passed_as_bearer(session_setup: Tuple[MagicMock, Session]):
     session = create_session(auth="Bearer+OIDC abcdef")
-    assert isinstance(session.auth, kinto_http.TokenAuth)
+    assert isinstance(session.auth, kinto_http.BearerTokenAuth)
     assert session.auth.type == "Bearer+OIDC"
     assert session.auth.token == "abcdef"
 

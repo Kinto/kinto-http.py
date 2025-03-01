@@ -44,7 +44,7 @@ def create_session(server_url=None, auth=None, session=None, **kwargs):
         elif "bearer" in auth.lower():
             # eg, "Bearer ghruhgrwyhg"
             _type, token = auth.split(" ", 1)
-            auth = kinto_http.TokenAuth(token, type=_type)
+            auth = kinto_http.BearerTokenAuth(token, type=_type)
         elif "basic" in auth.lower():
             _type, token = auth.split(" ", 1)
             auth = kinto_http.TokenAuth(token, type=_type)

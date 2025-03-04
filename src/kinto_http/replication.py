@@ -42,8 +42,7 @@ def get_arguments():  # pragma: nocover
 
     parser.add_argument(
         "--origin-auth",
-        help="The origin authentication credentials. "
-        "Will use the same as the remote if omitted",
+        help="The origin authentication credentials. Will use the same as the remote if omitted",
         action=cli_utils.AuthAction,
         default=None,
     )
@@ -51,14 +50,14 @@ def get_arguments():  # pragma: nocover
     parser.add_argument(
         "--origin-bucket",
         dest="origin_bucket",
-        help="The name of the origin bucket. " "Will use the same as the remote if omitted",
+        help="The name of the origin bucket. Will use the same as the remote if omitted",
         default=None,
     )
 
     parser.add_argument(
         "--origin-collection",
         dest="origin_collection",
-        help="The name of the origin collection. " "Will use the same as the remote if omitted",
+        help="The name of the origin collection. Will use the same as the remote if omitted",
         default=None,
     )
     cli_utils.set_parser_server_options(parser)

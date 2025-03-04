@@ -18,7 +18,7 @@ logger = logging.getLogger("kinto_http")
 
 __all__ = (
     "BrowserOAuth",
-    "TokenAuth"
+    "TokenAuth",
     "BearerTokenAuth",
     "Endpoints",
     "Session",
@@ -38,9 +38,10 @@ class TokenAuth(requests.auth.AuthBase):
         self.type = type or "Bearer"
 
     def __call__(self, r):
-        # Sets auth-scheme to either Bearer or Basic 
+        # Sets auth-scheme to either Bearer or Basic
         r.headers["Authorization"] = "{} {}".format(self.type, self.token)
         return r
+
 
 class BearerTokenAuth(TokenAuth):
     pass

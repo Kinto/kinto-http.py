@@ -209,13 +209,13 @@ def test_batch_options_are_transmitted(client_setup: Client, mocker: MockerFixtu
 
 def test_client_is_represented_properly_with_bucket_and_collection(client_setup: Client):
     client = client_setup.clone(server_url=SERVER_URL, bucket="homebrewing", collection="recipes")
-    expected_repr = f"<KintoClient {SERVER_URL}/" "buckets/homebrewing/collections/recipes>"
+    expected_repr = f"<KintoClient {SERVER_URL}/buckets/homebrewing/collections/recipes>"
     assert str(client) == expected_repr
 
 
 def test_client_is_represented_properly_with_bucket(client_setup: Client):
     client = client_setup.clone(server_url=SERVER_URL, bucket="homebrewing")
-    expected_repr = f"<KintoClient {SERVER_URL}/" "buckets/homebrewing>"
+    expected_repr = f"<KintoClient {SERVER_URL}/buckets/homebrewing>"
     assert str(client) == expected_repr
 
 
@@ -1003,7 +1003,7 @@ def test_records_timestamp_is_cached_per_collection(record_setup: Client):
 def test_pagination_is_followed(record_setup: Client):
     client = record_setup
     # Mock the calls to request.
-    link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
+    link = "http://example.org/buckets/buck/collections/coll/records/?token=1234"
 
     client.session.request.side_effect = [
         # First one returns a list of items with a pagination token.
@@ -1031,7 +1031,7 @@ def test_pagination_is_followed(record_setup: Client):
 def test_pagination_is_followed_generator(record_setup: Client):
     client = record_setup
     # Mock the calls to request.
-    link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
+    link = "http://example.org/buckets/buck/collections/coll/records/?token=1234"
 
     response = [
         # First one returns a list of items with a pagination token.
@@ -1057,7 +1057,7 @@ def test_pagination_is_followed_generator(record_setup: Client):
 def test_pagination_is_followed_for_number_of_pages(record_setup: Client):
     client = record_setup
     # Mock the calls to request.
-    link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
+    link = "http://example.org/buckets/buck/collections/coll/records/?token=1234"
 
     client.session.request.side_effect = [
         # First one returns a list of items with a pagination token.
@@ -1083,7 +1083,7 @@ def test_pagination_is_followed_for_number_of_pages(record_setup: Client):
 def test_pagination_is_not_followed_if_limit_is_specified(record_setup: Client):
     client = record_setup
     # Mock the calls to request.
-    link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
+    link = "http://example.org/buckets/buck/collections/coll/records/?token=1234"
 
     client.session.request.side_effect = [
         build_response(
@@ -1098,7 +1098,7 @@ def test_pagination_is_not_followed_if_limit_is_specified(record_setup: Client):
 
 def test_pagination_supports_if_none_match(record_setup: Client):
     client = record_setup
-    link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
+    link = "http://example.org/buckets/buck/collections/coll/records/?token=1234"
 
     client.session.request.side_effect = [
         # First one returns a list of items with a pagination token.
@@ -1124,7 +1124,7 @@ def test_pagination_supports_if_none_match(record_setup: Client):
 
 def test_pagination_generator_if_none_match(record_setup: Client):
     client = record_setup
-    link = "http://example.org/buckets/buck/collections/coll/records/" "?token=1234"
+    link = "http://example.org/buckets/buck/collections/coll/records/?token=1234"
 
     response = [
         # First one returns a list of items with a pagination token.

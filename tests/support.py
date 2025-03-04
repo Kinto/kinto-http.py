@@ -51,9 +51,9 @@ def get_user_id(server_url: str, credentials: Tuple[str, str]) -> str:
 
 def assert_option_strings(parser, *option_strings_list):
     for option_strings in option_strings_list:
-        assert any(
-            [action.option_strings == option_strings for action in parser._actions]
-        ), f"{option_strings} not found"
+        assert any([action.option_strings == option_strings for action in parser._actions]), (
+            f"{option_strings} not found"
+        )
 
 
 def build_response(data, headers=None):

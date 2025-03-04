@@ -246,6 +246,13 @@ def test_auth_can_be_passed_as_colon_separate(session_setup: Tuple[MagicMock, Se
 
 
 def test_auth_can_be_passed_as_basic_header(session_setup: Tuple[MagicMock, Session]):
+    session = create_session(auth="Basic asdfghjkl;")
+    assert isinstance(session.auth, kinto_http.TokenAuth)
+    assert session.auth.type == "Basic"
+    assert session.auth.token == "asdfghjkl;"
+
+
+def test_auth_can_be_passed_as_bearer(session_setup: Tuple[MagicMock, Session]):
     session = create_session(auth="Bearer+OIDC abcdef")
     assert isinstance(session.auth, kinto_http.BearerTokenAuth)
     assert session.auth.type == "Bearer+OIDC"

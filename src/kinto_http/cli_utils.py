@@ -75,7 +75,7 @@ def add_parser_options(
     parser.add_argument(
         "-a",
         "--auth",
-        help="BasicAuth credentials: `token:my-secret` or " "Authorization header: `Bearer token`",
+        help="BasicAuth credentials: `token:my-secret` or Authorization header: `Bearer token`",
         type=str,
         default=default_auth,
         action=AuthAction,
@@ -97,8 +97,7 @@ def add_parser_options(
 
     parser.add_argument(
         "--retry-after",
-        help="Delay in seconds between retries when requests fail. "
-        "(default: provided by server)",
+        help="Delay in seconds between retries when requests fail. (default: provided by server)",
         type=int,
         default=default_retry_after,
     )

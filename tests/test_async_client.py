@@ -1237,4 +1237,19 @@ async def test_purging_of_history(async_client_setup: Client):
     mock_response(client.session)
     await client.purge_history(bucket="mybucket")
     url = "/buckets/mybucket/history"
-    client.session.request.assert_called_with("delete", url, headers=None)
+    client.session.request.assert_called_with("delete", url, headers=None, params={})
+
+
+async def test_purging_of_history_with_params(async_client_setup: Client):
+    client = async_client_setup
+    mock_response(client.session)
+    await client.purge_history(
+        bucket="mybucket", user_id="plugin:remote-settings", _before='"1337"'
+    )
+    url = "/buckets/mybucket/history"
+    client.session.request.assert_called_with(
+        "delete",
+        url,
+        headers=None,
+        params={"user_id": "plugin:remote-settings", "_before": '"1337"'},
+    )

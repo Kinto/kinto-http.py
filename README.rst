@@ -421,7 +421,7 @@ The history of a bucket can also be purged with:
 
 .. code-block:: python
 
-    client.purge_history(bucket='default')
+    client.purge_history(bucket='default', _before='"1743671651423"', user_id="account:fulanito")
 
 
 Attachments

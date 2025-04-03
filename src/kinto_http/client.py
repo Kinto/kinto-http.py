@@ -878,11 +878,11 @@ class Client(object):
         return self._paginated(endpoint, **kwargs)
 
     @retry_timeout
-    def purge_history(self, *, bucket=None, safe=True, if_match=None) -> List[Dict]:
+    def purge_history(self, *, bucket=None, safe=True, if_match=None, **kwargs) -> List[Dict]:
         endpoint = self._get_endpoint("history", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         logger.info("Purge History of bucket %r" % bucket or self.bucket_name)
-        resp, _ = self.session.request("delete", endpoint, headers=headers)
+        resp, _ = self.session.request("delete", endpoint, headers=headers, params=kwargs)
         return resp["data"]
 
     @retry_timeout

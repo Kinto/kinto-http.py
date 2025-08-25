@@ -905,6 +905,9 @@ class Client(object):
         elif os.path.isdir(filepath):
             filepath = os.path.join(filepath, record["attachment"]["filename"])
 
+        if folder := os.path.dirname(filepath):
+            os.makedirs(folder, exist_ok=True)
+
         with open(filepath, "wb") as f:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()

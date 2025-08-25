@@ -914,7 +914,9 @@ class Client(object):
                 if local_sha256 == record["attachment"]["hash"]:
                     logger.info("Attachment %r is already up-to-date", filepath)
                     return filepath
-            logger.info("Attachment %r exists but is outdated, re-downloading", filepath)
+            logger.info(
+                "Attachment %r exists but is outdated, re-downloading", filepath
+            )  # pragma: nocover
 
         if folder := os.path.dirname(filepath):
             os.makedirs(folder, exist_ok=True)

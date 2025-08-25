@@ -1437,6 +1437,27 @@ def test_download_attachment(client_setup: Client, mocker: MockerFixture):
     assert os.path.exists("/tmp/local.bin")
 
 
+def test_download_attachment_with_metadata(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+
+    client.session.request.return_value = (
+        {"capabilities": {"attachments": {"base_url": "https://cdn/"}}},
+        {},
+    )
+    mock_requests_get = mocker.patch("kinto_http.requests.get")
+    mock_response = mocker.MagicMock()
+    mock_response.iter_content = mocker.MagicMock(return_value=[b"chunk1", b"chunk2", b"chunk3"])
+    mock_response.raise_for_status = mocker.MagicMock()
+    mock_requests_get.return_value.__enter__.return_value = mock_response
+
+    record = {"attachment": {"location": "file.bin", "filename": "local.bin"}}
+
+    client.download_attachment(record, filepath="/tmp/file.bin", save_metadata=True)
+
+    assert os.path.exists("/tmp/file.bin")
+    assert os.path.exists("/tmp/file.bin.meta.json")
+
+
 def test_add_attachment_guesses_mimetype(record_setup: Client, tmp_path):
     client = record_setup
     mock_response(client.session)

@@ -890,6 +890,7 @@ class Client(object):
         self,
         record,
         filepath=None,
+        save_metadata=False,
         chunk_size=8 * 1024,
     ):
         if "attachment" not in record:
@@ -913,6 +914,12 @@ class Client(object):
                 r.raise_for_status()
                 for chunk in r.iter_content(chunk_size=chunk_size):
                     f.write(chunk)
+
+        if save_metadata:
+            metadata_path = filepath + ".meta.json"
+            with open(metadata_path, "w") as meta_file:
+                json.dump(record["attachment"], meta_file)
+
         return filepath
 
     @retry_timeout

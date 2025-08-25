@@ -1,5 +1,6 @@
 import os
 import re
+import tempfile
 from unittest.mock import mock_open, patch
 
 import pytest
@@ -1409,7 +1410,17 @@ def test_purging_of_history_with_params(client_setup: Client):
     )
 
 
-def test_download_attachment(client_setup: Client, mocker: MockerFixture):
+@pytest.fixture()
+def delete_downloaded_files():
+    yield
+    for f in ["local.bin", "/tmp/local.bin", "/tmp/file.bin"]:
+        try:
+            os.remove(f)
+        except OSError:
+            pass
+
+
+def test_download_attachment(client_setup: Client, mocker: MockerFixture, delete_downloaded_files):
     client = client_setup
 
     client.session.request.return_value = (
@@ -1437,7 +1448,9 @@ def test_download_attachment(client_setup: Client, mocker: MockerFixture):
     assert os.path.exists("/tmp/local.bin")
 
 
-def test_download_attachment_with_metadata(client_setup: Client, mocker: MockerFixture):
+def test_download_attachment_with_metadata(
+    client_setup: Client, mocker: MockerFixture, delete_downloaded_files
+):
     client = client_setup
 
     client.session.request.return_value = (
@@ -1456,6 +1469,32 @@ def test_download_attachment_with_metadata(client_setup: Client, mocker: MockerF
 
     assert os.path.exists("/tmp/file.bin")
     assert os.path.exists("/tmp/file.bin.meta.json")
+
+
+def test_download_attachment_existing_file(client_setup: Client, mocker: MockerFixture):
+    client = client_setup
+
+    client.session.request.return_value = (
+        {"capabilities": {"attachments": {"base_url": "https://cdn/"}}},
+        {},
+    )
+    mock_requests_get = mocker.patch("kinto_http.requests.get")
+
+    record = {
+        "attachment": {
+            "location": "file.bin",
+            "filename": "local.bin",
+            "hash": "9834876dcfb05cb167a5c24953eba58c4ac89b1adf57f28f2f9d09af107ee8f0",
+            "size": 3,
+        }
+    }
+
+    with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        tmp_file.write(b"aaa")
+        tmp_file.close()
+        client.download_attachment(record, filepath=tmp_file.name)
+
+    mock_requests_get.return_value.__enter__.assert_not_called()
 
 
 def test_add_attachment_guesses_mimetype(record_setup: Client, tmp_path):

@@ -891,6 +891,7 @@ class Client(object):
         record,
         filepath=None,
         save_metadata=False,
+        overwrite=False,
         chunk_size=8 * 1024,
     ):
         if "attachment" not in record:
@@ -905,6 +906,15 @@ class Client(object):
             filepath = record["attachment"]["filename"]
         elif os.path.isdir(filepath):
             filepath = os.path.join(filepath, record["attachment"]["filename"])
+
+        if os.path.exists(filepath) and not overwrite:
+            local_size = os.path.getsize(filepath)
+            if local_size == record["attachment"]["size"]:
+                local_sha256 = utils.compute_sha256(filepath)
+                if local_sha256 == record["attachment"]["hash"]:
+                    logger.info("Attachment %r is already up-to-date", filepath)
+                    return filepath
+            logger.info("Attachment %r exists but is outdated, re-downloading", filepath)
 
         if folder := os.path.dirname(filepath):
             os.makedirs(folder, exist_ok=True)

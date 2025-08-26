@@ -940,13 +940,14 @@ class Client(object):
         self,
         id,
         filepath,
+        filename=None,
         bucket=None,
         collection=None,
         data=None,
         permissions=None,
         mimetype=None,
     ):
-        filename = os.path.basename(filepath)
+        filename = filename or os.path.basename(filepath)
         if mimetype is None:
             mimetype, _ = mimetypes.guess_type(filepath)
         endpoint = self._get_endpoint("attachment", id=id, bucket=bucket, collection=collection)

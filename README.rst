@@ -438,6 +438,7 @@ Download attachments:
 **Options**
 
 - `filepath`: path to the file or directory where to save the attachment. If a directory is provided, the original filename will be used.
+- `filename`: name of the file to save the attachment as. If not provided, the original filename will be used.
 - `overwrite` (default: ``False``): if the file already exists locally, don't re-download it if the size and hash match.
 - `save_metadata` (default: ``False``): if set to ``True``, the metadata of the attachment (content of ``attachment`` field on record) will be included in the response.
 - `chunk_size` (default: 8KB): the size of the chunks to download the attachment in bytes.

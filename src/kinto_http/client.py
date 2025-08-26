@@ -10,6 +10,7 @@ import uuid
 from collections import OrderedDict
 from contextlib import contextmanager
 from typing import Dict, List
+from urllib.parse import urljoin
 
 import backoff
 import requests
@@ -900,7 +901,7 @@ class Client(object):
         server_info = self.server_info()
         base_url = server_info["capabilities"]["attachments"]["base_url"]
         location = record["attachment"]["location"]
-        url = base_url + location
+        url = urljoin(base_url.rstrip("/") + "/", location.lstrip("/"))
 
         if filepath is None:
             filepath = record["attachment"]["filename"]

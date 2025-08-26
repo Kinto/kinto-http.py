@@ -69,6 +69,7 @@ class Client(object):
         self.session = create_session(**session_kwargs)
         self.bucket_name = bucket
         self.collection_name = collection
+        self._server_info = None
         self._server_settings = None
         self._records_timestamp = {}
         self._ignore_batch_4xx = ignore_batch_4xx
@@ -247,8 +248,11 @@ class Client(object):
 
     @retry_timeout
     def server_info(self) -> Dict:
+        if self._server_info is not None:
+            return self._server_info
         endpoint = self._get_endpoint("root")
         resp, _ = self.session.request("get", endpoint)
+        self._server_info = resp
         return resp
 
     # Buckets
@@ -895,8 +899,7 @@ class Client(object):
         if "attachment" not in record:
             raise ValueError("Specified record has no attachment")
 
-        server_info = self.server_info()
-        base_url = server_info["capabilities"]["attachments"]["base_url"]
+        base_url = self._server_info["capabilities"]["attachments"]["base_url"]
         location = record["attachment"]["location"]
         url = base_url + location
 

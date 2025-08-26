@@ -930,7 +930,7 @@ class Client(object):
         if save_metadata:
             metadata_path = filepath + ".meta.json"
             with open(metadata_path, "w") as meta_file:
-                json.dump(record["attachment"], meta_file)
+                json.dump(record, meta_file)
 
         return filepath
 

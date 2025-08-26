@@ -1417,9 +1417,6 @@ def test_download_attachment(client_setup: Client, mocker: MockerFixture):
         {},
     )
 
-    # TODO: do it implicitly
-    client.server_info()
-
     mock_requests_get = mocker.patch("kinto_http.requests.get")
     mock_response = mocker.MagicMock()
     mock_response.iter_content = mocker.MagicMock(return_value=[b"chunk1", b"chunk2", b"chunk3"])

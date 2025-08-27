@@ -1,4 +1,6 @@
+import os
 import re
+from unittest import mock
 
 import pytest
 from pytest_mock import MockerFixture
@@ -1253,3 +1255,52 @@ async def test_purging_of_history_with_params(async_client_setup: Client):
         headers=None,
         params={"user_id": "plugin:remote-settings", "_before": '"1337"'},
     )
+
+
+async def test_download_attachment(async_client_setup: Client, mocker: MockerFixture):
+    client = async_client_setup
+
+    client.session.request.return_value = (
+        {"capabilities": {"attachments": {"base_url": "https://cdn/"}}},
+        {},
+    )
+
+    mock_requests_get = mocker.patch("kinto_http.requests.get")
+    mock_response = mocker.MagicMock()
+    mock_response.iter_content = mocker.MagicMock(return_value=[b"chunk1", b"chunk2", b"chunk3"])
+    mock_response.raise_for_status = mocker.MagicMock()
+    mock_requests_get.return_value.__enter__.return_value = mock_response
+
+    with pytest.raises(ValueError):
+        await client.download_attachment({})
+
+    record = {"attachment": {"location": "file.bin", "filename": "local.bin"}}
+
+    path = await client.download_attachment(record)
+    assert path == "local.bin"
+    with open(path) as f:
+        assert f.read() == "chunk1chunk2chunk3"
+
+    path = await client.download_attachment(record, filepath="/tmp")
+    assert os.path.exists("/tmp/local.bin")
+
+
+async def test_add_attachment_guesses_mimetype(async_client_setup: Client, tmp_path):
+    client = async_client_setup
+    mock_response(client.session)
+
+    with mock.patch("builtins.open", mock.mock_open(read_data="hello")) as mock_file:
+        await client.add_attachment(
+            id="abc",
+            bucket="a",
+            collection="b",
+            filepath="file.txt",
+        )
+
+        client.session.request.assert_called_with(
+            "post",
+            "/buckets/a/collections/b/records/abc/attachment",
+            data=None,
+            permissions=None,
+            files=[("attachment", ("file.txt", mock_file.return_value, "text/plain"))],
+        )

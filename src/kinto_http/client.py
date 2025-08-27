@@ -69,6 +69,7 @@ class Client(object):
         self.session = create_session(**session_kwargs)
         self.bucket_name = bucket
         self.collection_name = collection
+        self._server_info = None
         self._server_settings = None
         self._records_timestamp = {}
         self._ignore_batch_4xx = ignore_batch_4xx
@@ -247,8 +248,11 @@ class Client(object):
 
     @retry_timeout
     def server_info(self) -> Dict:
+        if self._server_info is not None:
+            return self._server_info
         endpoint = self._get_endpoint("root")
         resp, _ = self.session.request("get", endpoint)
+        self._server_info = resp
         return resp
 
     # Buckets
@@ -886,8 +890,13 @@ class Client(object):
         return resp["data"]
 
     @retry_timeout
-    def download_attachment(
+    def download_attachment(self, *args, **kwargs):
+        server_info = self.server_info()
+        return self._download_attachment(server_info, *args, **kwargs)
+
+    def _download_attachment(
         self,
+        server_info,
         record,
         filepath=None,
         chunk_size=8 * 1024,
@@ -895,7 +904,6 @@ class Client(object):
         if "attachment" not in record:
             raise ValueError("Specified record has no attachment")
 
-        server_info = self.server_info()
         base_url = server_info["capabilities"]["attachments"]["base_url"]
         location = record["attachment"]["location"]
         url = base_url + location
@@ -1026,7 +1034,7 @@ def async_wrap(func):
 
 def async_client(cls):
     for name, method in inspect.getmembers(cls, inspect.isfunction):
-        if not (name.startswith("_") or name == "clone"):
+        if not (name.startswith("_") or name in ("clone", "download_attachment")):
             setattr(cls, name, async_wrap(method))
     return cls
 
@@ -1041,6 +1049,11 @@ class AsyncClient(Client):
     methods can't call other public methods from within the class. We had to
     patch `_create_if_not_exists` and `_delete_if_exists` below that reason.
     """
+
+    @retry_timeout
+    async def download_attachment(self, *args, **kwargs):
+        server_info = await self.server_info()
+        return super()._download_attachment(server_info, *args, **kwargs)
 
     #  have to redefine this because of the use of getattr. We want to make sure
     #  that we get the synchronous version of the create_ or get_ method

@@ -10,6 +10,7 @@ import uuid
 from collections import OrderedDict
 from contextlib import contextmanager
 from typing import Dict, List
+from urllib.parse import urljoin
 
 import backoff
 import requests
@@ -899,6 +900,8 @@ class Client(object):
         server_info,
         record,
         filepath=None,
+        save_metadata=False,
+        overwrite=False,
         chunk_size=8 * 1024,
     ):
         if "attachment" not in record:
@@ -906,18 +909,38 @@ class Client(object):
 
         base_url = server_info["capabilities"]["attachments"]["base_url"]
         location = record["attachment"]["location"]
-        url = base_url + location
+        url = urljoin(base_url.rstrip("/") + "/", location.lstrip("/"))
 
         if filepath is None:
             filepath = record["attachment"]["filename"]
         elif os.path.isdir(filepath):
             filepath = os.path.join(filepath, record["attachment"]["filename"])
 
+        if os.path.exists(filepath) and not overwrite:
+            local_size = os.path.getsize(filepath)
+            if local_size == record["attachment"]["size"]:
+                local_sha256 = utils.compute_sha256(filepath)
+                if local_sha256 == record["attachment"]["hash"]:
+                    logger.info("Attachment %r is already up-to-date", filepath)
+                    return filepath
+            logger.info(
+                "Attachment %r exists but is outdated, re-downloading", filepath
+            )  # pragma: nocover
+
+        if folder := os.path.dirname(filepath):
+            os.makedirs(folder, exist_ok=True)
+
         with open(filepath, "wb") as f:
             with requests.get(url, stream=True) as r:
                 r.raise_for_status()
                 for chunk in r.iter_content(chunk_size=chunk_size):
                     f.write(chunk)
+
+        if save_metadata:
+            metadata_path = filepath + ".meta.json"
+            with open(metadata_path, "w") as meta_file:
+                json.dump(record, meta_file)
+
         return filepath
 
     @retry_timeout
@@ -925,13 +948,14 @@ class Client(object):
         self,
         id,
         filepath,
+        filename=None,
         bucket=None,
         collection=None,
         data=None,
         permissions=None,
         mimetype=None,
     ):
-        filename = os.path.basename(filepath)
+        filename = filename or os.path.basename(filepath)
         if mimetype is None:
             mimetype, _ = mimetypes.guess_type(filepath)
         endpoint = self._get_endpoint("attachment", id=id, bucket=bucket, collection=collection)

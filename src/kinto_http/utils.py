@@ -1,4 +1,5 @@
 import functools
+import hashlib
 import json
 import re
 import sys
@@ -110,3 +111,11 @@ def collection_diff(src, dest):
             to_update.append((record, r))
     to_delete = list(dest_by_id.values())
     return to_create, to_update, to_delete
+
+
+def compute_sha256(filepath):
+    """Compute SHA-256 hash of specified file."""
+    with open(filepath, "rb") as f:
+        binary = f.read()
+    h = hashlib.sha256(binary)
+    return h.hexdigest()

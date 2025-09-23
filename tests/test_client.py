@@ -1437,7 +1437,7 @@ def test_download_attachment(client_setup: Client, mocker: MockerFixture, delete
     with pytest.raises(ValueError):
         client.download_attachment({})
 
-    record = {"attachment": {"location": "file.bin", "filename": "local.bin"}}
+    record = {"attachment": {"location": "file.bin", "size": 42, "filename": "local.bin"}}
 
     path = client.download_attachment(record)
     assert path == "local.bin"

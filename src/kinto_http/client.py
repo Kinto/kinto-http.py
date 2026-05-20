@@ -9,7 +9,7 @@ import random
 import uuid
 from collections import OrderedDict
 from contextlib import contextmanager
-from typing import Dict, List
+from typing import Any, Callable, Dict, Iterator, List, Optional
 from urllib.parse import urljoin
 
 import backoff
@@ -21,7 +21,7 @@ from kinto_http.constants import DO_NOT_OVERWRITE
 from kinto_http.endpoints import Endpoints
 from kinto_http.exceptions import BucketNotFound, CollectionNotFound, KintoException
 from kinto_http.patch_type import BasicPatch, PatchType
-from kinto_http.session import create_session
+from kinto_http.session import Session, create_session
 
 
 logger = logging.getLogger(__name__)
@@ -37,27 +37,27 @@ class Client(object):
     def __init__(
         self,
         *,
-        server_url=None,
-        session=None,
-        auth=None,
-        bucket="default",
-        collection=None,
-        retry=0,
-        retry_after=None,
-        timeout=None,
-        ignore_batch_4xx=False,
-        headers=None,
-        dry_mode=False,
+        server_url: Optional[str] = None,
+        session: Optional[Session] = None,
+        auth: Any = None,
+        bucket: Optional[str] = "default",
+        collection: Optional[str] = None,
+        retry: int = 0,
+        retry_after: Optional[int] = None,
+        timeout: Optional[float] = None,
+        ignore_batch_4xx: bool = False,
+        headers: Optional[Dict[str, str]] = None,
+        dry_mode: bool = False,
     ):
         self.endpoints = Endpoints()
 
         try:
             # See `BrowserOAuth` in login.py (for example).
-            auth.server_url = server_url
+            setattr(auth, "server_url", server_url)
         except AttributeError:
             pass
 
-        session_kwargs = dict(
+        session_kwargs: Dict[str, Any] = dict(
             server_url=server_url,
             auth=auth,
             session=session,
@@ -70,12 +70,14 @@ class Client(object):
         self.session = create_session(**session_kwargs)
         self.bucket_name = bucket
         self.collection_name = collection
-        self._server_info = None
-        self._server_settings = None
-        self._records_timestamp = {}
+        self._server_info: Optional[Dict[str, Any]] = None
+        self._server_settings: Optional[Dict[str, Any]] = None
+        self._records_timestamp: Dict[str, str] = {}
         self._ignore_batch_4xx = ignore_batch_4xx
+        # Populated when used as a batch client (see :meth:`batch`).
+        self.results: Optional[Callable[[], List[Any]]] = None
 
-    def clone(self, **kwargs):
+    def clone(self, **kwargs: Any) -> "Client":
         if "server_url" in kwargs or "auth" in kwargs:
             kwargs.setdefault("server_url", self.session.server_url)
             kwargs.setdefault("auth", self.session.auth)
@@ -89,7 +91,7 @@ class Client(object):
 
     @retry_timeout
     @contextmanager
-    def batch(self, **kwargs):
+    def batch(self, **kwargs: Any) -> Iterator["Client"]:
         if self._server_settings is None:
             resp, _ = self.session.request("GET", self._get_endpoint("root"))
             self._server_settings = resp["settings"] if not self.session.dry_mode else {}
@@ -109,10 +111,26 @@ class Client(object):
         batch_session.send()
         batch_session.reset()
 
-    def get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None) -> str:
+    def get_endpoint(
+        self,
+        name: str,
+        *,
+        bucket: Optional[str] = None,
+        group: Optional[str] = None,
+        collection: Optional[str] = None,
+        id: Optional[str] = None,
+    ) -> str:
         return self._get_endpoint(name, bucket=bucket, group=group, collection=collection, id=id)
 
-    def _get_endpoint(self, name, *, bucket=None, group=None, collection=None, id=None) -> str:
+    def _get_endpoint(
+        self,
+        name: str,
+        *,
+        bucket: Optional[str] = None,
+        group: Optional[str] = None,
+        collection: Optional[str] = None,
+        id: Optional[str] = None,
+    ) -> str:
         """Return the endpoint with named parameters."""
         kwargs = {
             "bucket": bucket or self.bucket_name,
@@ -124,8 +142,14 @@ class Client(object):
 
     @retry_timeout
     def _paginated(
-        self, endpoint, records=None, *, if_none_match=None, pages=None, **kwargs
-    ) -> List:
+        self,
+        endpoint: str,
+        records: Optional["OrderedDict[str, Any]"] = None,
+        *,
+        if_none_match: Optional[str] = None,
+        pages: Optional[float] = None,
+        **kwargs: Any,
+    ) -> List[Any]:
         if records is None:
             records = OrderedDict()
         headers = {}
@@ -156,15 +180,27 @@ class Client(object):
                 )
         return list(records.values())
 
-    def _get_cache_headers(self, safe, data=None, if_match=None):
+    def _get_cache_headers(
+        self,
+        safe: bool,
+        data: Optional[Dict[str, Any]] = None,
+        if_match: Optional[Any] = None,
+    ) -> Optional[Dict[str, str]]:
         has_data = data is not None and data.get("last_modified")
         if if_match is None and has_data:
+            assert data is not None
             if_match = data["last_modified"]
         if safe and if_match is not None:
             return {"If-Match": utils.quote(if_match)}
         # else return None
+        return None
 
-    def _extract_original_info(self, original, id, if_match):
+    def _extract_original_info(
+        self,
+        original: Optional[Dict[str, Any]],
+        id: Optional[str],
+        if_match: Optional[Any],
+    ) -> "tuple[Optional[str], Optional[Any]]":
         """Utility method to extract ID and last_modified.
 
         Many update methods require the ID of a resource (to generate
@@ -183,8 +219,14 @@ class Client(object):
 
     @retry_timeout
     def _patch_method(
-        self, endpoint, patch, safe=True, if_match=None, data=None, permissions=None
-    ):
+        self,
+        endpoint: str,
+        patch: Optional[PatchType],
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+    ) -> Any:
         """Utility method for implementing PATCH methods."""
         if not patch:
             # Backwards compatibility: the changes argument was
@@ -204,12 +246,12 @@ class Client(object):
         resp, _ = self.session.request("patch", endpoint, payload=body, headers=headers)
         return resp
 
-    def _create_if_not_exists(self, resource, **kwargs):
+    def _create_if_not_exists(self, resource: str, **kwargs: Any) -> Any:
         try:
             create_method = getattr(self, "create_%s" % resource)
             return create_method(**kwargs)
         except KintoException as e:
-            if not hasattr(e, "response") or e.response.status_code != 412:
+            if not hasattr(e, "response") or getattr(e.response, "status_code", None) != 412:
                 raise e
             # The exception contains the existing record in details.existing
             # but it's not enough as we also need to return the permissions.
@@ -225,14 +267,16 @@ class Client(object):
             get_method = getattr(self, "get_%s" % resource)
             return get_method(**get_kwargs)
 
-    def _delete_if_exists(self, resource, **kwargs):
+    def _delete_if_exists(self, resource: str, **kwargs: Any) -> Any:
         try:
             delete_method = getattr(self, "delete_%s" % resource)
             return delete_method(**kwargs)
         except KintoException as e:
             # Should not raise in case of a 404.
             should_raise = not (
-                hasattr(e, "response") and e.response is not None and e.response.status_code == 404
+                hasattr(e, "response")
+                and e.response is not None
+                and getattr(e.response, "status_code", None) == 404
             )
 
             # Should not raise in case of a 403 on a bucket.
@@ -240,7 +284,7 @@ class Client(object):
                 should_raise = not (
                     hasattr(e, "response")
                     and e.response is not None
-                    and e.response.status_code == 403
+                    and getattr(e.response, "status_code", None) == 403
                 )
             if should_raise:
                 raise e
@@ -345,7 +389,7 @@ class Client(object):
         try:
             resp, _ = self.session.request("get", endpoint, params=kwargs)
         except KintoException as e:
-            error_resp_code = e.response.status_code
+            error_resp_code = getattr(e.response, "status_code", None)
             if error_resp_code == 401:
                 msg = (
                     "Unauthorized. Please authenticate or make sure the bucket "
@@ -409,7 +453,7 @@ class Client(object):
                 "put", endpoint, data=data, permissions=permissions, headers=headers
             )
         except KintoException as e:
-            if e.response.status_code == 403:
+            if getattr(e.response, "status_code", None) == 403:
                 msg = (
                     "Unauthorized. Please check that the bucket exists and "
                     "that you have the permission to create or write on "
@@ -541,7 +585,7 @@ class Client(object):
                 "put", endpoint, data=data, permissions=permissions, headers=headers
             )
         except KintoException as e:
-            if e.response.status_code == 403:
+            if getattr(e.response, "status_code", None) == 403:
                 msg = (
                     "Unauthorized. Please check that the bucket exists and "
                     "that you have the permission to create or write on "
@@ -624,7 +668,7 @@ class Client(object):
         try:
             resp, _ = self.session.request("get", endpoint, params=kwargs)
         except KintoException as e:
-            error_resp_code = e.response.status_code
+            error_resp_code = getattr(e.response, "status_code", None)
             if error_resp_code == 404:
                 raise CollectionNotFound(id or self.collection_name, e)
             raise
@@ -733,7 +777,7 @@ class Client(object):
         safe=True,
         if_not_exists=False,
     ) -> Dict:
-        id = id or data.get("id", None)
+        id = id or (data.get("id", None) if data else None)
         if if_not_exists:
             return self._create_if_not_exists(
                 "record",
@@ -760,7 +804,7 @@ class Client(object):
                 "put", endpoint, data=data, permissions=permissions, headers=headers
             )
         except KintoException as e:
-            if e.response.status_code == 403:
+            if getattr(e.response, "status_code", None) == 403:
                 msg = (
                     "Unauthorized. Please check that the collection exists "
                     "and that you have the permission to create or write on"
@@ -783,7 +827,7 @@ class Client(object):
         safe=True,
         if_match=None,
     ) -> Dict:
-        id = id or data.get("id")
+        id = id or (data.get("id") if data else None)
         if id is None:
             raise KeyError("Unable to update a record, need an id.")
         endpoint = self._get_endpoint("record", id=id, bucket=bucket, collection=collection)
@@ -1042,7 +1086,7 @@ class Client(object):
         else:
             endpoint = self._get_endpoint("root")
 
-        absolute_endpoint = utils.urljoin(self.session.server_url, endpoint)
+        absolute_endpoint = utils.urljoin(self.session.server_url or "", endpoint)
         return f"<Kinto{self.__class__.__name__} {absolute_endpoint}>"
 
 
@@ -1075,18 +1119,20 @@ class AsyncClient(Client):
     """
 
     @retry_timeout
-    async def download_attachment(self, *args, **kwargs):
-        server_info = await self.server_info()
+    async def download_attachment(self, *args: Any, **kwargs: Any) -> Any:
+        # `server_info` is wrapped by `async_client` decorator so it is awaitable
+        # at runtime even though ty cannot infer this through the dynamic wrapping.
+        server_info = await self.server_info()  # ty: ignore[invalid-await]
         return super()._download_attachment(server_info, *args, **kwargs)
 
     #  have to redefine this because of the use of getattr. We want to make sure
     #  that we get the synchronous version of the create_ or get_ method
-    def _create_if_not_exists(self, resource, **kwargs):
+    def _create_if_not_exists(self, resource: str, **kwargs: Any) -> Any:
         try:
             create_method = getattr(super(), "create_%s" % resource)
             return create_method(**kwargs)
         except KintoException as e:
-            if not hasattr(e, "response") or e.response.status_code != 412:
+            if not hasattr(e, "response") or getattr(e.response, "status_code", None) != 412:
                 raise e
             # The exception contains the existing record in details.existing
             # but it's not enough as we also need to return the permissions.
@@ -1104,14 +1150,16 @@ class AsyncClient(Client):
 
     # have to redefine this because of the use of getattr. We want to make sure
     #  that we get the synchronous version of the delete_ method
-    def _delete_if_exists(self, resource, **kwargs):
+    def _delete_if_exists(self, resource: str, **kwargs: Any) -> Any:
         try:
             delete_method = getattr(super(), "delete_%s" % resource)
             return delete_method(**kwargs)
         except KintoException as e:
             # Should not raise in case of a 404.
             should_raise = not (
-                hasattr(e, "response") and e.response is not None and e.response.status_code == 404
+                hasattr(e, "response")
+                and e.response is not None
+                and getattr(e.response, "status_code", None) == 404
             )
 
             # Should not raise in case of a 403 on a bucket.
@@ -1119,7 +1167,7 @@ class AsyncClient(Client):
                 should_raise = not (
                     hasattr(e, "response")
                     and e.response is not None
-                    and e.response.status_code == 403
+                    and getattr(e.response, "status_code", None) == 403
                 )
             if should_raise:
                 raise e

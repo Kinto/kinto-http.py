@@ -1,4 +1,5 @@
 import logging
+from typing import Any, Dict
 
 from kinto_http import utils
 from kinto_http.exceptions import KintoException
@@ -8,7 +9,7 @@ logger = logging.getLogger(__name__)
 
 
 class Endpoints(object):
-    endpoints = {
+    endpoints: Dict[str, str] = {
         "root": "{root}/",
         "batch": "{root}/batch",
         "permissions": "{root}/permissions",
@@ -25,10 +26,10 @@ class Endpoints(object):
         "changeset": "{root}/buckets/{bucket}/collections/{collection}/changeset",  # NOQA
     }
 
-    def __init__(self, root=""):
+    def __init__(self, root: str = ""):
         self._root = root
 
-    def get(self, endpoint, **kwargs):
+    def get(self, endpoint: str, **kwargs: Any) -> str:
         # Remove nullable values from the kwargs, and slugify the values.
         kwargs = dict((k, utils.slugify(v)) for k, v in kwargs.items() if v)
 

@@ -5,6 +5,7 @@ import re
 import sys
 import unicodedata
 from datetime import date, datetime
+from typing import Any, Iterable, Iterator, List, Tuple
 
 from unidecode import unidecode
 
@@ -14,7 +15,7 @@ from kinto_http.constants import VALID_SLUG_REGEXP
 MAX_LENGTH_INT = len(str(sys.maxsize * 2 + 1))
 
 
-def slugify(value):
+def slugify(value: Any) -> str:
     """Normalizes string, converts to lowercase, removes non-alpha characters
     and converts spaces to hyphens.
     """
@@ -32,18 +33,18 @@ def slugify(value):
     return value
 
 
-def urljoin(server_url, path):
+def urljoin(server_url: str, path: str) -> str:
     """Return the url concatenation of server_url and path."""
     return server_url.rstrip("/") + "/" + path.lstrip("/")
 
 
-def quote(text):
+def quote(text: Any) -> str:
     if hasattr(text, "strip"):
         text = text.strip('"')
     return '"{0}"'.format(text)
 
 
-def chunks(lst, n):
+def chunks(lst: List[Any], n: int) -> Iterator[List[Any]]:
     """Yield successive n-sized chunks from lst.
     Source: http://stackoverflow.com/a/312464
     """
@@ -54,7 +55,7 @@ def chunks(lst, n):
         yield lst
 
 
-def json_iso_datetime(obj):
+def json_iso_datetime(obj: Any) -> str:
     """JSON serializer for objects not serializable by default json code"""
     if isinstance(obj, (datetime, date)):
         return obj.isoformat()
@@ -64,12 +65,12 @@ def json_iso_datetime(obj):
 json_dumps = functools.partial(json.dumps, default=json_iso_datetime)
 
 
-def sort_records(records, sort):
+def sort_records(records: List[dict], sort: str) -> List[dict]:
     """
     Sort records following the same format as the server ``name,-last_modified``.
     """
 
-    def reversed(way, value):
+    def reversed(way: int, value: Any) -> str:
         if isinstance(value, (int, float)):
             value = str(way * value).zfill(MAX_LENGTH_INT)
         if isinstance(value, str):
@@ -84,7 +85,7 @@ def sort_records(records, sort):
     )
 
 
-def records_equal(a, b):
+def records_equal(a: dict, b: dict) -> bool:
     """
     Compare records attributes, ignoring those assigned automatically
     by the server.
@@ -95,13 +96,15 @@ def records_equal(a, b):
     return ac == bc
 
 
-def collection_diff(src, dest):
+def collection_diff(
+    src: Iterable[dict], dest: Iterable[dict]
+) -> Tuple[List[dict], List[Tuple[dict, dict]], List[dict]]:
     """
     Compare two lists of records.
     """
     dest_by_id = {r["id"]: r for r in dest}
-    to_create = []
-    to_update = []
+    to_create: List[dict] = []
+    to_update: List[Tuple[dict, dict]] = []
     for r in src:
         record = dest_by_id.pop(r["id"], None)
         if record is None:
@@ -113,7 +116,7 @@ def collection_diff(src, dest):
     return to_create, to_update, to_delete
 
 
-def compute_sha256(filepath):
+def compute_sha256(filepath: str) -> str:
     """Compute SHA-256 hash of specified file."""
     with open(filepath, "rb") as f:
         binary = f.read()

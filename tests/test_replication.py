@@ -60,8 +60,8 @@ def test_removed_records_are_deleted_on_the_destination(mocker: MockerFixture):
     destination.batch = batch
 
     replicate(origin, destination)
-    batched.delete_record.assert_any_call("1234", last_modified="1234")
-    batched.delete_record.assert_any_call("4567", last_modified="4567")
+    batched.delete_record.assert_any_call(id="1234", if_match="1234")
+    batched.delete_record.assert_any_call(id="4567", if_match="4567")
 
 
 def test_logger_outputs_replication_information(mocker: MockerFixture):

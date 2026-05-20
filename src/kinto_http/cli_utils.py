@@ -1,22 +1,23 @@
 import argparse
 import getpass
 import logging
+from typing import Any, Optional, Tuple
 
 from . import BearerTokenAuth, Client
 
 
-def get_auth(auth):
+def get_auth(auth: str) -> Tuple[str, ...]:
     """Ask for the user password if needed."""
-    auth = tuple(auth.split(":", 1))
-    if len(auth) < 2:
-        user = auth[0]
+    parts: Tuple[str, ...] = tuple(auth.split(":", 1))
+    if len(parts) < 2:
+        user = parts[0]
         password = getpass.getpass("Please enter a password for %s: " % user)
-        auth = (user, password)
+        parts = (user, password)
 
-    return auth
+    return parts
 
 
-def create_client_from_args(args):
+def create_client_from_args(args: argparse.Namespace) -> Client:
     """Return a client from parser args."""
     return Client(
         server_url=args.server,
@@ -30,7 +31,13 @@ def create_client_from_args(args):
 
 
 class AuthAction(argparse.Action):
-    def __call__(self, parser, namespace, values, option_string=None):
+    def __call__(
+        self,
+        parser: argparse.ArgumentParser,
+        namespace: argparse.Namespace,
+        values: Any,
+        option_string: Optional[str] = None,
+    ) -> None:
         if values is not None:
             auth = None
             try:
@@ -49,18 +56,18 @@ class AuthAction(argparse.Action):
 
 
 def add_parser_options(
-    parser=None,
-    default_server=None,
-    default_auth=None,
-    default_retry=0,
-    default_retry_after=None,
-    default_ignore_batch_4xx=False,
-    default_bucket=None,
-    default_collection=None,
-    include_bucket=True,
-    include_collection=True,
-    **kwargs,
-):
+    parser: Optional[argparse.ArgumentParser] = None,
+    default_server: Optional[str] = None,
+    default_auth: Optional[str] = None,
+    default_retry: int = 0,
+    default_retry_after: Optional[int] = None,
+    default_ignore_batch_4xx: bool = False,
+    default_bucket: Optional[str] = None,
+    default_collection: Optional[str] = None,
+    include_bucket: bool = True,
+    include_collection: bool = True,
+    **kwargs: Any,
+) -> argparse.ArgumentParser:
     if parser is None:
         parser = argparse.ArgumentParser(**kwargs)
 
@@ -141,7 +148,7 @@ def add_parser_options(
     return parser
 
 
-def setup_logger(logger, args):  # pragma: nocover
+def setup_logger(logger: logging.Logger, args: argparse.Namespace) -> None:  # pragma: nocover
     logger.addHandler(logging.StreamHandler())
     if args.verbosity:
         logger.setLevel(args.verbosity)

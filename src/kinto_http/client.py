@@ -304,7 +304,13 @@ class Client(object):
 
     @retry_timeout
     def create_bucket(
-        self, *, id=None, data=None, permissions=None, safe=True, if_not_exists=False
+        self,
+        *,
+        id: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_not_exists: bool = False,
     ) -> Dict:
         if id is None and data:
             id = data.get("id", None)
@@ -325,7 +331,13 @@ class Client(object):
 
     @retry_timeout
     def update_bucket(
-        self, *, id=None, data=None, permissions=None, safe=True, if_match=None
+        self,
+        *,
+        id: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
     ) -> Dict:
         if id is None and data:
             id = data.get("id", None)
@@ -344,13 +356,13 @@ class Client(object):
     def patch_bucket(
         self,
         *,
-        id=None,
-        changes=None,
-        data=None,
-        original=None,
-        permissions=None,
-        safe=True,
-        if_match=None,
+        id: Optional[str] = None,
+        changes: Optional[PatchType] = None,
+        data: Optional[Dict[str, Any]] = None,
+        original: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
     ) -> Dict:
         """Issue a PATCH request on a bucket.
 
@@ -376,12 +388,12 @@ class Client(object):
             endpoint, changes, data=data, permissions=permissions, safe=safe, if_match=if_match
         )
 
-    def get_buckets(self, **kwargs) -> List[Dict]:
+    def get_buckets(self, **kwargs: Any) -> List[Dict]:
         endpoint = self._get_endpoint("buckets")
         return self._paginated(endpoint, **kwargs)
 
     @retry_timeout
-    def get_bucket(self, *, id=None, **kwargs) -> Dict:
+    def get_bucket(self, *, id: Optional[str] = None, **kwargs: Any) -> Dict:
         endpoint = self._get_endpoint("bucket", bucket=id)
 
         logger.info("Get bucket %r" % id or self.bucket_name)
@@ -402,7 +414,14 @@ class Client(object):
         return resp
 
     @retry_timeout
-    def delete_bucket(self, *, id=None, safe=True, if_match=None, if_exists=False) -> Dict:
+    def delete_bucket(
+        self,
+        *,
+        id: Optional[str] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+        if_exists: bool = False,
+    ) -> Dict:
         if if_exists:
             return self._delete_if_exists("bucket", id=id, safe=safe, if_match=if_match)
         endpoint = self._get_endpoint("bucket", bucket=id)
@@ -414,7 +433,7 @@ class Client(object):
         return resp["data"]
 
     @retry_timeout
-    def delete_buckets(self, *, safe=True, if_match=None) -> Dict:
+    def delete_buckets(self, *, safe: bool = True, if_match: Optional[Any] = None) -> Dict:
         endpoint = self._get_endpoint("buckets")
         headers = self._get_cache_headers(safe, if_match=if_match)
 
@@ -425,13 +444,20 @@ class Client(object):
 
     # Groups
 
-    def get_groups(self, *, bucket=None, **kwargs) -> List[Dict]:
+    def get_groups(self, *, bucket: Optional[str] = None, **kwargs: Any) -> List[Dict]:
         endpoint = self._get_endpoint("groups", bucket=bucket)
         return self._paginated(endpoint, **kwargs)
 
     @retry_timeout
     def create_group(
-        self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
+        self,
+        *,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_not_exists: bool = False,
     ) -> Dict:
         if id is None and data:
             id = data.get("id", None)
@@ -466,7 +492,14 @@ class Client(object):
 
     @retry_timeout
     def update_group(
-        self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
+        self,
+        *,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
     ) -> Dict:
         if id is None and data:
             id = data.get("id", None)
@@ -488,14 +521,14 @@ class Client(object):
     def patch_group(
         self,
         *,
-        id=None,
-        bucket=None,
-        changes=None,
-        data=None,
-        original=None,
-        permissions=None,
-        safe=True,
-        if_match=None,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        changes: Optional[PatchType] = None,
+        data: Optional[Dict[str, Any]] = None,
+        original: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
     ) -> Dict:
         """Issue a PATCH request on a bucket.
 
@@ -522,7 +555,7 @@ class Client(object):
         )
 
     @retry_timeout
-    def get_group(self, *, id, bucket=None) -> Dict:
+    def get_group(self, *, id: str, bucket: Optional[str] = None) -> Dict:
         endpoint = self._get_endpoint("group", bucket=bucket, group=id)
 
         logger.info("Get group %r in bucket %r" % (id, bucket or self.bucket_name))
@@ -531,7 +564,15 @@ class Client(object):
         return resp
 
     @retry_timeout
-    def delete_group(self, *, id, bucket=None, safe=True, if_match=None, if_exists=False) -> Dict:
+    def delete_group(
+        self,
+        *,
+        id: str,
+        bucket: Optional[str] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+        if_exists: bool = False,
+    ) -> Dict:
         if if_exists:
             return self._delete_if_exists(
                 "group", id=id, bucket=bucket, safe=safe, if_match=if_match
@@ -545,7 +586,13 @@ class Client(object):
         return resp["data"]
 
     @retry_timeout
-    def delete_groups(self, *, bucket=None, safe=True, if_match=None) -> Dict:
+    def delete_groups(
+        self,
+        *,
+        bucket: Optional[str] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+    ) -> Dict:
         endpoint = self._get_endpoint("groups", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
@@ -556,13 +603,20 @@ class Client(object):
 
     # Collections
 
-    def get_collections(self, *, bucket=None, **kwargs) -> List[Dict]:
+    def get_collections(self, *, bucket: Optional[str] = None, **kwargs: Any) -> List[Dict]:
         endpoint = self._get_endpoint("collections", bucket=bucket)
         return self._paginated(endpoint, **kwargs)
 
     @retry_timeout
     def create_collection(
-        self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_not_exists=False
+        self,
+        *,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_not_exists: bool = False,
     ) -> Dict:
         if id is None and data:
             id = data.get("id", None)
@@ -598,7 +652,14 @@ class Client(object):
 
     @retry_timeout
     def update_collection(
-        self, *, id=None, bucket=None, data=None, permissions=None, safe=True, if_match=None
+        self,
+        *,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
     ) -> Dict:
         if id is None and data:
             id = data.get("id", None)
@@ -620,14 +681,14 @@ class Client(object):
     def patch_collection(
         self,
         *,
-        id=None,
-        bucket=None,
-        changes=None,
-        data=None,
-        original=None,
-        permissions=None,
-        safe=True,
-        if_match=None,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        changes: Optional[PatchType] = None,
+        data: Optional[Dict[str, Any]] = None,
+        original: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
     ) -> Dict:
         """Issue a PATCH request on a collection.
 
@@ -657,7 +718,13 @@ class Client(object):
         )
 
     @retry_timeout
-    def get_collection(self, *, id=None, bucket=None, **kwargs) -> Dict:
+    def get_collection(
+        self,
+        *,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict:
         endpoint = self._get_endpoint("collection", bucket=bucket, collection=id)
 
         logger.info(
@@ -676,7 +743,13 @@ class Client(object):
 
     @retry_timeout
     def delete_collection(
-        self, *, id=None, bucket=None, safe=True, if_match=None, if_exists=False
+        self,
+        *,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+        if_exists: bool = False,
     ) -> Dict:
         if if_exists:
             return self._delete_if_exists(
@@ -694,7 +767,13 @@ class Client(object):
         return resp["data"]
 
     @retry_timeout
-    def delete_collections(self, *, bucket=None, safe=True, if_match=None) -> Dict:
+    def delete_collections(
+        self,
+        *,
+        bucket: Optional[str] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+    ) -> Dict:
         endpoint = self._get_endpoint("collections", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
@@ -705,7 +784,9 @@ class Client(object):
 
     # Records
 
-    def get_records_timestamp(self, *, collection=None, bucket=None) -> str:
+    def get_records_timestamp(
+        self, *, collection: Optional[str] = None, bucket: Optional[str] = None
+    ) -> str:
         endpoint = self._get_endpoint("records", bucket=bucket, collection=collection)
         if endpoint not in self._records_timestamp:
             record_resp, headers = self.session.request("head", endpoint)
@@ -717,18 +798,26 @@ class Client(object):
         return self._records_timestamp[endpoint]
 
     @retry_timeout
-    def get_records(self, *, collection=None, bucket=None, **kwargs) -> List[Dict]:
+    def get_records(
+        self, *, collection: Optional[str] = None, bucket: Optional[str] = None, **kwargs: Any
+    ) -> List[Dict]:
         """Returns all the records"""
         endpoint = self._get_endpoint("records", bucket=bucket, collection=collection)
         return self._paginated(endpoint, **kwargs)
 
-    def get_paginated_records(self, *, collection=None, bucket=None, **kwargs) -> List[Dict]:
+    def get_paginated_records(
+        self, *, collection: Optional[str] = None, bucket: Optional[str] = None, **kwargs: Any
+    ) -> Iterator[Any]:
         endpoint = self._get_endpoint("records", bucket=bucket, collection=collection)
 
         return self._paginated_generator(endpoint, **kwargs)
 
     @retry_timeout
-    def get_permissions(self, exclude_resource_names=None, **kwargs):
+    def get_permissions(
+        self,
+        exclude_resource_names: Optional[List[str]] = None,
+        **kwargs: Any,
+    ) -> Any:
         endpoint = self._get_endpoint("permissions")
         params = kwargs.setdefault("params", {})
         params.setdefault("_sort", "id")
@@ -737,8 +826,10 @@ class Client(object):
         body, _ = self.session.request("get", endpoint, **kwargs)
         return body["data"]
 
-    def _paginated_generator(self, endpoint, *, if_none_match=None, **kwargs):
-        headers = {}
+    def _paginated_generator(
+        self, endpoint: str, *, if_none_match: Optional[str] = None, **kwargs: Any
+    ) -> Iterator[Any]:
+        headers: Dict[str, str] = {}
         if if_none_match is not None:
             headers["If-None-Match"] = utils.quote(if_none_match)
 
@@ -754,7 +845,14 @@ class Client(object):
             yield from self._paginated_generator(next_page, if_none_match=if_none_match)
 
     @retry_timeout
-    def get_record(self, *, id, collection=None, bucket=None, **kwargs) -> Dict:
+    def get_record(
+        self,
+        *,
+        id: str,
+        collection: Optional[str] = None,
+        bucket: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict:
         endpoint = self._get_endpoint("record", id=id, bucket=bucket, collection=collection)
 
         logger.info(
@@ -769,13 +867,13 @@ class Client(object):
     def create_record(
         self,
         *,
-        id=None,
-        bucket=None,
-        collection=None,
-        data=None,
-        permissions=None,
-        safe=True,
-        if_not_exists=False,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        collection: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_not_exists: bool = False,
     ) -> Dict:
         id = id or (data.get("id", None) if data else None)
         if if_not_exists:
@@ -819,13 +917,13 @@ class Client(object):
     def update_record(
         self,
         *,
-        id=None,
-        collection=None,
-        bucket=None,
-        data=None,
-        permissions=None,
-        safe=True,
-        if_match=None,
+        id: Optional[str] = None,
+        collection: Optional[str] = None,
+        bucket: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
     ) -> Dict:
         id = id or (data.get("id") if data else None)
         if id is None:
@@ -847,15 +945,15 @@ class Client(object):
     def patch_record(
         self,
         *,
-        id=None,
-        collection=None,
-        bucket=None,
-        changes=None,
-        data=None,
-        original=None,
-        permissions=None,
-        safe=True,
-        if_match=None,
+        id: Optional[str] = None,
+        collection: Optional[str] = None,
+        bucket: Optional[str] = None,
+        changes: Optional[PatchType] = None,
+        data: Optional[Dict[str, Any]] = None,
+        original: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
     ) -> Dict:
         """Issue a PATCH request on a record.
 
@@ -890,7 +988,14 @@ class Client(object):
 
     @retry_timeout
     def delete_record(
-        self, *, id, collection=None, bucket=None, safe=True, if_match=None, if_exists=False
+        self,
+        *,
+        id: str,
+        collection: Optional[str] = None,
+        bucket: Optional[str] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+        if_exists: bool = False,
     ) -> Dict:
         if if_exists:
             return self._delete_if_exists(
@@ -908,7 +1013,14 @@ class Client(object):
         return resp["data"]
 
     @retry_timeout
-    def delete_records(self, *, collection=None, bucket=None, safe=True, if_match=None) -> Dict:
+    def delete_records(
+        self,
+        *,
+        collection: Optional[str] = None,
+        bucket: Optional[str] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+    ) -> Dict:
         endpoint = self._get_endpoint("records", bucket=bucket, collection=collection)
         headers = self._get_cache_headers(safe, if_match=if_match)
 
@@ -921,13 +1033,20 @@ class Client(object):
         return resp["data"]
 
     @retry_timeout
-    def get_history(self, *, bucket=None, **kwargs) -> List[Dict]:
+    def get_history(self, *, bucket: Optional[str] = None, **kwargs: Any) -> List[Dict]:
         endpoint = self._get_endpoint("history", bucket=bucket)
         logger.info("Get history from bucket %r" % bucket or self.bucket_name)
         return self._paginated(endpoint, **kwargs)
 
     @retry_timeout
-    def purge_history(self, *, bucket=None, safe=True, if_match=None, **kwargs) -> List[Dict]:
+    def purge_history(
+        self,
+        *,
+        bucket: Optional[str] = None,
+        safe: bool = True,
+        if_match: Optional[Any] = None,
+        **kwargs: Any,
+    ) -> List[Dict]:
         endpoint = self._get_endpoint("history", bucket=bucket)
         headers = self._get_cache_headers(safe, if_match=if_match)
         logger.info("Purge History of bucket %r" % bucket or self.bucket_name)
@@ -935,19 +1054,19 @@ class Client(object):
         return resp["data"]
 
     @retry_timeout
-    def download_attachment(self, *args, **kwargs):
+    def download_attachment(self, *args: Any, **kwargs: Any) -> Any:
         server_info = self.server_info()
         return self._download_attachment(server_info, *args, **kwargs)
 
     def _download_attachment(
         self,
-        server_info,
-        record,
-        filepath=None,
-        save_metadata=False,
-        overwrite=False,
-        chunk_size=8 * 1024,
-    ):
+        server_info: Dict[str, Any],
+        record: Dict[str, Any],
+        filepath: Optional[str] = None,
+        save_metadata: bool = False,
+        overwrite: bool = False,
+        chunk_size: int = 8 * 1024,
+    ) -> str:
         if "attachment" not in record:
             raise ValueError("Specified record has no attachment")
 
@@ -990,15 +1109,15 @@ class Client(object):
     @retry_timeout
     def add_attachment(
         self,
-        id,
-        filepath,
-        filename=None,
-        bucket=None,
-        collection=None,
-        data=None,
-        permissions=None,
-        mimetype=None,
-    ):
+        id: str,
+        filepath: str,
+        filename: Optional[str] = None,
+        bucket: Optional[str] = None,
+        collection: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
+        permissions: Optional[Dict[str, Any]] = None,
+        mimetype: Optional[str] = None,
+    ) -> Any:
         filename = filename or os.path.basename(filepath)
         if mimetype is None:
             mimetype, _ = mimetypes.guess_type(filepath)
@@ -1016,12 +1135,20 @@ class Client(object):
         return resp
 
     @retry_timeout
-    def remove_attachment(self, id, bucket=None, collection=None):
+    def remove_attachment(
+        self, id: str, bucket: Optional[str] = None, collection: Optional[str] = None
+    ) -> Any:
         endpoint = self._get_endpoint("attachment", id=id, bucket=bucket, collection=collection)
         resp, _ = self.session.request("delete", endpoint)
         return resp
 
-    def get_changeset(self, bucket=None, collection=None, bust_cache=False, **kwargs):
+    def get_changeset(
+        self,
+        bucket: Optional[str] = None,
+        collection: Optional[str] = None,
+        bust_cache: bool = False,
+        **kwargs: Any,
+    ) -> Any:
         kwargs.setdefault(
             "_expected", random.randint(999999000000, 999999999999) if bust_cache else 0
         )
@@ -1029,7 +1156,13 @@ class Client(object):
         resp, _ = self.session.request("get", endpoint, params=kwargs)
         return resp
 
-    def request_review(self, message, id=None, bucket=None, **kwargs):
+    def request_review(
+        self,
+        message: str,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict:
         return self.patch_collection(
             id=id,
             bucket=bucket,
@@ -1041,7 +1174,13 @@ class Client(object):
             **kwargs,
         )
 
-    def decline_changes(self, message, id=None, bucket=None, **kwargs):
+    def decline_changes(
+        self,
+        message: str,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict:
         return self.patch_collection(
             id=id,
             bucket=bucket,
@@ -1053,7 +1192,12 @@ class Client(object):
             **kwargs,
         )
 
-    def approve_changes(self, id=None, bucket=None, **kwargs):
+    def approve_changes(
+        self,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict:
         return self.patch_collection(
             id=id,
             bucket=bucket,
@@ -1064,7 +1208,13 @@ class Client(object):
             **kwargs,
         )
 
-    def rollback_changes(self, message, id=None, bucket=None, **kwargs):
+    def rollback_changes(
+        self,
+        message: str,
+        id: Optional[str] = None,
+        bucket: Optional[str] = None,
+        **kwargs: Any,
+    ) -> Dict:
         return self.patch_collection(
             id=id,
             bucket=bucket,

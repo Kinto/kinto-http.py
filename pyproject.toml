@@ -16,6 +16,7 @@ keywords = ["web services"]
 authors = [
   {name = "Mozilla Services", email = "developers@kinto-storage.org"},
 ]
+requires-python = ">=3.10"
 
 [project.urls]
 Repository = "https://github.com/Kinto/kinto-http.py"

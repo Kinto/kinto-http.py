@@ -80,6 +80,7 @@ class Session(object):
         self.timeout = timeout
         self.headers = headers or {}
         self.dry_mode = dry_mode
+        self._session = requests.Session()
 
     def request(self, method, endpoint, data=None, permissions=None, payload=None, **kwargs):
         current_time = time.time()
@@ -147,7 +148,7 @@ class Session(object):
                 )
                 resp.status_code = resp.status
             else:
-                resp = requests.request(method, actual_url, **kwargs)
+                resp = self._session.request(method, actual_url, **kwargs)
 
             if "Alert" in resp.headers:
                 warnings.warn(resp.headers["Alert"], DeprecationWarning)

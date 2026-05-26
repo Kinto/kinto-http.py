@@ -1267,11 +1267,11 @@ async def test_download_attachment(async_client_setup: Client, mocker: MockerFix
         {},
     )
 
-    mock_requests_get = mocker.patch("kinto_http.requests.get")
+    mock_session_request = client.session._session.request
     mock_response = mocker.MagicMock()
     mock_response.iter_content = mocker.MagicMock(return_value=[b"chunk1", b"chunk2", b"chunk3"])
     mock_response.raise_for_status = mocker.MagicMock()
-    mock_requests_get.return_value.__enter__.return_value = mock_response
+    mock_session_request.return_value.__enter__.return_value = mock_response
 
     with pytest.raises(ValueError):
         await client.download_attachment({})

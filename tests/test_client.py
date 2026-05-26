@@ -1427,11 +1427,11 @@ def test_download_attachment(client_setup: Client, mocker: MockerFixture, delete
         {},
     )
 
-    mock_requests_get = mocker.patch("kinto_http.requests.get")
+    mock_session_request = client.session._session.request
     mock_response = mocker.MagicMock()
     mock_response.iter_content = mocker.MagicMock(return_value=[b"chunk1", b"chunk2", b"chunk3"])
     mock_response.raise_for_status = mocker.MagicMock()
-    mock_requests_get.return_value.__enter__.return_value = mock_response
+    mock_session_request.return_value.__enter__.return_value = mock_response
 
     with pytest.raises(ValueError):
         client.download_attachment({})
@@ -1456,11 +1456,11 @@ def test_download_attachment_with_metadata(
         {"capabilities": {"attachments": {"base_url": "https://cdn/"}}},
         {},
     )
-    mock_requests_get = mocker.patch("kinto_http.requests.get")
+    mock_session_request = client.session._session.request
     mock_response = mocker.MagicMock()
     mock_response.iter_content = mocker.MagicMock(return_value=[b"chunk1", b"chunk2", b"chunk3"])
     mock_response.raise_for_status = mocker.MagicMock()
-    mock_requests_get.return_value.__enter__.return_value = mock_response
+    mock_session_request.return_value.__enter__.return_value = mock_response
 
     record = {"attachment": {"location": "file.bin", "filename": "local.bin"}}
 
@@ -1477,7 +1477,7 @@ def test_download_attachment_existing_file(client_setup: Client, mocker: MockerF
         {"capabilities": {"attachments": {"base_url": "https://cdn/"}}},
         {},
     )
-    mock_requests_get = mocker.patch("kinto_http.requests.get")
+    mock_session_request = client.session._session.request
 
     record = {
         "attachment": {
@@ -1493,7 +1493,7 @@ def test_download_attachment_existing_file(client_setup: Client, mocker: MockerF
         tmp_file.close()
         client.download_attachment(record, filepath=tmp_file.name)
 
-    mock_requests_get.return_value.__enter__.assert_not_called()
+    mock_session_request.return_value.__enter__.assert_not_called()
 
 
 def test_add_attachment_guesses_mimetype(record_setup: Client, tmp_path):

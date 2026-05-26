@@ -78,10 +78,9 @@ async def test_client_can_receive_default_headers(mocker: MockerFixture):
     r = mocker.MagicMock()
     r.status_code = 200
     client = Client(server_url="https://kinto.io/v1", headers={"Allow-Access": "CDN"})
-    mocked = mocker.patch("kinto_http.session.requests")
-    mocked.request.return_value = r
+    mocked = mocker.patch.object(client.session._session, "request", return_value=r)
     await client.server_info()
-    assert "Allow-Access" in mocked.request.call_args_list[0][1]["headers"]
+    assert "Allow-Access" in mocked.call_args_list[0][1]["headers"]
 
 
 def test_client_clone_with_auth(async_client_setup: Client):
@@ -1274,7 +1273,7 @@ async def test_download_attachment(async_client_setup: Client, mocker: MockerFix
     with pytest.raises(ValueError):
         await client.download_attachment({})
 
-    record = {"attachment": {"location": "file.bin", "filename": "local.bin"}}
+    record = {"attachment": {"location": "file.bin", "filename": "local.bin", "size": 42}}
 
     path = await client.download_attachment(record)
     assert path == "local.bin"

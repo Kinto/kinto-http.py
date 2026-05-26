@@ -77,10 +77,13 @@ def test_client_uses_passed_bucket_if_specified():
 async def test_client_can_receive_default_headers(mocker: MockerFixture):
     r = mocker.MagicMock()
     r.status_code = 200
+    # AsyncClient runs requests in an executor thread (differ in main than executor).
+    # Patch the class so all threads get the same mock.
+    mocked = mocker.patch("kinto_http.session.requests.Session").return_value
+    mocked.request.return_value = r
     client = Client(server_url="https://kinto.io/v1", headers={"Allow-Access": "CDN"})
-    mocked = mocker.patch.object(client.session._session, "request", return_value=r)
     await client.server_info()
-    assert "Allow-Access" in mocked.call_args_list[0][1]["headers"]
+    assert "Allow-Access" in mocked.request.call_args_list[0][1]["headers"]
 
 
 def test_client_clone_with_auth(async_client_setup: Client):

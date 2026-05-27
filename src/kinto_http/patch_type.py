@@ -1,3 +1,6 @@
+from typing import Any, Dict, List, Optional
+
+
 class PatchType(object):
     """Class representing a PATCH request to Kinto.
 
@@ -10,7 +13,8 @@ class PatchType(object):
     modified) and its ``permissions``.
     """
 
-    pass
+    content_type: str = ""
+    body: Any = None
 
 
 class BasicPatch(PatchType):
@@ -25,7 +29,7 @@ class BasicPatch(PatchType):
 
     content_type = "application/json"
 
-    def __init__(self, data=None, permissions=None):
+    def __init__(self, data: Optional[dict] = None, permissions: Optional[dict] = None):
         """BasicPatch(data)
 
         :param data: the fields and values that should be replaced on
@@ -39,8 +43,8 @@ class BasicPatch(PatchType):
         self.permissions = permissions
 
     @property
-    def body(self):
-        ret = {}
+    def body(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
         if self.data is not None:
             ret["data"] = self.data
         if self.permissions is not None:
@@ -65,7 +69,7 @@ class MergePatch(PatchType):
 
     content_type = "application/merge-patch+json"
 
-    def __init__(self, data=None, permissions=None):
+    def __init__(self, data: Optional[dict] = None, permissions: Optional[dict] = None):
         """MergePatch(data)
 
         :param data: the fields and values that should be merged on
@@ -79,8 +83,8 @@ class MergePatch(PatchType):
         self.permissions = permissions
 
     @property
-    def body(self):
-        ret = {}
+    def body(self) -> Dict[str, Any]:
+        ret: Dict[str, Any] = {}
         if self.data is not None:
             ret["data"] = self.data
         if self.permissions is not None:
@@ -101,7 +105,7 @@ class JSONPatch(PatchType):
 
     content_type = "application/json-patch+json"
 
-    def __init__(self, operations):
+    def __init__(self, operations: List[Dict[str, Any]]):
         """JSONPatch(operations)
 
         Takes a list of operations to apply.  Operations should be

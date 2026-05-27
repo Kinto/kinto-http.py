@@ -1,9 +1,14 @@
 import logging
 from collections import defaultdict
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple
 
 from kinto_http.exceptions import KintoBatchException, KintoException
 
 from . import utils
+
+
+if TYPE_CHECKING:
+    from kinto_http.client import Client
 
 
 logger = logging.getLogger(__name__)
@@ -15,32 +20,45 @@ class WrapDict(dict):
     We use this small helper to make it look like the classes from requests.
     """
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Any:
         return self[name]
 
 
 class RequestDict(WrapDict):
     @property
-    def path_url(self):
-        return self.path
+    def path_url(self) -> Any:
+        return self["path"]
 
 
 class ResponseDict(WrapDict):
     @property
-    def status_code(self):
+    def status_code(self) -> Any:
         return self["status"]
 
 
 class BatchSession(object):
-    def __init__(self, client, batch_max_requests=0, ignore_4xx_errors=False):
+    def __init__(
+        self,
+        client: "Client",
+        batch_max_requests: int = 0,
+        ignore_4xx_errors: bool = False,
+    ):
         self.session = client.session
         self.endpoints = client.endpoints
         self.batch_max_requests = batch_max_requests
         self._ignore_4xx_errors = ignore_4xx_errors
-        self.requests = []
-        self._results = []
+        self.requests: List[Tuple[str, str, Dict[str, Any], Optional[Dict[str, str]]]] = []
+        self._results: List[Tuple[Any, Any]] = []
 
-    def request(self, method, endpoint, data=None, permissions=None, payload=None, headers=None):
+    def request(
+        self,
+        method: str,
+        endpoint: str,
+        data: Any = None,
+        permissions: Any = None,
+        payload: Optional[Dict[str, Any]] = None,
+        headers: Optional[Dict[str, str]] = None,
+    ) -> Tuple[Any, Any]:
         # Store all the requests in a dict, to be read later when .send()
         # is called.
         payload = payload or {}
@@ -53,15 +71,15 @@ class BatchSession(object):
         # This is the signature of the session request.
         return defaultdict(dict), defaultdict(dict)
 
-    def reset(self):
+    def reset(self) -> None:
         # Reinitialize the batch request queue.
         self.requests = []
 
-    def _build_requests(self):
-        requests = []
+    def _build_requests(self) -> List[Dict[str, Any]]:
+        requests: List[Dict[str, Any]] = []
         for method, url, payload, headers in self.requests:
             # Strip the prefix in batch requests.
-            request = {"method": method.upper(), "path": url.replace("v1/", "")}
+            request: Dict[str, Any] = {"method": method.upper(), "path": url.replace("v1/", "")}
 
             request["body"] = payload
             if headers is not None:
@@ -69,13 +87,13 @@ class BatchSession(object):
             requests.append(request)
         return requests
 
-    def send(self):
+    def send(self) -> List[Tuple[Any, Any]]:
         self._results = []
-        _exceptions = []
+        _exceptions: List[KintoException] = []
         requests = self._build_requests()
         id_request = 0
         for chunk in utils.chunks(requests, self.batch_max_requests):
-            kwargs = dict(
+            kwargs: Dict[str, Any] = dict(
                 method="POST", endpoint=self.endpoints.get("batch"), payload={"requests": chunk}
             )
             resp, headers = self.session.request(**kwargs)
@@ -120,15 +138,15 @@ class BatchSession(object):
             self._results.append((resp, headers))
 
         if _exceptions:
-            raise KintoBatchException(_exceptions, self._results)
+            raise KintoBatchException(list(_exceptions), self._results)
 
         return self._results
 
-    def results(self):
+    def results(self) -> List[Any]:
         # Get each batch block response
         chunks = [resp for resp, _ in self._results]
 
-        responses = []
+        responses: List[Any] = []
         for chunk in chunks:
             responses += chunk["responses"]
 

@@ -3,6 +3,7 @@ import logging
 import threading
 import time
 import warnings
+from typing import Any, Dict, Optional, Tuple, Union, cast
 from urllib.parse import urlencode, urlparse
 
 import requests
@@ -17,7 +18,12 @@ from kinto_http.exceptions import BackoffException, KintoException
 logger = logging.getLogger(__name__)
 
 
-def create_session(server_url=None, auth=None, session=None, **kwargs):
+def create_session(
+    server_url: Optional[str] = None,
+    auth: Any = None,
+    session: Optional["Session"] = None,
+    **kwargs: Any,
+) -> "Session":
     """Returns a session from the passed arguments.
 
     :param server_url:
@@ -65,21 +71,21 @@ class Session(object):
 
     def __init__(
         self,
-        server_url,
-        auth=None,
-        timeout=False,
-        headers=None,
-        retry=0,
-        retry_after=None,
-        dry_mode=False,
+        server_url: Optional[str],
+        auth: Any = None,
+        timeout: Union[int, float, bool, None] = False,
+        headers: Optional[Dict[str, str]] = None,
+        retry: int = 0,
+        retry_after: Optional[int] = None,
+        dry_mode: bool = False,
     ):
-        self.backoff = None
-        self.server_url = server_url
+        self.backoff: Optional[float] = None
+        self.server_url: Optional[str] = server_url
         self.auth = auth
         self.nb_retry = retry
         self.retry_after = retry_after
         self.timeout = timeout
-        self.headers = headers or {}
+        self.headers: Dict[str, str] = headers or {}
         self.dry_mode = dry_mode
         self._local = threading.local()
 
@@ -93,7 +99,15 @@ class Session(object):
             self._local.session = s
         return s
 
-    def request(self, method, endpoint, data=None, permissions=None, payload=None, **kwargs):
+    def request(
+        self,
+        method: str,
+        endpoint: str,
+        data: Any = None,
+        permissions: Any = None,
+        payload: Optional[Dict[str, Any]] = None,
+        **kwargs: Any,
+    ) -> Tuple[Any, Any]:
         current_time = time.time()
         if self.backoff and self.backoff > current_time:
             seconds = int(self.backoff - current_time)
@@ -101,7 +115,7 @@ class Session(object):
 
         parsed = urlparse(endpoint)
         if not parsed.scheme:
-            actual_url = utils.urljoin(self.server_url, endpoint)
+            actual_url = utils.urljoin(self.server_url or "", endpoint)
         else:
             actual_url = endpoint
 
@@ -154,10 +168,11 @@ class Session(object):
             if self.dry_mode:
                 qs = ("?" + urlencode(kwargs["params"])) if "params" in kwargs else ""
                 logger.debug(f"(dry mode) {method} {actual_url}{qs}")
-                resp = HTTPResponse(
+                dry_resp = HTTPResponse(
                     status=200, headers={"Content-Type": "application/json"}, body=b"{}"
                 )
-                resp.status_code = resp.status
+                dry_resp.status_code = dry_resp.status  # ty: ignore[unresolved-attribute]
+                resp: requests.Response = cast(requests.Response, dry_resp)
             else:
                 resp = self._session.request(method, actual_url, **kwargs)
 
@@ -170,11 +185,12 @@ class Session(object):
                 self.backoff = None
 
             retry = retry - 1
-            if 200 <= resp.status_code < 400:
+            status_code = resp.status_code or 0
+            if 200 <= status_code < 400:
                 # Success
                 break
             else:
-                if retry >= 0 and (resp.status_code >= 500 or resp.status_code == 409):
+                if retry >= 0 and (status_code >= 500 or status_code == 409):
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.
                     if self.retry_after is None:
@@ -186,15 +202,15 @@ class Session(object):
 
                 # Retries exhausted, raise expection.
                 try:
-                    message = "{0} - {1}".format(resp.status_code, resp.json())
+                    message = "{0} - {1}".format(status_code, resp.json())
                 except ValueError:
                     # In case the response is not JSON, fallback to text.
-                    message = "{0} - {1}".format(resp.status_code, resp.text)
+                    message = "{0} - {1}".format(status_code, resp.text)
                 exception = KintoException(message)
                 exception.request = resp.request
                 exception.response = resp
                 raise exception
-        if resp.status_code == 204 or resp.status_code == 304 or method == "head":
+        if status_code == 204 or status_code == 304 or method == "head":
             body = None
         else:
             body = resp.json()

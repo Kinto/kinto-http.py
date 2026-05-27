@@ -35,6 +35,7 @@ functional: install need-kinto-running
 lint: install
 	$(VENV)/bin/ruff check src tests
 	$(VENV)/bin/ruff format --check src tests
+	$(VENV)/bin/ty check src
 
 .PHONY: format
 format: install

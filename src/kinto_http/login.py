@@ -3,17 +3,25 @@ import json
 import threading
 import webbrowser
 from http.server import BaseHTTPRequestHandler, HTTPServer
+from typing import Any, Callable, Dict, Optional
 from urllib.parse import unquote
 
 import requests
+import requests.auth
+from requests.models import PreparedRequest
 
 
 class RequestHandler(BaseHTTPRequestHandler):
-    def __init__(self, *args, set_jwt_token_callback=None, **kwargs):
+    def __init__(
+        self,
+        *args: Any,
+        set_jwt_token_callback: Optional[Callable[[Dict[str, Any]], None]] = None,
+        **kwargs: Any,
+    ):
         self.set_jwt_token_callback = set_jwt_token_callback
         super().__init__(*args, **kwargs)
 
-    def do_GET(self):
+    def do_GET(self) -> None:
         # Ignore non-auth requests (eg. favicon.ico).
         if "/auth" not in self.path:  # pragma: no cover
             self.send_response(404)
@@ -32,6 +40,7 @@ class RequestHandler(BaseHTTPRequestHandler):
         encoded_jwt_token = unquote(self.path.replace("/auth/", ""))
         decoded_data = base64.urlsafe_b64decode(encoded_jwt_token + "====").decode("utf-8")
         jwt_data = json.loads(decoded_data)
+        assert self.set_jwt_token_callback is not None
         self.set_jwt_token_callback(jwt_data)
         # We don't want to stop the server immediately or it won't be
         # able to serve the request response.
@@ -39,19 +48,22 @@ class RequestHandler(BaseHTTPRequestHandler):
 
 
 class BrowserOAuth(requests.auth.AuthBase):
-    def __init__(self, provider=None):
+    server_url: str = ""
+
+    def __init__(self, provider: Optional[str] = None):
         """
         @param method: Name of the OpenID provider to get OAuth details from.
         """
         self.provider = provider
-        self.header_type = None
-        self.token = None
+        self.header_type: Optional[str] = None
+        self.token: Optional[str] = None
 
-    def set_jwt_token(self, jwt_data):
+    def set_jwt_token(self, jwt_data: Dict[str, Any]) -> None:
         self.header_type = jwt_data["token_type"]
         self.token = jwt_data["access_token"]
 
-    def __call__(self, r):
+    def __call__(self, r: PreparedRequest) -> PreparedRequest:
+        assert r.headers is not None
         if self.token is not None:
             r.headers["Authorization"] = "{} {}".format(self.header_type, self.token)
             return r

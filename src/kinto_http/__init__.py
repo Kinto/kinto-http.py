@@ -1,6 +1,9 @@
 import logging
+from typing import Optional
 
 import requests
+import requests.auth
+from requests.models import PreparedRequest
 
 from kinto_http.client import AsyncClient, Client
 from kinto_http.endpoints import Endpoints
@@ -33,12 +36,13 @@ __all__ = (
 
 
 class TokenAuth(requests.auth.AuthBase):
-    def __init__(self, token, type=None):
+    def __init__(self, token: str, type: Optional[str] = None):
         self.token = token
         self.type = type or "Bearer"
 
-    def __call__(self, r):
+    def __call__(self, r: PreparedRequest) -> PreparedRequest:
         # Sets auth-scheme to either Bearer or Basic
+        assert r.headers is not None
         r.headers["Authorization"] = "{} {}".format(self.type, self.token)
         return r
 

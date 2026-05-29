@@ -1,5 +1,5 @@
 [project]
-dynamic = ["version", "dependencies"]
+dynamic = ["version"]
 name = "kinto-http"
 description = "Kinto client"
 readme = "README.rst"
@@ -17,15 +17,17 @@ authors = [
   {name = "Mozilla Services", email = "developers@kinto-storage.org"},
 ]
 requires-python = ">=3.10"
+dependencies = [
+    "Unidecode",
+    "requests",
+    "backoff",
+]
 
 [project.urls]
 Repository = "https://github.com/Kinto/kinto-http.py"
 
 [tool.setuptools_scm]
 # can be empty if no extra settings are needed, presence enables setuptools_scm
-
-[tool.setuptools.dynamic]
-dependencies = { file = ["requirements.in"] }
 
 [build-system]
 requires = ["setuptools>=64", "setuptools_scm>=8"]
@@ -43,9 +45,6 @@ dev = [
     "pytest-mock",
     "pytest-xdist",
 ]
-
-[tool.pip-tools]
-generate-hashes = true
 
 [tool.coverage.run]
 relative_files = true

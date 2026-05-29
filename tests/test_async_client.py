@@ -77,6 +77,7 @@ def test_client_uses_passed_bucket_if_specified():
 async def test_client_can_receive_default_headers(mocker: MockerFixture):
     r = mocker.MagicMock()
     r.status_code = 200
+    r.headers = {}
     # AsyncClient runs requests in an executor thread (differ in main than executor).
     # Patch the class so all threads get the same mock.
     mocked = mocker.patch("kinto_http.session.requests.Session").return_value

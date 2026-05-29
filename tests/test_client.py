@@ -242,6 +242,7 @@ def test_client_uses_passed_bucket_if_specified():
 def test_client_can_receive_default_headers(mocker: MockerFixture):
     r = mocker.MagicMock()
     r.status_code = 200
+    r.headers = {}
     client = Client(server_url="https://kinto.io/v1", headers={"Allow-Access": "CDN"})
     mocked = mocker.patch.object(client.session._session, "request", return_value=r)
     client.server_info()

@@ -1,5 +1,6 @@
 import json
 import logging
+import re
 import threading
 import time
 import warnings
@@ -115,7 +116,7 @@ class Session(object):
             params = dict()
             for key, value in kwargs["params"].items():
                 if key.startswith("in_") or key.startswith("exclude_"):
-                    params[key] = ",".join(value)
+                    params[key] = f"{value}," if isinstance(value, str) else ",".join(value)
                 elif isinstance(value, str):
                     params[key] = value
                 else:
@@ -129,7 +130,7 @@ class Session(object):
 
         payload = payload or {}
 
-        if method.lower() == "get" and (payload or data):
+        if method.lower() in ("get", "head") and (payload or data):
             raise KintoException("GET requests are not allowed to have a body!")
 
         if data is not None:
@@ -152,7 +153,9 @@ class Session(object):
         retry = self.nb_retry
         while retry >= 0:
             if self.dry_mode:
-                qs = ("?" + urlencode(kwargs["params"])) if "params" in kwargs else ""
+                qs = (
+                    ("?" + urlencode(kwargs["params"])) if kwargs.get("params") is not None else ""
+                )
                 logger.debug(f"(dry mode) {method} {actual_url}{qs}")
                 resp = HTTPResponse(
                     status=200, headers={"Content-Type": "application/json"}, body=b"{}"
@@ -164,7 +167,7 @@ class Session(object):
             if "Alert" in resp.headers:
                 warnings.warn(resp.headers["Alert"], DeprecationWarning)
             backoff_seconds = resp.headers.get("Backoff")
-            if backoff_seconds:
+            if backoff_seconds and re.match(r"^\d+$", backoff_seconds):
                 self.backoff = time.time() + int(backoff_seconds)
             else:
                 self.backoff = None
@@ -174,17 +177,20 @@ class Session(object):
                 # Success
                 break
             else:
-                if retry >= 0 and (resp.status_code >= 500 or resp.status_code == 409):
+                if retry >= 0 and (resp.status_code >= 500 or resp.status_code in (409, 429)):
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.
                     if self.retry_after is None:
-                        retry_after = int(resp.headers.get("Retry-After", 0))
+                        server_retryafter = resp.headers.get("Retry-After", "0")
+                        retry_after = (
+                            int(server_retryafter) if re.match(r"^\d+$", server_retryafter) else 0
+                        )
                     else:
                         retry_after = self.retry_after
                     time.sleep(retry_after)
                     continue
 
-                # Retries exhausted, raise expection.
+                # Retries exhausted, raise exception.
                 try:
                     message = "{0} - {1}".format(resp.status_code, resp.json())
                 except ValueError:
@@ -194,7 +200,7 @@ class Session(object):
                 exception.request = resp.request
                 exception.response = resp
                 raise exception
-        if resp.status_code == 204 or resp.status_code == 304 or method == "head":
+        if resp.status_code == 204 or resp.status_code == 304 or method.lower() == "head":
             body = None
         else:
             body = resp.json()

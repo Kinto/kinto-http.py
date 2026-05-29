@@ -181,7 +181,7 @@ class Session(object):
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.
                     if self.retry_after is None:
-                        server_retryafter = resp.headers.get("Retry-After", 0)
+                        server_retryafter = resp.headers.get("Retry-After", "0")
                         retry_after = (
                             int(server_retryafter) if re.match(r"^\d+$", server_retryafter) else 0
                         )

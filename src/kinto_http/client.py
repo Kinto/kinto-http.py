@@ -931,7 +931,10 @@ class Client(object):
             os.makedirs(folder, exist_ok=True)
 
         with open(filepath, "wb") as f:
-            with requests.get(url, stream=True) as r:
+            # `self.session.request()` parses JSON and is not compatible with `stream=True`.
+            # Using the underlying `Session` object, instead of introducing more
+            # code branches there seems the most reasonable approach.
+            with self.session._session.request("get", url, stream=True) as r:
                 r.raise_for_status()
                 for chunk in r.iter_content(chunk_size=chunk_size):
                     f.write(chunk)

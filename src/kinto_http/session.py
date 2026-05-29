@@ -1,6 +1,7 @@
 import json
 import logging
 import re
+import threading
 import time
 import warnings
 from urllib.parse import urlencode, urlparse
@@ -81,6 +82,17 @@ class Session(object):
         self.timeout = timeout
         self.headers = headers or {}
         self.dry_mode = dry_mode
+        self._local = threading.local()
+
+    @property
+    def _session(self):
+        # Connection pool and cookie jar of requests.Session are not thread-safe.
+        # Give each thread its own instance.
+        s = getattr(self._local, "session", None)
+        if s is None:
+            s = requests.Session()
+            self._local.session = s
+        return s
 
     def request(self, method, endpoint, data=None, permissions=None, payload=None, **kwargs):
         current_time = time.time()
@@ -150,7 +162,7 @@ class Session(object):
                 )
                 resp.status_code = resp.status
             else:
-                resp = requests.request(method, actual_url, **kwargs)
+                resp = self._session.request(method, actual_url, **kwargs)
 
             if "Alert" in resp.headers:
                 warnings.warn(resp.headers["Alert"], DeprecationWarning)

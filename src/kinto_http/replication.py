@@ -7,7 +7,7 @@ from kinto_http import Client, cli_utils
 logger = logging.getLogger(__name__)
 
 
-def replicate(origin, destination):
+def replicate(origin: Client, destination: Client) -> None:
     """Replicates records from one collection to another one.
 
     All records are replicated, not only the ones that changed.
@@ -28,12 +28,12 @@ def replicate(origin, destination):
     with destination.batch() as batch:
         for record in records:
             if record.get("deleted", False) is True:
-                batch.delete_record(record["id"], last_modified=record["last_modified"])
+                batch.delete_record(id=record["id"], if_match=record["last_modified"])
             else:
                 batch.update_record(data=record, safe=False)
 
 
-def get_arguments():  # pragma: nocover
+def get_arguments() -> argparse.Namespace:  # pragma: nocover
     description = "Migrate data from one kinto instance to another one."
     parser = argparse.ArgumentParser(description=description)
 
@@ -60,11 +60,11 @@ def get_arguments():  # pragma: nocover
         help="The name of the origin collection. Will use the same as the remote if omitted",
         default=None,
     )
-    cli_utils.set_parser_server_options(parser)
+    cli_utils.add_parser_options(parser)
     return parser.parse_args()
 
 
-def main():  # pragma: nocover
+def main() -> None:  # pragma: nocover
     args = get_arguments()
     cli_utils.setup_logger(logger, args)
 

@@ -8,6 +8,7 @@ install:
 lint: install
 	uv run ruff check src tests
 	uv run ruff format --check src tests
+	uv run ty check src
 
 .PHONY: format
 format:

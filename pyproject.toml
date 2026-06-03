@@ -38,6 +38,7 @@ dev = [
     "kinto",
     "kinto-attachment",
     "ruff",
+    "ty",
     "pytest",
     "pytest-asyncio",
     "pytest-cache",

@@ -1,5 +1,7 @@
 import json
 import logging
+import re
+import threading
 import time
 import warnings
 from typing import Any, Dict, Optional, Tuple, Union, cast
@@ -86,6 +88,17 @@ class Session(object):
         self.timeout = timeout
         self.headers: Dict[str, str] = headers or {}
         self.dry_mode = dry_mode
+        self._local = threading.local()
+
+    @property
+    def _session(self):
+        # Connection pool and cookie jar of requests.Session are not thread-safe.
+        # Give each thread its own instance.
+        s = getattr(self._local, "session", None)
+        if s is None:
+            s = requests.Session()
+            self._local.session = s
+        return s
 
     def request(
         self,
@@ -117,7 +130,7 @@ class Session(object):
             params = dict()
             for key, value in kwargs["params"].items():
                 if key.startswith("in_") or key.startswith("exclude_"):
-                    params[key] = ",".join(value)
+                    params[key] = f"{value}," if isinstance(value, str) else ",".join(value)
                 elif isinstance(value, str):
                     params[key] = value
                 else:
@@ -131,7 +144,7 @@ class Session(object):
 
         payload = payload or {}
 
-        if method.lower() == "get" and (payload or data):
+        if method.lower() in ("get", "head") and (payload or data):
             raise KintoException("GET requests are not allowed to have a body!")
 
         if data is not None:
@@ -154,7 +167,9 @@ class Session(object):
         retry = self.nb_retry
         while retry >= 0:
             if self.dry_mode:
-                qs = ("?" + urlencode(kwargs["params"])) if "params" in kwargs else ""
+                qs = (
+                    ("?" + urlencode(kwargs["params"])) if kwargs.get("params") is not None else ""
+                )
                 logger.debug(f"(dry mode) {method} {actual_url}{qs}")
                 dry_resp = HTTPResponse(
                     status=200, headers={"Content-Type": "application/json"}, body=b"{}"
@@ -162,12 +177,12 @@ class Session(object):
                 dry_resp.status_code = dry_resp.status  # ty: ignore[unresolved-attribute]
                 resp: requests.Response = cast(requests.Response, dry_resp)
             else:
-                resp = requests.request(method, actual_url, **kwargs)
+                resp = self._session.request(method, actual_url, **kwargs)
 
             if "Alert" in resp.headers:
                 warnings.warn(resp.headers["Alert"], DeprecationWarning)
             backoff_seconds = resp.headers.get("Backoff")
-            if backoff_seconds:
+            if backoff_seconds and re.match(r"^\d+$", backoff_seconds):
                 self.backoff = time.time() + int(backoff_seconds)
             else:
                 self.backoff = None
@@ -178,17 +193,20 @@ class Session(object):
                 # Success
                 break
             else:
-                if retry >= 0 and (status_code >= 500 or status_code == 409):
+                if retry >= 0 and (status_code >= 500 or status_code in (409, 429)):
                     # Wait and try again.
                     # If not forced, use retry-after header and wait.
                     if self.retry_after is None:
-                        retry_after = int(resp.headers.get("Retry-After", 0))
+                        server_retryafter = resp.headers.get("Retry-After", "0")
+                        retry_after = (
+                            int(server_retryafter) if re.match(r"^\d+$", server_retryafter) else 0
+                        )
                     else:
                         retry_after = self.retry_after
                     time.sleep(retry_after)
                     continue
 
-                # Retries exhausted, raise expection.
+                # Retries exhausted, raise exception.
                 try:
                     message = "{0} - {1}".format(status_code, resp.json())
                 except ValueError:
@@ -198,7 +216,7 @@ class Session(object):
                 exception.request = resp.request
                 exception.response = resp
                 raise exception
-        if status_code == 204 or status_code == 304 or method == "head":
+        if status_code == 204 or status_code == 304 or method.lower() == "head":
             body = None
         else:
             body = resp.json()

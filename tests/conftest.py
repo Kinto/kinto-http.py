@@ -115,7 +115,7 @@ def exception_setup(mocker: MockerFixture) -> KintoException:
 
 @pytest.fixture
 def session_setup(mocker: MockerFixture) -> Tuple[MagicMock, Session]:
-    requests_mock = mocker.patch("kinto_http.session.requests")
+    requests_mock = mocker.patch("kinto_http.session.requests.Session").return_value
     requests_mock.request.headers = {"User-Agent": USER_AGENT}
     requests_mock.request.post_json_headers = {
         "User-Agent": USER_AGENT,

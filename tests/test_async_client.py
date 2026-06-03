@@ -77,9 +77,12 @@ def test_client_uses_passed_bucket_if_specified():
 async def test_client_can_receive_default_headers(mocker: MockerFixture):
     r = mocker.MagicMock()
     r.status_code = 200
-    client = Client(server_url="https://kinto.io/v1", headers={"Allow-Access": "CDN"})
-    mocked = mocker.patch("kinto_http.session.requests")
+    r.headers = {}
+    # AsyncClient runs requests in an executor thread (differ in main than executor).
+    # Patch the class so all threads get the same mock.
+    mocked = mocker.patch("kinto_http.session.requests.Session").return_value
     mocked.request.return_value = r
+    client = Client(server_url="https://kinto.io/v1", headers={"Allow-Access": "CDN"})
     await client.server_info()
     assert "Allow-Access" in mocked.request.call_args_list[0][1]["headers"]
 
@@ -1265,16 +1268,16 @@ async def test_download_attachment(async_client_setup: Client, mocker: MockerFix
         {},
     )
 
-    mock_requests_get = mocker.patch("kinto_http.requests.get")
+    mock_session_request = client.session._session.request
     mock_response = mocker.MagicMock()
     mock_response.iter_content = mocker.MagicMock(return_value=[b"chunk1", b"chunk2", b"chunk3"])
     mock_response.raise_for_status = mocker.MagicMock()
-    mock_requests_get.return_value.__enter__.return_value = mock_response
+    mock_session_request.return_value.__enter__.return_value = mock_response
 
     with pytest.raises(ValueError):
         await client.download_attachment({})
 
-    record = {"attachment": {"location": "file.bin", "filename": "local.bin"}}
+    record = {"attachment": {"location": "file.bin", "filename": "local.bin", "size": 42}}
 
     path = await client.download_attachment(record)
     assert path == "local.bin"

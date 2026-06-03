@@ -1,49 +1,39 @@
-VENV := $(shell echo $${VIRTUAL_ENV-.venv})
-PYTHON = $(VENV)/bin/python
-INSTALL_STAMP = $(VENV)/.install.stamp
-
 .PHONY: all
 all: install
 
-install: $(INSTALL_STAMP)
-$(INSTALL_STAMP): $(PYTHON) pyproject.toml requirements.txt
-	$(VENV)/bin/pip install -U pip
-	$(VENV)/bin/pip install -r requirements.txt
-	$(VENV)/bin/pip install -e ".[dev]"
-	touch $(INSTALL_STAMP)
+install:
+	uv sync --all-extras
 
-$(PYTHON):
-	python3 -m venv $(VENV)
+.PHONY: lint
+lint: install
+	uv run ruff check src tests
+	uv run ruff format --check src tests
+	uv run ty check src
+
+.PHONY: format
+format:
+	uv run ruff check --fix src tests
+	uv run ruff format src tests
 
 need-kinto-running:
 	@curl http://localhost:8888/v0/ 2>/dev/null 1>&2 || (echo "Run 'make run-kinto' before starting tests." && exit 1)
 
-run-kinto: install
-	$(VENV)/bin/kinto migrate --ini tests/config/kinto.ini
-	$(VENV)/bin/kinto start --ini tests/config/kinto.ini
-
 .PHONY: tests
-test: tests
-tests: install need-kinto-running
-	$(VENV)/bin/pytest --cov-report term-missing --cov-fail-under 100 --cov kinto_http
+tests: test
+tests-once: test
+test: install need-kinto-running
+	uv run pytest --cov-report term-missing --cov-fail-under 100 --cov kinto_http
 
 .PHONY: functional
 functional: install need-kinto-running
-	$(VENV)/bin/pytest -k "test_functional"
-
-.PHONY: lint
-lint: install
-	$(VENV)/bin/ruff check src tests
-	$(VENV)/bin/ruff format --check src tests
-	$(VENV)/bin/ty check src
-
-.PHONY: format
-format: install
-	$(VENV)/bin/ruff check --fix src tests
-	$(VENV)/bin/ruff format src tests
+	uv run pytest -k "test_functional"
 
 .IGNORE: clean
 clean:
-	find src -name '__pycache__' -type d -exec rm -fr {} \;
-	find tests -name '__pycache__' -type d -exec rm -fr {} \;
-	rm -rf .venv .coverage *.egg-info .pytest_cache .ruff_cache build dist
+	find src/ -name '__pycache__' -type d -exec rm -fr {} \;
+	find tests/ -name '__pycache__' -type d -exec rm -fr {} \;
+	rm -rf .coverage *.egg-info .pytest_cache .ruff_cache build dist
+
+run-kinto:
+	uv run kinto migrate --ini tests/config/kinto.ini
+	uv run kinto start --ini tests/config/kinto.ini

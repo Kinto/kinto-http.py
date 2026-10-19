@@ -14,7 +14,10 @@ class PatchType(object):
     """
 
     content_type: str = ""
-    body: Any = None
+
+    @property
+    def body(self) -> Any:
+        return None
 
 
 class BasicPatch(PatchType):
@@ -121,4 +124,8 @@ class JSONPatch(PatchType):
             dicts
         :type operations: list
         """
-        self.body = operations
+        self.operations = operations
+
+    @property
+    def body(self) -> List[Dict[str, Any]]:
+        return self.operations

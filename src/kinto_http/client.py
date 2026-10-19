@@ -9,7 +9,7 @@ import random
 import uuid
 from collections import OrderedDict
 from contextlib import contextmanager
-from typing import Any, Callable, Dict, Iterator, List, Optional
+from typing import Any, Callable, Dict, Generator, Iterator, List, Optional
 from urllib.parse import urljoin
 
 import backoff
@@ -91,7 +91,7 @@ class Client(object):
 
     @retry_timeout
     @contextmanager
-    def batch(self, **kwargs: Any) -> Iterator["Client"]:
+    def batch(self, **kwargs: Any) -> Generator["Client", None, None]:
         if self._server_settings is None:
             resp, _ = self.session.request("GET", self._get_endpoint("root"))
             self._server_settings = resp["settings"] if not self.session.dry_mode else {}

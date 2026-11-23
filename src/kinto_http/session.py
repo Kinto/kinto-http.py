@@ -174,7 +174,7 @@ class Session(object):
                 dry_resp = HTTPResponse(
                     status=200, headers={"Content-Type": "application/json"}, body=b"{}"
                 )
-                dry_resp.status_code = dry_resp.status  # ty: ignore[unresolved-attribute]
+                dry_resp.status_code = dry_resp.status  # ty: ignore[missing-attribute]
                 resp: requests.Response = cast(requests.Response, dry_resp)
             else:
                 resp = self._session.request(method, actual_url, **kwargs)
